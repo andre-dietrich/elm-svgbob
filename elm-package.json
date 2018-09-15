@@ -1,13 +1,13 @@
 {
     "version": "1.0.0",
-    "summary": "helpful summary of your project, less than 80 characters",
-    "repository": "https://github.com/user/project.git",
+    "summary": "Fork of the great ASCII to SVG converter SvgBob by Ivan Ceras.",
+    "repository": "https://github.com/andre-dietrich/elm-svgbob.git",
     "license": "BSD3",
     "source-directories": [
         "src",
         "examples"
     ],
-    "exposed-modules": [],
+    "exposed-modules": [ "SvgBob" ],
     "dependencies": {
         "elm-lang/core": "5.1.1 <= v < 6.0.0",
         "elm-lang/html": "2.0.0 <= v < 3.0.0",
