@@ -16,6 +16,7 @@ It is a fork of Ivan Ceras example that is hosted at:
 -}
 
 import Html exposing (Html)
+import Svg
 import SvgBob.Grid
 import SvgBob.Model
 
@@ -36,6 +37,6 @@ init =
 
 {-| Get the resulting svg and pass it into a div or whatever
 -}
-getSvg : Model -> Html msg
+getSvg : List (Svg.Attribute msg) -> Model -> Html msg
 getSvg =
     SvgBob.Grid.getSvg

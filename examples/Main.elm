@@ -52,15 +52,7 @@ view model =
                 ]
                 [ text "Convert >>" ]
             ]
-        , div
-            [ style
-                [ ( "width", "500px" )
-                , ( "height", "100%" )
-                , ( "overflow", "auto" )
-                ]
-            ]
-            [ SvgBob.getSvg model.grid
-            ]
+        , SvgBob.getSvg [ style [ ( "width", "100%" ) ] ] model.grid
         ]
 
 

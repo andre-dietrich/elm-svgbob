@@ -3,7 +3,7 @@ module SvgBob.Grid exposing (getSvg)
 import Array exposing (Array)
 import Char
 import Color
-import Html exposing (Html)
+import Html exposing (Attribute, Html)
 import String
 import Svg exposing (Svg, defs, line, marker, path, svg)
 import Svg.Attributes
@@ -742,8 +742,8 @@ arrowMarker =
         ]
 
 
-getSvg : Model -> Html msg
-getSvg model =
+getSvg : List (Svg.Attribute msg) -> Model -> Html msg
+getSvg attr model =
     let
         gwidth =
             toString <| measureX model.columns + 10
@@ -751,7 +751,7 @@ getSvg model =
         gheight =
             toString <| measureY model.rows + 10
     in
-    svg [ height gheight, width gwidth ]
+    svg (height gheight :: width gwidth :: attr)
         (defs []
             [ arrowMarker ]
             :: drawPaths model
