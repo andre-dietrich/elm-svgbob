@@ -4,6 +4,7 @@ import Array exposing (Array)
 import Char
 import Color
 import Html exposing (Attribute, Html)
+import Html.Attributes exposing (attribute)
 import String
 import Svg exposing (Svg, defs, line, marker, path, svg)
 import Svg.Attributes
@@ -698,6 +699,11 @@ getElement x y model =
             Nothing
 
 
+vectorEffect : Attribute a
+vectorEffect =
+    attribute "vector-effect" "none"
+
+
 drawArc : Float -> Float -> Float -> Float -> Float -> Settings -> Svg a
 drawArc startX startY endX endY radius s =
     let
@@ -722,7 +728,7 @@ drawArc startX startY endX endY radius s =
             ]
                 |> String.join " "
     in
-    path [ d paths, stroke "black", strokeWidth <| toString s.lineWidth, fill "transparent" ] []
+    path [ d paths, stroke "black", strokeWidth <| toString s.lineWidth, fill "transparent", vectorEffect ] []
 
 
 arrowMarker : Svg a
@@ -737,7 +743,7 @@ arrowMarker =
         , markerHeight "10"
         , orient "auto"
         ]
-        [ path [ d "M 0 0 L 10 5 L 0 10 z" ]
+        [ path [ d "M 0 0 L 10 5 L 0 10 z", vectorEffect ]
             []
         ]
 
@@ -2234,6 +2240,7 @@ drawArrowRight x y model =
         , y2 <| toString endY
         , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ toString model.settings.lineWidth)
         , markerEnd "url(#triangle)"
+        , vectorEffect
         ]
         []
 
@@ -2265,6 +2272,7 @@ drawArrowLeft x y model =
         , y2 <| toString endY
         , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ toString model.settings.lineWidth)
         , markerEnd "url(#triangle)"
+        , vectorEffect
         ]
         []
 
@@ -2296,6 +2304,7 @@ drawArrowDown x y model =
         , y2 <| toString endY
         , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ toString model.settings.lineWidth)
         , markerEnd "url(#triangle)"
+        , vectorEffect
         ]
         []
 
@@ -2327,6 +2336,7 @@ drawArrowSouthWest x y model =
         , y2 <| toString endY
         , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ toString model.settings.lineWidth)
         , markerEnd "url(#triangle)"
+        , vectorEffect
         ]
         []
 
@@ -2358,6 +2368,7 @@ drawArrowSouthEast x y model =
         , y2 <| toString endY
         , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ toString model.settings.lineWidth)
         , markerEnd "url(#triangle)"
+        , vectorEffect
         ]
         []
 
@@ -2389,6 +2400,7 @@ drawArrowUp x y model =
         , y2 <| toString endY
         , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ toString model.settings.lineWidth)
         , markerEnd "url(#triangle)"
+        , vectorEffect
         ]
         []
 
@@ -2420,6 +2432,7 @@ drawArrowNorthWest x y model =
         , y2 <| toString endY
         , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ toString model.settings.lineWidth)
         , markerEnd "url(#triangle)"
+        , vectorEffect
         ]
         []
 
@@ -2451,6 +2464,7 @@ drawArrowNorthEast x y model =
         , y2 <| toString endY
         , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ toString model.settings.lineWidth)
         , markerEnd "url(#triangle)"
+        , vectorEffect
         ]
         []
 
@@ -2472,6 +2486,7 @@ drawLine startX startY endX endY s =
         , strokeWidth <| toString s.lineWidth
         , strokeLinecap "round"
         , strokeLinejoin "mitter"
+        , vectorEffect
         ]
         []
 

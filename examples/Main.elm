@@ -10,7 +10,7 @@ module Main exposing
     )
 
 import Html exposing (Html, button, div, pre, text, textarea)
-import Html.Attributes exposing (class, contenteditable, id, style)
+import Html.Attributes exposing (attribute, class, contenteditable, id, style)
 import Html.Events exposing (on, onClick)
 import Json.Decode exposing (string)
 import SvgBob
@@ -52,7 +52,7 @@ view model =
                 ]
                 [ text "Convert >>" ]
             ]
-        , SvgBob.getSvg [ style [ ( "width", "100%" ) ] ] model.grid
+        , SvgBob.getSvg [ style [ ( "width", "100%" ) ], attribute "vector-effect" "non-scaling-stroke" ] model.grid
         ]
 
 
