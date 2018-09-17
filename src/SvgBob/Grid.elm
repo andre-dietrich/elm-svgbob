@@ -751,7 +751,7 @@ getSvg attr model =
         gheight =
             toString <| measureY model.rows + 10
     in
-    svg (height gheight :: width gwidth :: attr)
+    svg (viewBox ("0 0 " ++ gwidth ++ " " ++ gheight) :: attr)
         (defs []
             [ arrowMarker ]
             :: drawPaths model
