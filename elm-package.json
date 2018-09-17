@@ -1,5 +1,5 @@
 {
-    "version": "2.0.1",
+    "version": "2.0.2",
     "summary": "Fork of the great ASCII to SVG converter SvgBob by Ivan Ceras.",
     "repository": "https://github.com/andre-dietrich/elm-svgbob.git",
     "license": "BSD3",
