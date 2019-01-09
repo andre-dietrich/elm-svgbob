@@ -203,8 +203,8 @@ bottomRightOf x y model =
 
 isNeighbor neighbor check =
     case neighbor of
-        Just neighbor ->
-            check neighbor
+        Just neighbor_ ->
+            check neighbor_
 
         Nothing ->
             False
@@ -241,65 +241,65 @@ getElement x y model =
             bottomRightOf x y model
     in
     case char of
-        Just char ->
+        Just char_ ->
             if
-                isVertical char
+                isVertical char_
                     && not (isNeighbor left isAlphaNumeric)
                     && not (isNeighbor right isAlphaNumeric)
             then
                 Just Vertical
 
             else if
-                isHorizontal char
+                isHorizontal char_
                     && not (isNeighbor left isAlphaNumeric)
                     && not (isNeighbor right isAlphaNumeric)
             then
                 Just Horizontal
 
             else if
-                isLowHorizontal char
+                isLowHorizontal char_
                     && isNeighbor left isSlantRight
             then
                 Just LowHorizontalExtendLeft
 
             else if
-                isLowHorizontal char
+                isLowHorizontal char_
                     && isNeighbor left isVertical
             then
                 Just LowHorizontalExtendVerticalLeft
 
             else if
-                isLowHorizontal char
+                isLowHorizontal char_
                     && isNeighbor right isSlantLeft
             then
                 Just LowHorizontalExtendRight
 
             else if
-                isLowHorizontal char
+                isLowHorizontal char_
                     && isNeighbor right isVertical
             then
                 Just LowHorizontalExtendVerticalRight
 
             else if
-                isLowHorizontal char
+                isLowHorizontal char_
                     && isNeighbor bottomLeft isVertical
             then
                 Just LowHorizontalExtendVerticalBottomLeft
 
             else if
-                isLowHorizontal char
+                isLowHorizontal char_
                     && isNeighbor bottomRight isVertical
             then
                 Just LowHorizontalExtendVerticalBottomRight
 
             else if
-                isLowHorizontal char
+                isLowHorizontal char_
                     && not (isNeighbor left isAlphaNumeric)
                     && not (isNeighbor right isAlphaNumeric)
             then
                 Just LowHorizontal
 
-            else if isIntersection char then
+            else if isIntersection char_ then
                 let
                     isVerticalJunctionLeft =
                         isNeighbor top isVertical
@@ -369,7 +369,7 @@ getElement x y model =
                 else
                     Nothing
 
-            else if isRoundCorner char then
+            else if isRoundCorner char_ then
                 if
                     isNeighbor topRight isSlantRight
                         && isNeighbor bottomLeft isSlantRight
@@ -619,12 +619,12 @@ getElement x y model =
                     Just (RoundCorner TopRightSlantedTopLeft)
 
                 else
-                    Just (Text char)
+                    Just (Text char_)
 
-            else if isArrowRight char then
+            else if isArrowRight char_ then
                 Just ArrowEast
 
-            else if isArrowDown char then
+            else if isArrowDown char_ then
                 if isNeighbor top isVertical then
                     Just ArrowSouth
 
@@ -635,12 +635,12 @@ getElement x y model =
                     Just ArrowSouthEast
 
                 else
-                    Just <| Text char
+                    Just <| Text char_
 
-            else if isArrowLeft char then
+            else if isArrowLeft char_ then
                 Just ArrowWest
 
-            else if isArrowUp char then
+            else if isArrowUp char_ then
                 if isNeighbor bottom isVertical then
                     Just ArrowNorth
 
@@ -651,15 +651,15 @@ getElement x y model =
                     Just ArrowNorthEast
 
                 else
-                    Just <| Text char
+                    Just <| Text char_
 
-            else if isSlantRight char then
+            else if isSlantRight char_ then
                 Just SlantRight
 
-            else if isSlantLeft char then
+            else if isSlantLeft char_ then
                 Just SlantLeft
 
-            else if isOpenCurve char then
+            else if isOpenCurve char_ then
                 if
                     isNeighbor topRight isSlantRight
                         && isNeighbor bottomRight isSlantLeft
@@ -673,24 +673,24 @@ getElement x y model =
                     Just BigOpenCurve
 
                 else
-                    Just <| Text char
+                    Just <| Text char_
 
             else if
-                isCloseCurve char
+                isCloseCurve char_
                     && isNeighbor topLeft isRoundCorner
                     && isNeighbor bottomLeft isRoundCorner
             then
                 Just BigCloseCurve
 
             else if
-                isCloseCurve char
+                isCloseCurve char_
                     && isNeighbor topLeft isSlantLeft
                     && isNeighbor bottomLeft isSlantRight
             then
                 Just CloseCurve
 
-            else if char /= ' ' then
-                Just <| Text char
+            else if char_ /= ' ' then
+                Just <| Text char_
 
             else
                 Nothing
@@ -715,20 +715,20 @@ drawArc startX startY endX endY radius s =
 
         paths =
             [ "M"
-            , toString startX
-            , toString startY
+            , String.fromFloat startX
+            , String.fromFloat startY
             , "A"
-            , toString rx
-            , toString ry
+            , String.fromFloat rx
+            , String.fromFloat ry
             , "0"
             , "0"
             , "0"
-            , toString endX
-            , toString endY
+            , String.fromFloat endX
+            , String.fromFloat endY
             ]
                 |> String.join " "
     in
-    path [ d paths, stroke "black", strokeWidth <| toString s.lineWidth, fill "transparent", vectorEffect ] []
+    path [ d paths, stroke "black", strokeWidth <| String.fromFloat s.lineWidth, fill "transparent", vectorEffect ] []
 
 
 arrowMarker : Svg a
@@ -752,10 +752,10 @@ getSvg : List (Svg.Attribute msg) -> Model -> Html msg
 getSvg attr model =
     let
         gwidth =
-            toString <| measureX model.columns + 10
+            String.fromFloat <| measureX model.columns + 10
 
         gheight =
-            toString <| measureY model.rows + 10
+            String.fromFloat <| measureY model.rows + 10
     in
     svg (viewBox ("0 0 " ++ gwidth ++ " " ++ gheight) :: attr)
         (defs []
@@ -793,8 +793,8 @@ drawElement x y model =
             getElement x y model
     in
     case element of
-        Just element ->
-            case element of
+        Just e ->
+            case e of
                 Horizontal ->
                     [ drawHorizontalLine x y model ]
 
@@ -2228,17 +2228,17 @@ drawArrowRight x y model =
             startY
 
         { red, green, blue, alpha } =
-            Color.toRgb model.settings.color
+            Color.toRgba model.settings.color
 
         colorText =
-            "rgb(" ++ toString red ++ "," ++ toString green ++ "," ++ toString blue ++ ")"
+            "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
     in
     line
-        [ x1 <| toString startX
-        , x2 <| toString endX
-        , y1 <| toString startY
-        , y2 <| toString endY
-        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ toString model.settings.lineWidth)
+        [ x1 <| String.fromFloat startX
+        , x2 <| String.fromFloat endX
+        , y1 <| String.fromFloat startY
+        , y2 <| String.fromFloat endY
+        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
         , markerEnd "url(#triangle)"
         , vectorEffect
         ]
@@ -2260,17 +2260,17 @@ drawArrowLeft x y model =
             startY
 
         { red, green, blue, alpha } =
-            Color.toRgb model.settings.color
+            Color.toRgba model.settings.color
 
         colorText =
-            "rgb(" ++ toString red ++ "," ++ toString green ++ "," ++ toString blue ++ ")"
+            "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
     in
     line
-        [ x1 <| toString startX
-        , x2 <| toString endX
-        , y1 <| toString startY
-        , y2 <| toString endY
-        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ toString model.settings.lineWidth)
+        [ x1 <| String.fromFloat startX
+        , x2 <| String.fromFloat endX
+        , y1 <| String.fromFloat startY
+        , y2 <| String.fromFloat endY
+        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
         , markerEnd "url(#triangle)"
         , vectorEffect
         ]
@@ -2292,17 +2292,17 @@ drawArrowDown x y model =
             startY + textHeight
 
         { red, green, blue, alpha } =
-            Color.toRgb model.settings.color
+            Color.toRgba model.settings.color
 
         colorText =
-            "rgb(" ++ toString red ++ "," ++ toString green ++ "," ++ toString blue ++ ")"
+            "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
     in
     line
-        [ x1 <| toString startX
-        , x2 <| toString endX
-        , y1 <| toString startY
-        , y2 <| toString endY
-        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ toString model.settings.lineWidth)
+        [ x1 <| String.fromFloat startX
+        , x2 <| String.fromFloat endX
+        , y1 <| String.fromFloat startY
+        , y2 <| String.fromFloat endY
+        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
         , markerEnd "url(#triangle)"
         , vectorEffect
         ]
@@ -2324,17 +2324,17 @@ drawArrowSouthWest x y model =
             startY + textHeight / 2
 
         { red, green, blue, alpha } =
-            Color.toRgb model.settings.color
+            Color.toRgba model.settings.color
 
         colorText =
-            "rgb(" ++ toString red ++ "," ++ toString green ++ "," ++ toString blue ++ ")"
+            "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
     in
     line
-        [ x1 <| toString startX
-        , x2 <| toString endX
-        , y1 <| toString startY
-        , y2 <| toString endY
-        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ toString model.settings.lineWidth)
+        [ x1 <| String.fromFloat startX
+        , x2 <| String.fromFloat endX
+        , y1 <| String.fromFloat startY
+        , y2 <| String.fromFloat endY
+        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
         , markerEnd "url(#triangle)"
         , vectorEffect
         ]
@@ -2356,17 +2356,17 @@ drawArrowSouthEast x y model =
             startY + textHeight / 2
 
         { red, green, blue, alpha } =
-            Color.toRgb model.settings.color
+            Color.toRgba model.settings.color
 
         colorText =
-            "rgb(" ++ toString red ++ "," ++ toString green ++ "," ++ toString blue ++ ")"
+            "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
     in
     line
-        [ x1 <| toString startX
-        , x2 <| toString endX
-        , y1 <| toString startY
-        , y2 <| toString endY
-        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ toString model.settings.lineWidth)
+        [ x1 <| String.fromFloat startX
+        , x2 <| String.fromFloat endX
+        , y1 <| String.fromFloat startY
+        , y2 <| String.fromFloat endY
+        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
         , markerEnd "url(#triangle)"
         , vectorEffect
         ]
@@ -2388,17 +2388,17 @@ drawArrowUp x y model =
             measureY y
 
         { red, green, blue, alpha } =
-            Color.toRgb model.settings.color
+            Color.toRgba model.settings.color
 
         colorText =
-            "rgb(" ++ toString red ++ "," ++ toString green ++ "," ++ toString blue ++ ")"
+            "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
     in
     line
-        [ x1 <| toString startX
-        , x2 <| toString endX
-        , y1 <| toString startY
-        , y2 <| toString endY
-        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ toString model.settings.lineWidth)
+        [ x1 <| String.fromFloat startX
+        , x2 <| String.fromFloat endX
+        , y1 <| String.fromFloat startY
+        , y2 <| String.fromFloat endY
+        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
         , markerEnd "url(#triangle)"
         , vectorEffect
         ]
@@ -2420,17 +2420,17 @@ drawArrowNorthWest x y model =
             measureY y + textHeight / 2
 
         { red, green, blue, alpha } =
-            Color.toRgb model.settings.color
+            Color.toRgba model.settings.color
 
         colorText =
-            "rgb(" ++ toString red ++ "," ++ toString green ++ "," ++ toString blue ++ ")"
+            "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
     in
     line
-        [ x1 <| toString startX
-        , x2 <| toString endX
-        , y1 <| toString startY
-        , y2 <| toString endY
-        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ toString model.settings.lineWidth)
+        [ x1 <| String.fromFloat startX
+        , x2 <| String.fromFloat endX
+        , y1 <| String.fromFloat startY
+        , y2 <| String.fromFloat endY
+        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
         , markerEnd "url(#triangle)"
         , vectorEffect
         ]
@@ -2452,17 +2452,17 @@ drawArrowNorthEast x y model =
             measureY y + textHeight / 2
 
         { red, green, blue, alpha } =
-            Color.toRgb model.settings.color
+            Color.toRgba model.settings.color
 
         colorText =
-            "rgb(" ++ toString red ++ "," ++ toString green ++ "," ++ toString blue ++ ")"
+            "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
     in
     line
-        [ x1 <| toString startX
-        , x2 <| toString endX
-        , y1 <| toString startY
-        , y2 <| toString endY
-        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ toString model.settings.lineWidth)
+        [ x1 <| String.fromFloat startX
+        , x2 <| String.fromFloat endX
+        , y1 <| String.fromFloat startY
+        , y2 <| String.fromFloat endY
+        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
         , markerEnd "url(#triangle)"
         , vectorEffect
         ]
@@ -2472,18 +2472,18 @@ drawArrowNorthEast x y model =
 drawLine startX startY endX endY s =
     let
         { red, green, blue, alpha } =
-            Color.toRgb s.color
+            Color.toRgba s.color
 
         colorText =
-            "rgb(" ++ toString red ++ "," ++ toString green ++ "," ++ toString blue ++ ")"
+            "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
     in
     line
-        [ x1 <| toString startX
-        , x2 <| toString endX
-        , y1 <| toString startY
-        , y2 <| toString endY
+        [ x1 <| String.fromFloat startX
+        , x2 <| String.fromFloat endX
+        , y1 <| String.fromFloat startY
+        , y2 <| String.fromFloat endY
         , stroke colorText
-        , strokeWidth <| toString s.lineWidth
+        , strokeWidth <| String.fromFloat s.lineWidth
         , strokeLinecap "round"
         , strokeLinejoin "mitter"
         , vectorEffect
@@ -2501,9 +2501,9 @@ drawText x_ y_ char s =
             measureY y_ + textHeight * 3 / 4
     in
     Svg.node "text"
-        [ x <| toString x__
-        , y <| toString y__
-        , Svg.Attributes.style ("font-size:" ++ toString s.fontSize ++ "px;font-family:monospace")
+        [ x <| String.fromFloat x__
+        , y <| String.fromFloat y__
+        , Svg.Attributes.style ("font-size:" ++ String.fromFloat s.fontSize ++ "px;font-family:monospace")
         ]
         [ Svg.text <| String.fromChar char ]
 
