@@ -2,8 +2,9 @@
     "type": "package",
     "name": "andre-dietrich/elm-svgbob",
     "summary": "Fork of the great ASCII to SVG converter SvgBob by Ivan Ceras.",
+    "repository": "https://github.com/andre-dietrich/elm-svgbob.git",
     "license": "Apache-2.0",
-    "version": "1.0.0",
+    "version": "2.0.3",
     "exposed-modules": [
         "SvgBob"
     ],
