@@ -2213,6 +2213,14 @@ drawIntersection x y itype model =
             [ v1Line, v2Line, h1Line, h2Line ]
 
 
+colorText color =
+    let
+        { red, green, blue, alpha } =
+            Color.toRgba color
+    in
+    "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
+
+
 drawArrowRight x y model =
     let
         startX =
@@ -2226,19 +2234,13 @@ drawArrowRight x y model =
 
         endY =
             startY
-
-        { red, green, blue, alpha } =
-            Color.toRgba model.settings.color
-
-        colorText =
-            "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
     in
     line
         [ x1 <| String.fromFloat startX
         , x2 <| String.fromFloat endX
         , y1 <| String.fromFloat startY
         , y2 <| String.fromFloat endY
-        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
+        , Svg.Attributes.style ("stroke: " ++ colorText model.settings.color ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
         , markerEnd "url(#triangle)"
         , vectorEffect
         ]
@@ -2258,19 +2260,13 @@ drawArrowLeft x y model =
 
         endY =
             startY
-
-        { red, green, blue, alpha } =
-            Color.toRgba model.settings.color
-
-        colorText =
-            "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
     in
     line
         [ x1 <| String.fromFloat startX
         , x2 <| String.fromFloat endX
         , y1 <| String.fromFloat startY
         , y2 <| String.fromFloat endY
-        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
+        , Svg.Attributes.style ("stroke: " ++ colorText model.settings.color ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
         , markerEnd "url(#triangle)"
         , vectorEffect
         ]
@@ -2290,19 +2286,13 @@ drawArrowDown x y model =
 
         endY =
             startY + textHeight
-
-        { red, green, blue, alpha } =
-            Color.toRgba model.settings.color
-
-        colorText =
-            "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
     in
     line
         [ x1 <| String.fromFloat startX
         , x2 <| String.fromFloat endX
         , y1 <| String.fromFloat startY
         , y2 <| String.fromFloat endY
-        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
+        , Svg.Attributes.style ("stroke: " ++ colorText model.settings.color ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
         , markerEnd "url(#triangle)"
         , vectorEffect
         ]
@@ -2322,19 +2312,13 @@ drawArrowSouthWest x y model =
 
         endY =
             startY + textHeight / 2
-
-        { red, green, blue, alpha } =
-            Color.toRgba model.settings.color
-
-        colorText =
-            "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
     in
     line
         [ x1 <| String.fromFloat startX
         , x2 <| String.fromFloat endX
         , y1 <| String.fromFloat startY
         , y2 <| String.fromFloat endY
-        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
+        , Svg.Attributes.style ("stroke: " ++ colorText model.settings.color ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
         , markerEnd "url(#triangle)"
         , vectorEffect
         ]
@@ -2354,19 +2338,13 @@ drawArrowSouthEast x y model =
 
         endY =
             startY + textHeight / 2
-
-        { red, green, blue, alpha } =
-            Color.toRgba model.settings.color
-
-        colorText =
-            "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
     in
     line
         [ x1 <| String.fromFloat startX
         , x2 <| String.fromFloat endX
         , y1 <| String.fromFloat startY
         , y2 <| String.fromFloat endY
-        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
+        , Svg.Attributes.style ("stroke: " ++ colorText model.settings.color ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
         , markerEnd "url(#triangle)"
         , vectorEffect
         ]
@@ -2386,19 +2364,13 @@ drawArrowUp x y model =
 
         endY =
             measureY y
-
-        { red, green, blue, alpha } =
-            Color.toRgba model.settings.color
-
-        colorText =
-            "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
     in
     line
         [ x1 <| String.fromFloat startX
         , x2 <| String.fromFloat endX
         , y1 <| String.fromFloat startY
         , y2 <| String.fromFloat endY
-        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
+        , Svg.Attributes.style ("stroke: " ++ colorText model.settings.color ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
         , markerEnd "url(#triangle)"
         , vectorEffect
         ]
@@ -2418,19 +2390,13 @@ drawArrowNorthWest x y model =
 
         endY =
             measureY y + textHeight / 2
-
-        { red, green, blue, alpha } =
-            Color.toRgba model.settings.color
-
-        colorText =
-            "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
     in
     line
         [ x1 <| String.fromFloat startX
         , x2 <| String.fromFloat endX
         , y1 <| String.fromFloat startY
         , y2 <| String.fromFloat endY
-        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
+        , Svg.Attributes.style ("stroke: " ++ colorText model.settings.color ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
         , markerEnd "url(#triangle)"
         , vectorEffect
         ]
@@ -2450,19 +2416,13 @@ drawArrowNorthEast x y model =
 
         endY =
             measureY y + textHeight / 2
-
-        { red, green, blue, alpha } =
-            Color.toRgba model.settings.color
-
-        colorText =
-            "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
     in
     line
         [ x1 <| String.fromFloat startX
         , x2 <| String.fromFloat endX
         , y1 <| String.fromFloat startY
         , y2 <| String.fromFloat endY
-        , Svg.Attributes.style ("stroke: " ++ colorText ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
+        , Svg.Attributes.style ("stroke: " ++ colorText model.settings.color ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
         , markerEnd "url(#triangle)"
         , vectorEffect
         ]
@@ -2470,19 +2430,12 @@ drawArrowNorthEast x y model =
 
 
 drawLine startX startY endX endY s =
-    let
-        { red, green, blue, alpha } =
-            Color.toRgba s.color
-
-        colorText =
-            "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
-    in
     line
         [ x1 <| String.fromFloat startX
         , x2 <| String.fromFloat endX
         , y1 <| String.fromFloat startY
         , y2 <| String.fromFloat endY
-        , stroke colorText
+        , stroke <| colorText s.color
         , strokeWidth <| String.fromFloat s.lineWidth
         , strokeLinecap "round"
         , strokeLinejoin "mitter"
