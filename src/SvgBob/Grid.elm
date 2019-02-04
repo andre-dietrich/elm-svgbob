@@ -37,74 +37,92 @@ import SvgBob.Model exposing (..)
 import SvgBob.Types exposing (..)
 
 
+textWidth : Float
 textWidth =
     8.0
 
 
+textHeight : Float
 textHeight =
     16.0
 
 
+vertical : List Char
 vertical =
     [ '|' ]
 
 
+verticalDashed : List Char
 verticalDashed =
     [ ':' ]
 
 
+horizontal : List Char
 horizontal =
     [ '-' ]
 
 
+horizontalDouble : List Char
 horizontalDouble =
     [ '=' ]
 
 
+lowHorizontal : List Char
 lowHorizontal =
     [ '_' ]
 
 
+intersections : List Char
 intersections =
     [ '+' ]
 
 
+roundCorners : List Char
 roundCorners =
     [ '.', '\'' ]
 
 
+arrowRight : List Char
 arrowRight =
     [ '>' ]
 
 
+arrowDown : List Char
 arrowDown =
     [ 'V', 'v' ]
 
 
+arrowLeft : List Char
 arrowLeft =
     [ '<' ]
 
 
+arrowUp : List Char
 arrowUp =
     [ '^', 'î' ]
 
 
+slantRight : List Char
 slantRight =
     [ '/' ]
 
 
+slantLeft : List Char
 slantLeft =
     [ '\\' ]
 
 
+openCurve : List Char
 openCurve =
     [ '(' ]
 
 
+closeCurve : List Char
 closeCurve =
     [ ')' ]
 
 
+isOpenCurve : Char -> Bool
 isOpenCurve char =
     List.member char openCurve
 
@@ -113,58 +131,72 @@ isOpenCurve char =
 --close parenthesis
 
 
+isCloseCurve : Char -> Bool
 isCloseCurve char =
     List.member char closeCurve
 
 
+isVertical : Char -> Bool
 isVertical char =
     List.member char vertical
 
 
+isAlphaNumeric : Char -> Bool
 isAlphaNumeric char =
     Char.isDigit char || Char.isUpper char || Char.isLower char
 
 
+isHorizontal : Char -> Bool
 isHorizontal char =
     List.member char horizontal
 
 
+isLowHorizontal : Char -> Bool
 isLowHorizontal char =
     List.member char lowHorizontal
 
 
+isIntersection : Char -> Bool
 isIntersection char =
     List.member char intersections
 
 
+isLine : Char -> Bool
 isLine char =
     isVertical char || isHorizontal char || isLowHorizontal char
 
 
+isRoundCorner : Char -> Bool
 isRoundCorner char =
     List.member char roundCorners
 
 
+isArrowRight : Char -> Bool
 isArrowRight char =
     List.member char arrowRight
 
 
+isArrowLeft : Char -> Bool
 isArrowLeft char =
     List.member char arrowLeft
 
 
+isArrowDown : Char -> Bool
 isArrowDown char =
     List.member char arrowDown
 
 
+isArrowUp : Char -> Bool
 isArrowUp char =
     List.member char arrowUp
 
 
+isSlantRight : Char -> Bool
 isSlantRight char =
     List.member char slantRight
 
 
+isSlantLeft : Char -> Bool
 isSlantLeft char =
     List.member char slantLeft
 

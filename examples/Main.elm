@@ -1,14 +1,6 @@
-module Main exposing
-    ( Model
-    , Msg(..)
-    , arg
-    , init
-    , main
-    , subscriptions
-    , update
-    , view
-    )
+module Main exposing (Model, Msg(..), arg, init, main, update, view)
 
+import Browser
 import Html exposing (Html, button, div, pre, text, textarea)
 import Html.Attributes exposing (attribute, class, contenteditable, id, style)
 import Html.Events exposing (on, onClick)
@@ -32,55 +24,44 @@ type Msg
     | Convert
 
 
-init : ( Model, Cmd Msg )
+init : Model
 init =
-    ( { grid = SvgBob.init arg
-      }
-    , Cmd.none
-    )
+    { grid = SvgBob.init arg }
 
 
+view : Model -> Html Msg
 view model =
-    div
-        [ style
-            [ ( "display", "flex" )
-            ]
-        ]
+    div [ style "display" "flex" ]
         [ div []
             [ button
                 [ onClick Convert
                 ]
                 [ text "Convert >>" ]
             ]
-        , SvgBob.getSvg [ style [ ( "width", "100%" ) ], attribute "vector-effect" "non-scaling-stroke" ] model.grid
+        , SvgBob.getSvg [ style "width" "100%", attribute "vector-effect" "non-scaling-stroke" ] model.grid
         ]
 
 
+update : Msg -> Model -> Model
 update msg model =
     case msg of
         Convert ->
-            ( model, Cmd.none )
+            model
 
         Input asciiText ->
-            ( { model | grid = SvgBob.init asciiText }
-            , Cmd.none
-            )
+            { model | grid = SvgBob.init asciiText }
 
 
+main : Program () Model Msg
 main =
-    Html.program
+    Browser.sandbox
         { init = init
-        , view = view
         , update = update
-        , subscriptions = subscriptions
+        , view = view
         }
 
 
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.none
-
-
+arg : String
 arg =
     """
 
