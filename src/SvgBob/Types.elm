@@ -1,4 +1,9 @@
-module SvgBob.Types exposing (Element(..), Position(..), Type(..))
+module SvgBob.Types exposing
+    ( Direction(..)
+    , Element(..)
+    , Position(..)
+    , Type(..)
+    )
 
 
 type Position
@@ -37,7 +42,8 @@ type Position
 
 
 type Element
-    = Intersection Type -- also corner
+    = Empty
+    | Intersection Type -- also corner
     | Horizontal
     | LowHorizontal
     | LowHorizontalExtendLeft
@@ -48,14 +54,7 @@ type Element
     | LowHorizontalExtendVerticalBottomRight
     | Vertical
     | RoundCorner Position
-    | ArrowEast
-    | ArrowSouth
-    | ArrowSouthWest
-    | ArrowSouthEast
-    | ArrowNorth
-    | ArrowNorthWest
-    | ArrowNorthEast
-    | ArrowWest
+    | Arrow Direction
     | SlantRight
     | SlantLeft
     | OpenCurve
@@ -63,6 +62,17 @@ type Element
     | BigOpenCurve
     | BigCloseCurve
     | Text Char
+
+
+type Direction
+    = East
+    | South
+    | SouthWest
+    | SouthEast
+    | North
+    | NorthWest
+    | NorthEast
+    | West
 
 
 

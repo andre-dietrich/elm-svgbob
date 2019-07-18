@@ -43,6 +43,12 @@ type alias Point =
     }
 
 
+type alias Vector =
+    { orientation : Point
+    , position : Point
+    }
+
+
 textWidth : Float
 textWidth =
     8.0
@@ -253,7 +259,7 @@ isNeighbor neighbor check =
             False
 
 
-getElement : Int -> Int -> Model -> Maybe Element
+getElement : Int -> Int -> Model -> Element
 getElement x y model =
     let
         char =
@@ -284,63 +290,66 @@ getElement x y model =
             bottomRightOf x y model
     in
     case char of
+        Nothing ->
+            Empty
+
         Just char_ ->
             if
                 isVertical char_
                     && not (isNeighbor left isAlphaNumeric)
                     && not (isNeighbor right isAlphaNumeric)
             then
-                Just Vertical
+                Vertical
 
             else if
                 isHorizontal char_
                     && not (isNeighbor left isAlphaNumeric)
                     && not (isNeighbor right isAlphaNumeric)
             then
-                Just Horizontal
+                Horizontal
 
             else if
                 isLowHorizontal char_
                     && isNeighbor left isSlantRight
             then
-                Just LowHorizontalExtendLeft
+                LowHorizontalExtendLeft
 
             else if
                 isLowHorizontal char_
                     && isNeighbor left isVertical
             then
-                Just LowHorizontalExtendVerticalLeft
+                LowHorizontalExtendVerticalLeft
 
             else if
                 isLowHorizontal char_
                     && isNeighbor right isSlantLeft
             then
-                Just LowHorizontalExtendRight
+                LowHorizontalExtendRight
 
             else if
                 isLowHorizontal char_
                     && isNeighbor right isVertical
             then
-                Just LowHorizontalExtendVerticalRight
+                LowHorizontalExtendVerticalRight
 
             else if
                 isLowHorizontal char_
                     && isNeighbor bottomLeft isVertical
             then
-                Just LowHorizontalExtendVerticalBottomLeft
+                LowHorizontalExtendVerticalBottomLeft
 
             else if
                 isLowHorizontal char_
                     && isNeighbor bottomRight isVertical
             then
-                Just LowHorizontalExtendVerticalBottomRight
+                LowHorizontalExtendVerticalBottomRight
 
             else if
                 isLowHorizontal char_
                     && not (isNeighbor left isAlphaNumeric)
                     && not (isNeighbor right isAlphaNumeric)
             then
-                Just LowHorizontal
+                LowHorizontal
 
             else if isIntersection char_ then
                 let
@@ -383,34 +392,34 @@ getElement x y model =
                             && isNeighbor right isHorizontal
                 in
                 if isCrossIntersection then
-                    Just (Intersection Cross)
+                    Intersection Cross
 
                 else if isVerticalJunctionLeft then
-                    Just (Intersection VertJunctionLeft)
+                    Intersection VertJunctionLeft
 
                 else if isVerticalJunctionRight then
-                    Just (Intersection VertJunctionRight)
+                    Intersection VertJunctionRight
 
                 else if isHorizontalJunctionTop then
-                    Just (Intersection HorJunctionTop)
+                    Intersection HorJunctionTop
 
                 else if isHorizontalJunctionBot then
-                    Just (Intersection HorJunctionBot)
+                    Intersection HorJunctionBot
 
                 else if isTopRightIntersection then
-                    Just (Intersection TopRight)
+                    Intersection TopRight
 
                 else if isTopLeftIntersection then
-                    Just (Intersection TopLeft)
+                    Intersection TopLeft
 
                 else if isBottomRightIntersection then
-                    Just (Intersection BottomRight)
+                    Intersection BottomRight
 
                 else if isBottomLeftIntersection then
-                    Just (Intersection BottomLeft)
+                    Intersection BottomLeft
 
                 else
-                    Nothing
+                    Empty
 
             else if isRoundCorner char_ then
                 if
@@ -418,328 +427,325 @@ getElement x y model =
                         && isNeighbor bottomLeft isSlantRight
                         && isNeighbor right isHorizontal
                 then
-                    Just (RoundCorner SlantedRightJunctionRight)
+                    RoundCorner SlantedRightJunctionRight
 
                 else if
                     isNeighbor top isVertical
                         && isNeighbor bottom isVertical
                         && isNeighbor topLeft isSlantLeft
                 then
-                    Just (RoundCorner VerticalTopDownJunctionTopLeft)
+                    RoundCorner VerticalTopDownJunctionTopLeft
 
                 else if
                     isNeighbor topLeft isSlantLeft
                         && isNeighbor bottomRight isSlantLeft
                         && isNeighbor left isHorizontal
                 then
-                    Just (RoundCorner SlantedLeftJunctionLeft)
+                    RoundCorner SlantedLeftJunctionLeft
 
                 else if
                     isNeighbor topRight isSlantRight
                         && isNeighbor bottomLeft isSlantRight
                         && isNeighbor left isHorizontal
                 then
-                    Just (RoundCorner SlantedRightJunctionLeft)
+                    RoundCorner SlantedRightJunctionLeft
 
                 else if
                     isNeighbor topLeft isSlantLeft
                         && isNeighbor bottomRight isSlantLeft
                         && isNeighbor right isHorizontal
                 then
-                    Just (RoundCorner SlantedLeftJunctionRight)
+                    RoundCorner SlantedLeftJunctionRight
 
                 else if
                     isNeighbor top isVertical
                         && isNeighbor bottom isVertical
                         && isNeighbor bottomLeft isSlantRight
                 then
-                    Just (RoundCorner VerticalTopDownJunctionBottomLeft)
+                    RoundCorner VerticalTopDownJunctionBottomLeft
 
                 else if
                     isNeighbor top isVertical
                         && isNeighbor bottom isVertical
                         && isNeighbor bottomRight isSlantLeft
                 then
-                    Just (RoundCorner VerticalTopDownJunctionBottomRight)
+                    RoundCorner VerticalTopDownJunctionBottomRight
 
                 else if
                     isNeighbor top isVertical
                         && isNeighbor bottom isVertical
                         && isNeighbor topRight isSlantRight
                 then
-                    Just (RoundCorner VerticalTopDownJunctionTopRight)
+                    RoundCorner VerticalTopDownJunctionTopRight
 
                 else if
                     isNeighbor bottom isVertical
                         && isNeighbor right isHorizontal
                 then
-                    Just (RoundCorner TopLeftCorner)
+                    RoundCorner TopLeftCorner
 
                 else if
                     isNeighbor bottom isVertical
                         && isNeighbor left isHorizontal
                 then
-                    Just (RoundCorner TopRightCorner)
+                    RoundCorner TopRightCorner
 
                 else if
                     isNeighbor bottom isVertical
                         && isNeighbor topRight isSlantRight
                 then
-                    Just (RoundCorner TopLeftSlantedTopRight)
+                    RoundCorner TopLeftSlantedTopRight
 
                 else if
                     isNeighbor right isHorizontal
                         && isNeighbor bottomLeft isOpenCurve
                 then
-                    Just (RoundCorner TopLeftBigCurve)
+                    RoundCorner TopLeftBigCurve
 
                 else if
                     isNeighbor right isRoundCorner
                         && isNeighbor bottomLeft isOpenCurve
                 then
-                    Just (RoundCorner TopLeftBigCurve)
+                    RoundCorner TopLeftBigCurve
 
                 else if
                     isNeighbor left isHorizontal
                         && isNeighbor bottomRight isCloseCurve
                 then
-                    Just (RoundCorner TopRightBigCurve)
+                    RoundCorner TopRightBigCurve
 
                 else if
                     isNeighbor left isRoundCorner
                         && isNeighbor bottomRight isCloseCurve
                 then
-                    Just (RoundCorner TopRightBigCurve)
+                    RoundCorner TopRightBigCurve
 
                 else if
                     isNeighbor right isHorizontal
                         && isNeighbor topLeft isOpenCurve
                 then
-                    Just (RoundCorner BottomLeftBigCurve)
+                    RoundCorner BottomLeftBigCurve
 
                 else if
                     isNeighbor left isHorizontal
                         && isNeighbor topRight isCloseCurve
                 then
-                    Just (RoundCorner BottomRightBigCurve)
+                    RoundCorner BottomRightBigCurve
 
                 else if
                     isNeighbor right isRoundCorner
                         && isNeighbor topLeft isOpenCurve
                 then
-                    Just (RoundCorner BottomLeftBigCurve)
+                    RoundCorner BottomLeftBigCurve
 
                 else if
                     isNeighbor left isRoundCorner
                         && isNeighbor topRight isCloseCurve
                 then
-                    Just (RoundCorner BottomRightBigCurve)
+                    RoundCorner BottomRightBigCurve
 
                 else if
                     isNeighbor top isVertical
                         && isNeighbor right isHorizontal
                 then
-                    Just (RoundCorner BottomLeftCorner)
+                    RoundCorner BottomLeftCorner
 
                 else if
                     isNeighbor top isVertical
                         && isNeighbor right isLowHorizontal
                 then
-                    Just (RoundCorner BottomLeftLowHorizontal)
+                    RoundCorner BottomLeftLowHorizontal
 
                 else if
                     isNeighbor top isVertical
                         && isNeighbor left isLowHorizontal
                 then
-                    Just (RoundCorner BottomRightLowHorizontal)
+                    RoundCorner BottomRightLowHorizontal
 
                 else if
                     isNeighbor right isHorizontal
                         && isNeighbor topLeft isSlantLeft
                 then
-                    Just (RoundCorner BottomLeftSlantedTopLeft)
+                    RoundCorner BottomLeftSlantedTopLeft
 
                 else if
                     isNeighbor right isHorizontal
                         && isNeighbor topRight isSlantRight
                 then
-                    Just (RoundCorner BottomLeftSlantedTopRight)
+                    RoundCorner BottomLeftSlantedTopRight
 
                 else if
                     isNeighbor top isVertical
                         && isNeighbor bottomRight isSlantLeft
                 then
-                    Just (RoundCorner BottomLeftSlantedBottomRight)
+                    RoundCorner BottomLeftSlantedBottomRight
 
                 else if
                     isNeighbor left isHorizontal
                         && isNeighbor topRight isSlantRight
                 then
-                    Just (RoundCorner BottomRightSlantedTopRight)
+                    RoundCorner BottomRightSlantedTopRight
 
                 else if
                     isNeighbor right isLowHorizontal
                         && isNeighbor topRight isSlantRight
                 then
-                    Just (RoundCorner BottomLeftSlantedTopRightLowHorizontal)
+                    RoundCorner BottomLeftSlantedTopRightLowHorizontal
 
                 else if
                     isNeighbor left isLowHorizontal
                         && isNeighbor topLeft isSlantLeft
                 then
-                    Just (RoundCorner BottomRightSlantedTopLeftLowHorizontal)
+                    RoundCorner BottomRightSlantedTopLeftLowHorizontal
 
                 else if
                     isNeighbor left isHorizontal
                         && isNeighbor topLeft isSlantLeft
                 then
-                    Just (RoundCorner BottomRightSlantedTopLeft)
+                    RoundCorner BottomRightSlantedTopLeft
 
                 else if
                     isNeighbor top isVertical
                         && isNeighbor bottomLeft isSlantRight
                 then
-                    Just (RoundCorner BottomRightSlantedBottomLeft)
+                    RoundCorner BottomRightSlantedBottomLeft
 
                 else if
                     isNeighbor top isVertical
                         && isNeighbor left isHorizontal
                 then
-                    Just (RoundCorner BottomRightCorner)
+                    RoundCorner BottomRightCorner
 
                 else if
                     isNeighbor right isHorizontal
                         && isNeighbor bottom isRoundCorner
                 then
-                    Just (RoundCorner TopLeftCorner)
+                    RoundCorner TopLeftCorner
 
                 else if
                     isNeighbor left isHorizontal
                         && isNeighbor bottom isRoundCorner
                 then
-                    Just (RoundCorner TopRightCorner)
+                    RoundCorner TopRightCorner
 
                 else if
                     isNeighbor left isHorizontal
                         && isNeighbor top isRoundCorner
                 then
-                    Just (RoundCorner BottomRightCorner)
+                    RoundCorner BottomRightCorner
 
                 else if
                     isNeighbor right isHorizontal
                         && isNeighbor top isRoundCorner
                 then
-                    Just (RoundCorner BottomLeftCorner)
+                    RoundCorner BottomLeftCorner
 
                 else if
                     isNeighbor right isHorizontal
                         && isNeighbor bottomLeft isSlantRight
                 then
-                    Just (RoundCorner TopLeftSlantedBottomLeft)
+                    RoundCorner TopLeftSlantedBottomLeft
 
                 else if
                     isNeighbor right isHorizontal
                         && isNeighbor bottomRight isSlantLeft
                 then
-                    Just (RoundCorner TopLeftSlantedBottomRight)
+                    RoundCorner TopLeftSlantedBottomRight
 
                 else if
                     isNeighbor left isHorizontal
                         && isNeighbor bottomRight isSlantLeft
                 then
-                    Just (RoundCorner TopRightSlantedBottomRight)
+                    RoundCorner TopRightSlantedBottomRight
 
                 else if
                     isNeighbor left isHorizontal
                         && isNeighbor bottomLeft isSlantRight
                 then
-                    Just (RoundCorner TopRightSlantedBottomLeft)
+                    RoundCorner TopRightSlantedBottomLeft
 
                 else if
                     isNeighbor bottom isVertical
                         && isNeighbor topLeft isSlantLeft
                 then
-                    Just (RoundCorner TopRightSlantedTopLeft)
+                    RoundCorner TopRightSlantedTopLeft
 
                 else
-                    Just (Text char_)
+                    Text char_
 
             else if isArrowRight char_ then
-                Just ArrowEast
+                Arrow East
 
             else if isArrowDown char_ then
                 if isNeighbor top isVertical then
-                    Just ArrowSouth
+                    Arrow South
 
                 else if isNeighbor topRight isSlantRight then
-                    Just ArrowSouthWest
+                    Arrow SouthWest
 
                 else if isNeighbor topLeft isSlantLeft then
-                    Just ArrowSouthEast
+                    Arrow SouthEast
 
                 else
-                    Just <| Text char_
+                    Text char_
 
             else if isArrowLeft char_ then
-                Just ArrowWest
+                Arrow West
 
             else if isArrowUp char_ then
                 if isNeighbor bottom isVertical then
-                    Just ArrowNorth
+                    Arrow North
 
                 else if isNeighbor bottomLeft isSlantRight then
-                    Just ArrowNorthWest
+                    Arrow NorthWest
 
                 else if isNeighbor bottomRight isSlantLeft then
-                    Just ArrowNorthEast
+                    Arrow NorthEast
 
                 else
-                    Just <| Text char_
+                    Text char_
 
             else if isSlantRight char_ then
-                Just SlantRight
+                SlantRight
 
             else if isSlantLeft char_ then
-                Just SlantLeft
+                SlantLeft
 
             else if isOpenCurve char_ then
                 if
                     isNeighbor topRight isSlantRight
                         && isNeighbor bottomRight isSlantLeft
                 then
-                    Just OpenCurve
+                    OpenCurve
 
                 else if
                     isNeighbor topRight isRoundCorner
                         && isNeighbor bottomRight isRoundCorner
                 then
-                    Just BigOpenCurve
+                    BigOpenCurve
 
                 else
-                    Just <| Text char_
+                    Text char_
 
             else if
                 isCloseCurve char_
                     && isNeighbor topLeft isRoundCorner
                     && isNeighbor bottomLeft isRoundCorner
             then
-                Just BigCloseCurve
+                BigCloseCurve
 
             else if
                 isCloseCurve char_
                     && isNeighbor topLeft isSlantLeft
                     && isNeighbor bottomLeft isSlantRight
             then
-                Just CloseCurve
+                CloseCurve
 
             else if char_ /= ' ' then
-                Just <| Text char_
+                Text char_
 
             else
-                Nothing
-
-        Nothing ->
-            Nothing
+                Empty
 
 
 vectorEffect : Attribute a
@@ -831,87 +837,117 @@ drawPaths model =
 
 drawElement : Int -> Int -> Model -> List (Svg a)
 drawElement x y model =
+    let
+        position =
+            Point (measureX x) (measureY y)
+    in
     case getElement x y model of
-        Just Horizontal ->
+        Horizontal ->
             [ drawHorizontalLine x y model.settings ]
 
-        Just LowHorizontal ->
+        LowHorizontal ->
             [ drawLowHorizontalLine x y model.settings ]
 
-        Just LowHorizontalExtendLeft ->
+        LowHorizontalExtendLeft ->
             [ drawLowHorizontalExtendLeft x y model.settings ]
 
-        Just LowHorizontalExtendVerticalLeft ->
+        LowHorizontalExtendVerticalLeft ->
             [ drawLowHorizontalExtendVerticalLeft x y model.settings ]
 
-        Just LowHorizontalExtendRight ->
+        LowHorizontalExtendRight ->
             [ drawLowHorizontalExtendRight x y model.settings ]
 
-        Just LowHorizontalExtendVerticalRight ->
+        LowHorizontalExtendVerticalRight ->
             [ drawLowHorizontalExtendVerticalRight x y model.settings ]
 
-        Just LowHorizontalExtendVerticalBottomLeft ->
+        LowHorizontalExtendVerticalBottomLeft ->
             [ drawLowHorizontalExtendVerticalBottomLeft x y model.settings ]
 
-        Just LowHorizontalExtendVerticalBottomRight ->
+        LowHorizontalExtendVerticalBottomRight ->
             [ drawLowHorizontalExtendVerticalBottomRight x y model.settings ]
 
-        Just Vertical ->
+        Vertical ->
             [ drawVerticalLine x y model.settings ]
 
-        Just (Intersection itype) ->
+        Intersection itype ->
             drawIntersection x y itype model
 
-        Just (RoundCorner pos) ->
+        RoundCorner pos ->
             drawRoundCorner x y pos model.settings
 
-        Just ArrowEast ->
-            [ drawArrowRight x y model.settings ]
+        Arrow dir ->
+            [ drawArrow dir position model.settings ]
 
-        Just ArrowSouth ->
-            [ drawArrowDown x y model.settings ]
-
-        Just ArrowSouthWest ->
-            [ drawArrowSouthWest x y model.settings ]
-
-        Just ArrowSouthEast ->
-            [ drawArrowSouthEast x y model.settings ]
-
-        Just ArrowNorth ->
-            [ drawArrowUp x y model.settings ]
-
-        Just ArrowNorthWest ->
-            [ drawArrowNorthWest x y model.settings ]
-
-        Just ArrowNorthEast ->
-            [ drawArrowNorthEast x y model.settings ]
-
-        Just ArrowWest ->
-            [ drawArrowLeft x y model.settings ]
-
-        Just SlantRight ->
+        SlantRight ->
             [ drawSlantRightLine x y model.settings ]
 
-        Just SlantLeft ->
+        SlantLeft ->
             [ drawSlantLeftLine x y model.settings ]
 
-        Just OpenCurve ->
+        OpenCurve ->
             drawOpenCurve x y model.settings
 
-        Just CloseCurve ->
+        CloseCurve ->
             drawCloseCurve x y model.settings
 
-        Just BigOpenCurve ->
+        BigOpenCurve ->
             drawBigOpenCurve x y model.settings
 
-        Just BigCloseCurve ->
+        BigCloseCurve ->
             drawBigCloseCurve x y model.settings
 
-        Just (Text char) ->
+        Text char ->
             [ drawText x y char model.settings ]
 
-        Nothing ->
+        Empty ->
             []
+
+
+drawArrow dir pos settings =
+    let
+        draw =
+            drawArrowX settings
+    in
+    case dir of
+        East ->
+            draw
+                { pos | y = pos.y + textHeight / 2 }
+                { x = textWidth / 2, y = 0 }
+
+        South ->
+            draw
+                { pos | x = pos.x + textWidth / 2 }
+                { x = 0, y = textHeight }
+
+        SouthWest ->
+            draw
+                { pos | x = pos.x + textWidth }
+                { x = -textWidth / 2, y = textHeight / 2 }
+
+        SouthEast ->
+            draw
+                pos
+                { x = textWidth / 2, y = textHeight / 2 }
+
+        North ->
+            draw
+                { pos | x = pos.x + textWidth / 2, y = pos.y + textHeight }
+                { x = 0, y = -textHeight }
+
+        NorthWest ->
+            draw
+                { pos | y = pos.y + textHeight }
+                { x = textWidth / 2, y = -textHeight / 2 }
+
+        NorthEast ->
+            draw
+                { pos | x = pos.x + textWidth, y = pos.y + textHeight }
+                { x = -textWidth / 2, y = -textHeight / 2 }
+
+        West ->
+            draw
+                { pos | x = pos.x + textWidth, y = pos.y + textHeight / 2 }
+                { x = -textWidth / 2, y = 0 }
 
 
 drawHorizontalLine : Int -> Int -> Settings -> Svg a
@@ -2260,74 +2296,18 @@ colorText color =
     "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
 
 
-drawArrow : ( Float, Float ) -> ( Float, Float ) -> Settings -> Svg a
-drawArrow ( startX, endX ) ( startY, endY ) settings =
+drawArrowX : Settings -> Point -> Point -> Svg a
+drawArrowX settings position orientation =
     line
-        [ x1 <| String.fromFloat startX
-        , x2 <| String.fromFloat (startX + endX)
-        , y1 <| String.fromFloat startY
-        , y2 <| String.fromFloat (startY + endY)
+        [ x1 <| String.fromFloat position.x
+        , x2 <| String.fromFloat (position.x + orientation.x)
+        , y1 <| String.fromFloat position.y
+        , y2 <| String.fromFloat (position.y + orientation.y)
         , Svg.Attributes.style ("stroke: " ++ colorText settings.color ++ ";stroke-width:" ++ String.fromFloat settings.lineWidth)
         , markerEnd "url(#triangle)"
         , vectorEffect
         ]
         []
-
-
-drawArrowRight : Int -> Int -> Settings -> Svg a
-drawArrowRight x y =
-    drawArrow
-        ( measureX x, textWidth / 2 )
-        ( measureY y + textHeight / 2, 0 )
-
-
-drawArrowLeft : Int -> Int -> Settings -> Svg a
-drawArrowLeft x y =
-    drawArrow
-        ( measureX x + textWidth, -textWidth / 2 )
-        ( measureY y + textHeight / 2, 0 )
-
-
-drawArrowDown : Int -> Int -> Settings -> Svg a
-drawArrowDown x y =
-    drawArrow
-        ( measureX x + textWidth / 2, 0 )
-        ( measureY y, textHeight )
-
-
-drawArrowSouthWest : Int -> Int -> Settings -> Svg a
-drawArrowSouthWest x y =
-    drawArrow
-        ( measureX x + textWidth, -textWidth / 2 )
-        ( measureY y, textHeight / 2 )
-
-
-drawArrowSouthEast : Int -> Int -> Settings -> Svg a
-drawArrowSouthEast x y =
-    drawArrow
-        ( measureX x, textWidth / 2 )
-        ( measureY y, textHeight / 2 )
-
-
-drawArrowUp : Int -> Int -> Settings -> Svg a
-drawArrowUp x y =
-    drawArrow
-        ( measureX x + textWidth / 2, 0 )
-        ( measureY y + textHeight, -textHeight )
-
-
-drawArrowNorthWest : Int -> Int -> Settings -> Svg a
-drawArrowNorthWest x y =
-    drawArrow
-        ( measureX x, textWidth / 2 )
-        ( measureY y + textHeight, -textHeight / 2 )
-
-
-drawArrowNorthEast : Int -> Int -> Settings -> Svg a
-drawArrowNorthEast x y =
-    drawArrow
-        ( measureX x + textWidth, -textWidth / 2 )
-        ( measureY y + textHeight, -textHeight / 2 )
 
 
 drawLine : Float -> Float -> Float -> Float -> Settings -> Svg a
@@ -2344,6 +2324,31 @@ drawLine startX startY endX endY s =
         , vectorEffect
         ]
         []
+
+
+toLine : List (Svg.Attribute msg) -> Point -> Point -> Svg msg
+toLine misc position orientation =
+    line
+        (List.append
+            misc
+            [ x1 <| String.fromFloat position.x
+            , x2 <| String.fromFloat (position.x + orientation.x)
+            , y1 <| String.fromFloat position.y
+            , y2 <| String.fromFloat (position.y + orientation.y)
+            ]
+        )
+        []
+
+
+drawLineX : Settings -> Point -> Point -> Svg a
+drawLineX s =
+    toLine
+        [ stroke <| colorText s.color
+        , strokeWidth <| String.fromFloat s.lineWidth
+        , strokeLinecap "round"
+        , strokeLinejoin "mitter"
+        , vectorEffect
+        ]
 
 
 drawText : Int -> Int -> Char -> Settings -> Svg a
