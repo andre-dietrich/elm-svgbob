@@ -29,23 +29,18 @@ init str =
             String.lines str
 
         max =
-            List.map
-                (\line ->
-                    String.length line
-                )
-                lines
+            lines
+                |> List.map String.length
                 |> List.maximum
 
-        lineArr =
-            Array.fromList lines
-
         lineChar =
-            Array.map
-                (\line ->
-                    (String.toList <| String.trimRight line)
-                        |> Array.fromList
-                )
-                lineArr
+            lines
+                |> Array.fromList
+                |> Array.map
+                    (String.trimRight
+                        >> String.toList
+                        >> Array.fromList
+                    )
     in
     { rows = Array.length lineChar
     , columns = Maybe.withDefault 0 max

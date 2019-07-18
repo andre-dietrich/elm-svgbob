@@ -37,6 +37,12 @@ import SvgBob.Model exposing (..)
 import SvgBob.Types exposing (..)
 
 
+type alias Point =
+    { x : Float
+    , y : Float
+    }
+
+
 textWidth : Float
 textWidth =
     8.0
@@ -122,9 +128,14 @@ closeCurve =
     [ ')' ]
 
 
+member : List Char -> Char -> Bool
+member list char =
+    List.member char list
+
+
 isOpenCurve : Char -> Bool
-isOpenCurve char =
-    List.member char openCurve
+isOpenCurve =
+    member openCurve
 
 
 
@@ -132,13 +143,13 @@ isOpenCurve char =
 
 
 isCloseCurve : Char -> Bool
-isCloseCurve char =
-    List.member char closeCurve
+isCloseCurve =
+    member closeCurve
 
 
 isVertical : Char -> Bool
-isVertical char =
-    List.member char vertical
+isVertical =
+    member vertical
 
 
 isAlphaNumeric : Char -> Bool
@@ -147,18 +158,18 @@ isAlphaNumeric char =
 
 
 isHorizontal : Char -> Bool
-isHorizontal char =
-    List.member char horizontal
+isHorizontal =
+    member horizontal
 
 
 isLowHorizontal : Char -> Bool
-isLowHorizontal char =
-    List.member char lowHorizontal
+isLowHorizontal =
+    member lowHorizontal
 
 
 isIntersection : Char -> Bool
-isIntersection char =
-    List.member char intersections
+isIntersection =
+    member intersections
 
 
 isLine : Char -> Bool
@@ -167,38 +178,38 @@ isLine char =
 
 
 isRoundCorner : Char -> Bool
-isRoundCorner char =
-    List.member char roundCorners
+isRoundCorner =
+    member roundCorners
 
 
 isArrowRight : Char -> Bool
-isArrowRight char =
-    List.member char arrowRight
+isArrowRight =
+    member arrowRight
 
 
 isArrowLeft : Char -> Bool
-isArrowLeft char =
-    List.member char arrowLeft
+isArrowLeft =
+    member arrowLeft
 
 
 isArrowDown : Char -> Bool
-isArrowDown char =
-    List.member char arrowDown
+isArrowDown =
+    member arrowDown
 
 
 isArrowUp : Char -> Bool
-isArrowUp char =
-    List.member char arrowUp
+isArrowUp =
+    member arrowUp
 
 
 isSlantRight : Char -> Bool
-isSlantRight char =
-    List.member char slantRight
+isSlantRight =
+    member slantRight
 
 
 isSlantLeft : Char -> Bool
-isSlantLeft char =
-    List.member char slantLeft
+isSlantLeft =
+    member slantLeft
 
 
 leftOf x y model =
@@ -803,16 +814,16 @@ getSvg attr model =
 
 drawPaths : Model -> List (Svg a)
 drawPaths model =
-    Array.indexedMap
-        (\r line ->
-            Array.indexedMap
-                (\c char ->
-                    drawElement c r model
-                )
-                line
-                |> Array.toList
-        )
-        model.lines
+    model.lines
+        |> Array.indexedMap
+            (\r line ->
+                Array.indexedMap
+                    (\c char ->
+                        drawElement c r model
+                    )
+                    line
+                    |> Array.toList
+            )
         |> Array.toList
         |> List.concat
         |> List.concat
@@ -820,97 +831,91 @@ drawPaths model =
 
 drawElement : Int -> Int -> Model -> List (Svg a)
 drawElement x y model =
-    let
-        element =
-            getElement x y model
-    in
-    case element of
-        Just e ->
-            case e of
-                Horizontal ->
-                    [ drawHorizontalLine x y model ]
+    case getElement x y model of
+        Just Horizontal ->
+            [ drawHorizontalLine x y model.settings ]
 
-                LowHorizontal ->
-                    [ drawLowHorizontalLine x y model ]
+        Just LowHorizontal ->
+            [ drawLowHorizontalLine x y model.settings ]
 
-                LowHorizontalExtendLeft ->
-                    [ drawLowHorizontalExtendLeft x y model ]
+        Just LowHorizontalExtendLeft ->
+            [ drawLowHorizontalExtendLeft x y model.settings ]
 
-                LowHorizontalExtendVerticalLeft ->
-                    [ drawLowHorizontalExtendVerticalLeft x y model ]
+        Just LowHorizontalExtendVerticalLeft ->
+            [ drawLowHorizontalExtendVerticalLeft x y model.settings ]
 
-                LowHorizontalExtendRight ->
-                    [ drawLowHorizontalExtendRight x y model ]
+        Just LowHorizontalExtendRight ->
+            [ drawLowHorizontalExtendRight x y model.settings ]
 
-                LowHorizontalExtendVerticalRight ->
-                    [ drawLowHorizontalExtendVerticalRight x y model ]
+        Just LowHorizontalExtendVerticalRight ->
+            [ drawLowHorizontalExtendVerticalRight x y model.settings ]
 
-                LowHorizontalExtendVerticalBottomLeft ->
-                    [ drawLowHorizontalExtendVerticalBottomLeft x y model ]
+        Just LowHorizontalExtendVerticalBottomLeft ->
+            [ drawLowHorizontalExtendVerticalBottomLeft x y model.settings ]
 
-                LowHorizontalExtendVerticalBottomRight ->
-                    [ drawLowHorizontalExtendVerticalBottomRight x y model ]
+        Just LowHorizontalExtendVerticalBottomRight ->
+            [ drawLowHorizontalExtendVerticalBottomRight x y model.settings ]
 
-                Vertical ->
-                    [ drawVerticalLine x y model ]
+        Just Vertical ->
+            [ drawVerticalLine x y model.settings ]
 
-                Intersection itype ->
-                    drawIntersection x y itype model
+        Just (Intersection itype) ->
+            drawIntersection x y itype model
 
-                RoundCorner pos ->
-                    drawRoundCorner x y pos model
+        Just (RoundCorner pos) ->
+            drawRoundCorner x y pos model.settings
 
-                ArrowEast ->
-                    [ drawArrowRight x y model ]
+        Just ArrowEast ->
+            [ drawArrowRight x y model.settings ]
 
-                ArrowSouth ->
-                    [ drawArrowDown x y model ]
+        Just ArrowSouth ->
+            [ drawArrowDown x y model.settings ]
 
-                ArrowSouthWest ->
-                    [ drawArrowSouthWest x y model ]
+        Just ArrowSouthWest ->
+            [ drawArrowSouthWest x y model.settings ]
 
-                ArrowSouthEast ->
-                    [ drawArrowSouthEast x y model ]
+        Just ArrowSouthEast ->
+            [ drawArrowSouthEast x y model.settings ]
 
-                ArrowNorth ->
-                    [ drawArrowUp x y model ]
+        Just ArrowNorth ->
+            [ drawArrowUp x y model.settings ]
 
-                ArrowNorthWest ->
-                    [ drawArrowNorthWest x y model ]
+        Just ArrowNorthWest ->
+            [ drawArrowNorthWest x y model.settings ]
 
-                ArrowNorthEast ->
-                    [ drawArrowNorthEast x y model ]
+        Just ArrowNorthEast ->
+            [ drawArrowNorthEast x y model.settings ]
 
-                ArrowWest ->
-                    [ drawArrowLeft x y model ]
+        Just ArrowWest ->
+            [ drawArrowLeft x y model.settings ]
 
-                SlantRight ->
-                    [ drawSlantRightLine x y model ]
+        Just SlantRight ->
+            [ drawSlantRightLine x y model.settings ]
 
-                SlantLeft ->
-                    [ drawSlantLeftLine x y model ]
+        Just SlantLeft ->
+            [ drawSlantLeftLine x y model.settings ]
 
-                OpenCurve ->
-                    drawOpenCurve x y model
+        Just OpenCurve ->
+            drawOpenCurve x y model.settings
 
-                CloseCurve ->
-                    drawCloseCurve x y model
+        Just CloseCurve ->
+            drawCloseCurve x y model.settings
 
-                BigOpenCurve ->
-                    drawBigOpenCurve x y model
+        Just BigOpenCurve ->
+            drawBigOpenCurve x y model.settings
 
-                BigCloseCurve ->
-                    drawBigCloseCurve x y model
+        Just BigCloseCurve ->
+            drawBigCloseCurve x y model.settings
 
-                Text char ->
-                    [ drawText x y char model.settings ]
+        Just (Text char) ->
+            [ drawText x y char model.settings ]
 
         Nothing ->
             []
 
 
-drawHorizontalLine : Int -> Int -> Model -> Svg a
-drawHorizontalLine x y model =
+drawHorizontalLine : Int -> Int -> Settings -> Svg a
+drawHorizontalLine x y settings =
     let
         startX =
             measureX x
@@ -924,11 +929,11 @@ drawHorizontalLine x y model =
         endY =
             startY
     in
-    drawLine startX startY endX endY model.settings
+    drawLine startX startY endX endY settings
 
 
-drawLowHorizontalLine : Int -> Int -> Model -> Svg a
-drawLowHorizontalLine x y model =
+drawLowHorizontalLine : Int -> Int -> Settings -> Svg a
+drawLowHorizontalLine x y settings =
     let
         startX =
             measureX x
@@ -942,11 +947,11 @@ drawLowHorizontalLine x y model =
         endY =
             startY
     in
-    drawLine startX startY endX endY model.settings
+    drawLine startX startY endX endY settings
 
 
-drawLowHorizontalExtendLeft : Int -> Int -> Model -> Svg a
-drawLowHorizontalExtendLeft x y model =
+drawLowHorizontalExtendLeft : Int -> Int -> Settings -> Svg a
+drawLowHorizontalExtendLeft x y settings =
     let
         startX =
             measureX x - textWidth
@@ -960,11 +965,11 @@ drawLowHorizontalExtendLeft x y model =
         endY =
             startY
     in
-    drawLine startX startY endX endY model.settings
+    drawLine startX startY endX endY settings
 
 
-drawLowHorizontalExtendVerticalLeft : Int -> Int -> Model -> Svg a
-drawLowHorizontalExtendVerticalLeft x y model =
+drawLowHorizontalExtendVerticalLeft : Int -> Int -> Settings -> Svg a
+drawLowHorizontalExtendVerticalLeft x y settings =
     let
         startX =
             measureX x - textWidth / 2
@@ -978,11 +983,11 @@ drawLowHorizontalExtendVerticalLeft x y model =
         endY =
             startY
     in
-    drawLine startX startY endX endY model.settings
+    drawLine startX startY endX endY settings
 
 
-drawLowHorizontalExtendVerticalBottomLeft : Int -> Int -> Model -> Svg a
-drawLowHorizontalExtendVerticalBottomLeft x y model =
+drawLowHorizontalExtendVerticalBottomLeft : Int -> Int -> Settings -> Svg a
+drawLowHorizontalExtendVerticalBottomLeft x y settings =
     let
         startX =
             measureX x - textWidth / 2
@@ -996,11 +1001,11 @@ drawLowHorizontalExtendVerticalBottomLeft x y model =
         endY =
             startY
     in
-    drawLine startX startY endX endY model.settings
+    drawLine startX startY endX endY settings
 
 
-drawLowHorizontalExtendVerticalBottomRight : Int -> Int -> Model -> Svg a
-drawLowHorizontalExtendVerticalBottomRight x y model =
+drawLowHorizontalExtendVerticalBottomRight : Int -> Int -> Settings -> Svg a
+drawLowHorizontalExtendVerticalBottomRight x y settings =
     let
         startX =
             measureX x
@@ -1014,11 +1019,11 @@ drawLowHorizontalExtendVerticalBottomRight x y model =
         endY =
             startY
     in
-    drawLine startX startY endX endY model.settings
+    drawLine startX startY endX endY settings
 
 
-drawLowHorizontalExtendRight : Int -> Int -> Model -> Svg a
-drawLowHorizontalExtendRight x y model =
+drawLowHorizontalExtendRight : Int -> Int -> Settings -> Svg a
+drawLowHorizontalExtendRight x y settings =
     let
         startX =
             measureX x
@@ -1032,11 +1037,11 @@ drawLowHorizontalExtendRight x y model =
         endY =
             startY
     in
-    drawLine startX startY endX endY model.settings
+    drawLine startX startY endX endY settings
 
 
-drawLowHorizontalExtendVerticalRight : Int -> Int -> Model -> Svg a
-drawLowHorizontalExtendVerticalRight x y model =
+drawLowHorizontalExtendVerticalRight : Int -> Int -> Settings -> Svg a
+drawLowHorizontalExtendVerticalRight x y settings =
     let
         startX =
             measureX x
@@ -1050,11 +1055,11 @@ drawLowHorizontalExtendVerticalRight x y model =
         endY =
             startY
     in
-    drawLine startX startY endX endY model.settings
+    drawLine startX startY endX endY settings
 
 
-drawVerticalLine : Int -> Int -> Model -> Svg a
-drawVerticalLine x y model =
+drawVerticalLine : Int -> Int -> Settings -> Svg a
+drawVerticalLine x y settings =
     let
         startX =
             measureX x + textWidth / 2
@@ -1068,11 +1073,11 @@ drawVerticalLine x y model =
         endY =
             startY + textHeight
     in
-    drawLine startX startY endX endY model.settings
+    drawLine startX startY endX endY settings
 
 
-drawSlantRightLine : Int -> Int -> Model -> Svg a
-drawSlantRightLine x y model =
+drawSlantRightLine : Int -> Int -> Settings -> Svg a
+drawSlantRightLine x y settings =
     let
         startX =
             measureX x
@@ -1086,11 +1091,11 @@ drawSlantRightLine x y model =
         endY =
             measureY y
     in
-    drawLine startX startY endX endY model.settings
+    drawLine startX startY endX endY settings
 
 
-drawSlantLeftLine : Int -> Int -> Model -> Svg a
-drawSlantLeftLine x y model =
+drawSlantLeftLine : Int -> Int -> Settings -> Svg a
+drawSlantLeftLine x y settings =
     let
         startX =
             measureX x
@@ -1104,11 +1109,11 @@ drawSlantLeftLine x y model =
         endY =
             measureY y + textHeight
     in
-    drawLine startX startY endX endY model.settings
+    drawLine startX startY endX endY settings
 
 
-drawOpenCurve : Int -> Int -> Model -> List (Svg a)
-drawOpenCurve x y model =
+drawOpenCurve : Int -> Int -> Settings -> List (Svg a)
+drawOpenCurve x y settings =
     let
         startX =
             measureX x + textWidth
@@ -1122,11 +1127,11 @@ drawOpenCurve x y model =
         endY =
             measureY y + textHeight
     in
-    [ drawArc startX startY endX endY (model.settings.arcRadius * 4) model.settings ]
+    [ drawArc startX startY endX endY (settings.arcRadius * 4) settings ]
 
 
-drawBigOpenCurve : Int -> Int -> Model -> List (Svg a)
-drawBigOpenCurve x y model =
+drawBigOpenCurve : Int -> Int -> Settings -> List (Svg a)
+drawBigOpenCurve x y settings =
     let
         startX =
             measureX x + textWidth / 2
@@ -1140,11 +1145,11 @@ drawBigOpenCurve x y model =
         endY =
             measureY y + textHeight
     in
-    [ drawArc startX startY endX endY (model.settings.arcRadius * 4) model.settings ]
+    [ drawArc startX startY endX endY (settings.arcRadius * 4) settings ]
 
 
-drawBigCloseCurve : Int -> Int -> Model -> List (Svg a)
-drawBigCloseCurve x y model =
+drawBigCloseCurve : Int -> Int -> Settings -> List (Svg a)
+drawBigCloseCurve x y settings =
     let
         startX =
             measureX x + textWidth / 2
@@ -1158,11 +1163,11 @@ drawBigCloseCurve x y model =
         endY =
             measureY y
     in
-    [ drawArc startX startY endX endY (model.settings.arcRadius * 4) model.settings ]
+    [ drawArc startX startY endX endY (settings.arcRadius * 4) settings ]
 
 
-drawCloseCurve : Int -> Int -> Model -> List (Svg a)
-drawCloseCurve x y model =
+drawCloseCurve : Int -> Int -> Settings -> List (Svg a)
+drawCloseCurve x y settings =
     let
         startX =
             measureX x
@@ -1179,107 +1184,107 @@ drawCloseCurve x y model =
         radius =
             textHeight
     in
-    [ drawArc startX startY endX endY radius model.settings ]
+    [ drawArc startX startY endX endY radius settings ]
 
 
-drawRoundCorner : Int -> Int -> Position -> Model -> List (Svg a)
-drawRoundCorner x y pos model =
+drawRoundCorner : Int -> Int -> Position -> Settings -> List (Svg a)
+drawRoundCorner x y pos settings =
     case pos of
         TopLeftCorner ->
-            drawRoundTopLeftCorner x y model.settings
+            drawRoundTopLeftCorner x y settings
 
         TopRightCorner ->
-            drawRoundTopRightCorner x y model.settings
+            drawRoundTopRightCorner x y settings
 
         BottomLeftCorner ->
-            drawRoundBottomLeftCorner x y model.settings
+            drawRoundBottomLeftCorner x y settings
 
         BottomRightCorner ->
-            drawRoundBottomRightCorner x y model.settings
+            drawRoundBottomRightCorner x y settings
 
         TopLeftSlantedBottomLeft ->
-            drawRoundTopLeftSlantedBottomLeftCorner x y model.settings
+            drawRoundTopLeftSlantedBottomLeftCorner x y settings
 
         TopLeftSlantedBottomRight ->
-            drawRoundTopLeftSlantedBottomRightCorner x y model.settings
+            drawRoundTopLeftSlantedBottomRightCorner x y settings
 
         TopRightSlantedBottomRight ->
-            drawRoundTopRightSlantedBottomRight x y model.settings
+            drawRoundTopRightSlantedBottomRight x y settings
 
         TopRightSlantedBottomLeft ->
-            drawRoundTopRightSlantedBottomLeft x y model.settings
+            drawRoundTopRightSlantedBottomLeft x y settings
 
         TopRightSlantedTopLeft ->
-            drawRoundTopRightSlantedTopLeft x y model.settings
+            drawRoundTopRightSlantedTopLeft x y settings
 
         VerticalTopDownJunctionTopLeft ->
-            drawVerticalTopDownJunctionTopLeft x y model.settings
+            drawVerticalTopDownJunctionTopLeft x y settings
 
         SlantedRightJunctionRight ->
-            drawRoundSlantedRightJunctionRight x y model.settings
+            drawRoundSlantedRightJunctionRight x y settings
 
         SlantedLeftJunctionLeft ->
-            drawRoundSlantedLeftJunctionLeft x y model.settings
+            drawRoundSlantedLeftJunctionLeft x y settings
 
         SlantedRightJunctionLeft ->
-            drawRoundSlantedRightJunctionLeft x y model.settings
+            drawRoundSlantedRightJunctionLeft x y settings
 
         SlantedLeftJunctionRight ->
-            drawRoundSlantedLeftJunctionRight x y model.settings
+            drawRoundSlantedLeftJunctionRight x y settings
 
         BottomLeftLowHorizontal ->
-            drawRoundBottomLeftLowHorizontalCorner x y model.settings
+            drawRoundBottomLeftLowHorizontalCorner x y settings
 
         BottomRightLowHorizontal ->
-            drawRoundBottomRightLowHorizontalCorner x y model.settings
+            drawRoundBottomRightLowHorizontalCorner x y settings
 
         BottomLeftSlantedTopLeft ->
-            drawRoundBottomLeftSlantedTopLeftCorner x y model.settings
+            drawRoundBottomLeftSlantedTopLeftCorner x y settings
 
         BottomLeftSlantedTopRight ->
-            drawRoundBottomLeftSlantedTopRightCorner x y model.settings
+            drawRoundBottomLeftSlantedTopRightCorner x y settings
 
         BottomLeftSlantedBottomRight ->
-            drawRoundBottomLeftSlantedBottomRightCorner x y model.settings
+            drawRoundBottomLeftSlantedBottomRightCorner x y settings
 
         BottomLeftSlantedTopRightLowHorizontal ->
-            drawRoundBottomLeftSlantedTopRightLowHorizontal x y model.settings
+            drawRoundBottomLeftSlantedTopRightLowHorizontal x y settings
 
         BottomRightSlantedTopRight ->
-            drawRoundBottomRightSlantedTopRightCorner x y model.settings
+            drawRoundBottomRightSlantedTopRightCorner x y settings
 
         BottomRightSlantedTopLeftLowHorizontal ->
-            drawRoundBottomRightSlantedTopLeftLowHorizontal x y model.settings
+            drawRoundBottomRightSlantedTopLeftLowHorizontal x y settings
 
         BottomRightSlantedTopLeft ->
-            drawRoundBottomRightSlantedTopLeftCorner x y model.settings
+            drawRoundBottomRightSlantedTopLeftCorner x y settings
 
         BottomRightSlantedBottomLeft ->
-            drawRoundBottomRightSlantedBottomLeft x y model.settings
+            drawRoundBottomRightSlantedBottomLeft x y settings
 
         VerticalTopDownJunctionBottomLeft ->
-            drawVerticalTopDownJunctionBottomLeft x y model.settings
+            drawVerticalTopDownJunctionBottomLeft x y settings
 
         VerticalTopDownJunctionBottomRight ->
-            drawVerticalTopDownJunctionBottomRight x y model.settings
+            drawVerticalTopDownJunctionBottomRight x y settings
 
         TopLeftSlantedTopRight ->
-            drawRoundTopLeftSlantedTopRightCorner x y model.settings
+            drawRoundTopLeftSlantedTopRightCorner x y settings
 
         VerticalTopDownJunctionTopRight ->
-            drawVerticalTopDownJunctionTopRight x y model.settings
+            drawVerticalTopDownJunctionTopRight x y settings
 
         TopLeftBigCurve ->
-            drawTopLeftBigCurve x y model.settings
+            drawTopLeftBigCurve x y settings
 
         TopRightBigCurve ->
-            drawTopRightBigCurve x y model.settings
+            drawTopRightBigCurve x y settings
 
         BottomLeftBigCurve ->
-            drawBottomLeftBigCurve x y model.settings
+            drawBottomLeftBigCurve x y settings
 
         BottomRightBigCurve ->
-            drawBottomRightBigCurve x y model.settings
+            drawBottomRightBigCurve x y settings
 
 
 drawRoundTopLeftCorner x y s =
@@ -2130,6 +2135,7 @@ drawRoundTopRightCorner x y s =
     ]
 
 
+drawRoundBottomRightCorner : Int -> Int -> Settings -> List (Svg a)
 drawRoundBottomRightCorner x y s =
     let
         startX =
@@ -2245,6 +2251,7 @@ drawIntersection x y itype model =
             [ v1Line, v2Line, h1Line, h2Line ]
 
 
+colorText : Color.Color -> String
 colorText color =
     let
         { red, green, blue, alpha } =
@@ -2253,214 +2260,77 @@ colorText color =
     "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
 
 
-drawArrowRight x y model =
-    let
-        startX =
-            measureX x
-
-        endX =
-            startX + textWidth / 2
-
-        startY =
-            measureY y + textHeight / 2
-
-        endY =
-            startY
-    in
+drawArrow : ( Float, Float ) -> ( Float, Float ) -> Settings -> Svg a
+drawArrow ( startX, endX ) ( startY, endY ) settings =
     line
         [ x1 <| String.fromFloat startX
-        , x2 <| String.fromFloat endX
+        , x2 <| String.fromFloat (startX + endX)
         , y1 <| String.fromFloat startY
-        , y2 <| String.fromFloat endY
-        , Svg.Attributes.style ("stroke: " ++ colorText model.settings.color ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
+        , y2 <| String.fromFloat (startY + endY)
+        , Svg.Attributes.style ("stroke: " ++ colorText settings.color ++ ";stroke-width:" ++ String.fromFloat settings.lineWidth)
         , markerEnd "url(#triangle)"
         , vectorEffect
         ]
         []
 
 
-drawArrowLeft x y model =
-    let
-        startX =
-            measureX x + textWidth
-
-        endX =
-            measureX x + textWidth / 2
-
-        startY =
-            measureY y + textHeight / 2
-
-        endY =
-            startY
-    in
-    line
-        [ x1 <| String.fromFloat startX
-        , x2 <| String.fromFloat endX
-        , y1 <| String.fromFloat startY
-        , y2 <| String.fromFloat endY
-        , Svg.Attributes.style ("stroke: " ++ colorText model.settings.color ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
-        , markerEnd "url(#triangle)"
-        , vectorEffect
-        ]
-        []
+drawArrowRight : Int -> Int -> Settings -> Svg a
+drawArrowRight x y =
+    drawArrow
+        ( measureX x, textWidth / 2 )
+        ( measureY y + textHeight / 2, 0 )
 
 
-drawArrowDown x y model =
-    let
-        startX =
-            measureX x + textWidth / 2
-
-        endX =
-            startX
-
-        startY =
-            measureY y
-
-        endY =
-            startY + textHeight
-    in
-    line
-        [ x1 <| String.fromFloat startX
-        , x2 <| String.fromFloat endX
-        , y1 <| String.fromFloat startY
-        , y2 <| String.fromFloat endY
-        , Svg.Attributes.style ("stroke: " ++ colorText model.settings.color ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
-        , markerEnd "url(#triangle)"
-        , vectorEffect
-        ]
-        []
+drawArrowLeft : Int -> Int -> Settings -> Svg a
+drawArrowLeft x y =
+    drawArrow
+        ( measureX x + textWidth, -textWidth / 2 )
+        ( measureY y + textHeight / 2, 0 )
 
 
-drawArrowSouthWest x y model =
-    let
-        startX =
-            measureX x + textWidth
-
-        startY =
-            measureY y
-
-        endX =
-            startX - textWidth / 2
-
-        endY =
-            startY + textHeight / 2
-    in
-    line
-        [ x1 <| String.fromFloat startX
-        , x2 <| String.fromFloat endX
-        , y1 <| String.fromFloat startY
-        , y2 <| String.fromFloat endY
-        , Svg.Attributes.style ("stroke: " ++ colorText model.settings.color ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
-        , markerEnd "url(#triangle)"
-        , vectorEffect
-        ]
-        []
+drawArrowDown : Int -> Int -> Settings -> Svg a
+drawArrowDown x y =
+    drawArrow
+        ( measureX x + textWidth / 2, 0 )
+        ( measureY y, textHeight )
 
 
-drawArrowSouthEast x y model =
-    let
-        startX =
-            measureX x
-
-        startY =
-            measureY y
-
-        endX =
-            startX + textWidth / 2
-
-        endY =
-            startY + textHeight / 2
-    in
-    line
-        [ x1 <| String.fromFloat startX
-        , x2 <| String.fromFloat endX
-        , y1 <| String.fromFloat startY
-        , y2 <| String.fromFloat endY
-        , Svg.Attributes.style ("stroke: " ++ colorText model.settings.color ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
-        , markerEnd "url(#triangle)"
-        , vectorEffect
-        ]
-        []
+drawArrowSouthWest : Int -> Int -> Settings -> Svg a
+drawArrowSouthWest x y =
+    drawArrow
+        ( measureX x + textWidth, -textWidth / 2 )
+        ( measureY y, textHeight / 2 )
 
 
-drawArrowUp x y model =
-    let
-        startX =
-            measureX x + textWidth / 2
-
-        endX =
-            startX
-
-        startY =
-            measureY y + textHeight
-
-        endY =
-            measureY y
-    in
-    line
-        [ x1 <| String.fromFloat startX
-        , x2 <| String.fromFloat endX
-        , y1 <| String.fromFloat startY
-        , y2 <| String.fromFloat endY
-        , Svg.Attributes.style ("stroke: " ++ colorText model.settings.color ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
-        , markerEnd "url(#triangle)"
-        , vectorEffect
-        ]
-        []
+drawArrowSouthEast : Int -> Int -> Settings -> Svg a
+drawArrowSouthEast x y =
+    drawArrow
+        ( measureX x, textWidth / 2 )
+        ( measureY y, textHeight / 2 )
 
 
-drawArrowNorthWest x y model =
-    let
-        startX =
-            measureX x
-
-        startY =
-            measureY y + textHeight
-
-        endX =
-            startX + textWidth / 2
-
-        endY =
-            measureY y + textHeight / 2
-    in
-    line
-        [ x1 <| String.fromFloat startX
-        , x2 <| String.fromFloat endX
-        , y1 <| String.fromFloat startY
-        , y2 <| String.fromFloat endY
-        , Svg.Attributes.style ("stroke: " ++ colorText model.settings.color ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
-        , markerEnd "url(#triangle)"
-        , vectorEffect
-        ]
-        []
+drawArrowUp : Int -> Int -> Settings -> Svg a
+drawArrowUp x y =
+    drawArrow
+        ( measureX x + textWidth / 2, 0 )
+        ( measureY y + textHeight, -textHeight )
 
 
-drawArrowNorthEast x y model =
-    let
-        startX =
-            measureX x + textWidth
-
-        startY =
-            measureY y + textHeight
-
-        endX =
-            measureX x + textWidth / 2
-
-        endY =
-            measureY y + textHeight / 2
-    in
-    line
-        [ x1 <| String.fromFloat startX
-        , x2 <| String.fromFloat endX
-        , y1 <| String.fromFloat startY
-        , y2 <| String.fromFloat endY
-        , Svg.Attributes.style ("stroke: " ++ colorText model.settings.color ++ ";stroke-width:" ++ String.fromFloat model.settings.lineWidth)
-        , markerEnd "url(#triangle)"
-        , vectorEffect
-        ]
-        []
+drawArrowNorthWest : Int -> Int -> Settings -> Svg a
+drawArrowNorthWest x y =
+    drawArrow
+        ( measureX x, textWidth / 2 )
+        ( measureY y + textHeight, -textHeight / 2 )
 
 
+drawArrowNorthEast : Int -> Int -> Settings -> Svg a
+drawArrowNorthEast x y =
+    drawArrow
+        ( measureX x + textWidth, -textWidth / 2 )
+        ( measureY y + textHeight, -textHeight / 2 )
+
+
+drawLine : Float -> Float -> Float -> Float -> Settings -> Svg a
 drawLine startX startY endX endY s =
     line
         [ x1 <| String.fromFloat startX
@@ -2503,23 +2373,9 @@ measureY y =
     toFloat y * textHeight
 
 
-get : Int -> Int -> Model -> Maybe Char
-get x y model =
-    let
-        row =
-            y
-
-        line : Maybe (Array Char)
-        line =
-            Array.get y model.lines
-
-        char : Maybe Char
-        char =
-            case line of
-                Just l ->
-                    Array.get x l
-
-                Nothing ->
-                    Nothing
-    in
-    char
+get : Int -> Int -> { a | lines : Array (Array c) } -> Maybe c
+get x y { lines } =
+    lines
+        |> Array.get y
+        |> Maybe.map (Array.get x)
+        |> Maybe.withDefault Nothing
