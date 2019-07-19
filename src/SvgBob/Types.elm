@@ -67,11 +67,9 @@ type Element
 type Direction
     = East
     | South
-    | SouthWest
-    | SouthEast
+    | South_ Direction
     | North
-    | NorthWest
-    | NorthEast
+    | North_ Direction
     | West
 
 

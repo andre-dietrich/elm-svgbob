@@ -43,6 +43,32 @@ type alias Point =
     }
 
 
+move : Direction -> Point -> Point
+move dir pt =
+    case dir of
+        North ->
+            { pt | y = pt.y + textHeight / 2 }
+
+        North_ sub ->
+            pt
+                |> move North
+                |> move sub
+
+        South ->
+            { pt | y = pt.y - textHeight / 2 }
+
+        South_ sub ->
+            pt
+                |> move South
+                |> move sub
+
+        East ->
+            { pt | x = pt.x + textWidth / 2 }
+
+        West ->
+            { pt | x = pt.x - textWidth / 2 }
+
+
 type alias Vector =
     { orientation : Point
     , position : Point
@@ -674,33 +700,33 @@ getElement x y model =
                     Text char_
 
             else if isArrowRight char_ then
-                Arrow East
+                Arrow West
 
             else if isArrowDown char_ then
                 if isNeighbor top isVertical then
                     Arrow South
 
                 else if isNeighbor topRight isSlantRight then
-                    Arrow SouthWest
+                    Arrow <| South_ East
 
                 else if isNeighbor topLeft isSlantLeft then
-                    Arrow SouthEast
+                    Arrow <| South_ West
 
                 else
                     Text char_
 
             else if isArrowLeft char_ then
-                Arrow West
+                Arrow East
 
             else if isArrowUp char_ then
                 if isNeighbor bottom isVertical then
                     Arrow North
 
                 else if isNeighbor bottomLeft isSlantRight then
-                    Arrow NorthWest
+                    Arrow <| North_ West
 
                 else if isNeighbor bottomRight isSlantLeft then
-                    Arrow NorthEast
+                    Arrow <| North_ East
 
                 else
                     Text char_
@@ -876,7 +902,10 @@ drawElement x y model =
             drawRoundCorner x y pos model.settings
 
         Arrow dir ->
-            [ drawArrow dir position model.settings ]
+            [ drawArrowX model.settings
+                { position | x = position.x + textWidth / 2, y = position.y + textHeight / 2 }
+                dir
+            ]
 
         SlantRight ->
             [ drawSlantRightLine x y model.settings ]
@@ -903,51 +932,25 @@ drawElement x y model =
             []
 
 
-drawArrow dir pos settings =
-    let
-        draw =
-            drawArrowX settings
-    in
+opposite dir =
     case dir of
         East ->
-            draw
-                { pos | y = pos.y + textHeight / 2 }
-                { x = textWidth / 2, y = 0 }
-
-        South ->
-            draw
-                { pos | x = pos.x + textWidth / 2 }
-                { x = 0, y = textHeight }
-
-        SouthWest ->
-            draw
-                { pos | x = pos.x + textWidth }
-                { x = -textWidth / 2, y = textHeight / 2 }
-
-        SouthEast ->
-            draw
-                pos
-                { x = textWidth / 2, y = textHeight / 2 }
-
-        North ->
-            draw
-                { pos | x = pos.x + textWidth / 2, y = pos.y + textHeight }
-                { x = 0, y = -textHeight }
-
-        NorthWest ->
-            draw
-                { pos | y = pos.y + textHeight }
-                { x = textWidth / 2, y = -textHeight / 2 }
-
-        NorthEast ->
-            draw
-                { pos | x = pos.x + textWidth, y = pos.y + textHeight }
-                { x = -textWidth / 2, y = -textHeight / 2 }
+            West
 
         West ->
-            draw
-                { pos | x = pos.x + textWidth, y = pos.y + textHeight / 2 }
-                { x = -textWidth / 2, y = 0 }
+            East
+
+        South ->
+            North
+
+        South_ sub ->
+            North_ (opposite sub)
+
+        North ->
+            South
+
+        North_ sub ->
+            South_ (opposite sub)
 
 
 drawHorizontalLine : Int -> Int -> Settings -> Svg a
@@ -2296,13 +2299,20 @@ colorText color =
     "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
 
 
-drawArrowX : Settings -> Point -> Point -> Svg a
-drawArrowX settings position orientation =
+drawArrowX : Settings -> Point -> Direction -> Svg a
+drawArrowX settings pos start =
+    let
+        pos1 =
+            move start pos
+
+        pos2 =
+            move (opposite start) pos1
+    in
     line
-        [ x1 <| String.fromFloat position.x
-        , x2 <| String.fromFloat (position.x + orientation.x)
-        , y1 <| String.fromFloat position.y
-        , y2 <| String.fromFloat (position.y + orientation.y)
+        [ x1 <| String.fromFloat pos1.x
+        , x2 <| String.fromFloat pos2.x
+        , y1 <| String.fromFloat pos1.y
+        , y2 <| String.fromFloat pos2.y
         , Svg.Attributes.style ("stroke: " ++ colorText settings.color ++ ";stroke-width:" ++ String.fromFloat settings.lineWidth)
         , markerEnd "url(#triangle)"
         , vectorEffect
