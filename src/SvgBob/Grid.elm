@@ -43,30 +43,36 @@ type alias Point =
     }
 
 
+mult : Int -> Direction -> Direction
+mult i dir =
+    if i <= 1 then
+        dir
+
+    else
+        dir
+            |> mult (i - 1)
+            |> Ext dir
+
+
 move : Direction -> Point -> Point
 move dir pt =
     case dir of
         North ->
             { pt | y = pt.y + textHeight / 2 }
 
-        North_ sub ->
-            pt
-                |> move North
-                |> move sub
-
         South ->
             { pt | y = pt.y - textHeight / 2 }
-
-        South_ sub ->
-            pt
-                |> move South
-                |> move sub
 
         East ->
             { pt | x = pt.x + textWidth / 2 }
 
         West ->
             { pt | x = pt.x - textWidth / 2 }
+
+        Ext dir1 dir2 ->
+            pt
+                |> move dir1
+                |> move dir2
 
 
 type alias Vector =
@@ -325,57 +331,57 @@ getElement x y model =
                     && not (isNeighbor left isAlphaNumeric)
                     && not (isNeighbor right isAlphaNumeric)
             then
-                Vertical
+                Line North (Ext South South)
 
             else if
                 isHorizontal char_
                     && not (isNeighbor left isAlphaNumeric)
                     && not (isNeighbor right isAlphaNumeric)
             then
-                Horizontal
+                Line East (Ext West West)
 
             else if
                 isLowHorizontal char_
                     && isNeighbor left isSlantRight
             then
-                LowHorizontalExtendLeft
+                Line (Ext North East) (mult 4 West)
 
             else if
                 isLowHorizontal char_
                     && isNeighbor left isVertical
             then
-                LowHorizontalExtendVerticalLeft
+                Line (Ext North East) (mult 3 West)
 
             else if
                 isLowHorizontal char_
                     && isNeighbor right isSlantLeft
             then
-                LowHorizontalExtendRight
+                Line (Ext North West) (mult 4 East)
 
             else if
                 isLowHorizontal char_
                     && isNeighbor right isVertical
             then
-                LowHorizontalExtendVerticalRight
+                Line (Ext North West) (mult 3 East)
 
             else if
                 isLowHorizontal char_
                     && isNeighbor bottomLeft isVertical
             then
-                LowHorizontalExtendVerticalBottomLeft
+                Line (Ext North (Ext West West)) (mult 3 East)
 
             else if
                 isLowHorizontal char_
                     && isNeighbor bottomRight isVertical
             then
-                LowHorizontalExtendVerticalBottomRight
+                Line (Ext North West) (mult 3 East)
 
             else if
                 isLowHorizontal char_
                     && not (isNeighbor left isAlphaNumeric)
                     && not (isNeighbor right isAlphaNumeric)
             then
-                LowHorizontal
+                Line (Ext North East) (Ext West West)
 
             else if isIntersection char_ then
                 let
@@ -707,10 +713,10 @@ getElement x y model =
                     Arrow South
 
                 else if isNeighbor topRight isSlantRight then
-                    Arrow <| South_ East
+                    Arrow <| Ext South East
 
                 else if isNeighbor topLeft isSlantLeft then
-                    Arrow <| South_ West
+                    Arrow <| Ext South West
 
                 else
                     Text char_
@@ -723,19 +729,19 @@ getElement x y model =
                     Arrow North
 
                 else if isNeighbor bottomLeft isSlantRight then
-                    Arrow <| North_ West
+                    Arrow <| Ext North West
 
                 else if isNeighbor bottomRight isSlantLeft then
-                    Arrow <| North_ East
+                    Arrow <| Ext North East
 
                 else
                     Text char_
 
             else if isSlantRight char_ then
-                SlantRight
+                Line (Ext South East) (mult 2 (Ext North West))
 
             else if isSlantLeft char_ then
-                SlantLeft
+                Line (Ext North East) (mult 2 (Ext South West))
 
             else if isOpenCurve char_ then
                 if
@@ -865,35 +871,17 @@ drawElement : Int -> Int -> Model -> List (Svg a)
 drawElement x y model =
     let
         position =
-            Point (measureX x) (measureY y)
+            Point
+                (measureX x + textWidth / 2)
+                (measureY y + textHeight / 2)
     in
     case getElement x y model of
-        Horizontal ->
-            [ drawHorizontalLine x y model.settings ]
-
-        LowHorizontal ->
-            [ drawLowHorizontalLine x y model.settings ]
-
-        LowHorizontalExtendLeft ->
-            [ drawLowHorizontalExtendLeft x y model.settings ]
-
-        LowHorizontalExtendVerticalLeft ->
-            [ drawLowHorizontalExtendVerticalLeft x y model.settings ]
-
-        LowHorizontalExtendRight ->
-            [ drawLowHorizontalExtendRight x y model.settings ]
-
-        LowHorizontalExtendVerticalRight ->
-            [ drawLowHorizontalExtendVerticalRight x y model.settings ]
-
-        LowHorizontalExtendVerticalBottomLeft ->
-            [ drawLowHorizontalExtendVerticalBottomLeft x y model.settings ]
-
-        LowHorizontalExtendVerticalBottomRight ->
-            [ drawLowHorizontalExtendVerticalBottomRight x y model.settings ]
-
-        Vertical ->
-            [ drawVerticalLine x y model.settings ]
+        Line start stop ->
+            [ drawLineX
+                model.settings
+                (move start position)
+                stop
+            ]
 
         Intersection itype ->
             drawIntersection x y itype model
@@ -902,16 +890,7 @@ drawElement x y model =
             drawRoundCorner x y pos model.settings
 
         Arrow dir ->
-            [ drawArrowX model.settings
-                { position | x = position.x + textWidth / 2, y = position.y + textHeight / 2 }
-                dir
-            ]
-
-        SlantRight ->
-            [ drawSlantRightLine x y model.settings ]
-
-        SlantLeft ->
-            [ drawSlantLeftLine x y model.settings ]
+            [ drawArrowX model.settings position dir ]
 
         OpenCurve ->
             drawOpenCurve x y model.settings
@@ -932,6 +911,7 @@ drawElement x y model =
             []
 
 
+opposite : Direction -> Direction
 opposite dir =
     case dir of
         East ->
@@ -943,212 +923,11 @@ opposite dir =
         South ->
             North
 
-        South_ sub ->
-            North_ (opposite sub)
-
         North ->
             South
 
-        North_ sub ->
-            South_ (opposite sub)
-
-
-drawHorizontalLine : Int -> Int -> Settings -> Svg a
-drawHorizontalLine x y settings =
-    let
-        startX =
-            measureX x
-
-        endX =
-            startX + textWidth
-
-        startY =
-            measureY y + textHeight / 2
-
-        endY =
-            startY
-    in
-    drawLine startX startY endX endY settings
-
-
-drawLowHorizontalLine : Int -> Int -> Settings -> Svg a
-drawLowHorizontalLine x y settings =
-    let
-        startX =
-            measureX x
-
-        endX =
-            startX + textWidth
-
-        startY =
-            measureY y + textHeight
-
-        endY =
-            startY
-    in
-    drawLine startX startY endX endY settings
-
-
-drawLowHorizontalExtendLeft : Int -> Int -> Settings -> Svg a
-drawLowHorizontalExtendLeft x y settings =
-    let
-        startX =
-            measureX x - textWidth
-
-        endX =
-            measureX x + textWidth
-
-        startY =
-            measureY y + textHeight
-
-        endY =
-            startY
-    in
-    drawLine startX startY endX endY settings
-
-
-drawLowHorizontalExtendVerticalLeft : Int -> Int -> Settings -> Svg a
-drawLowHorizontalExtendVerticalLeft x y settings =
-    let
-        startX =
-            measureX x - textWidth / 2
-
-        endX =
-            measureX x + textWidth
-
-        startY =
-            measureY y + textHeight
-
-        endY =
-            startY
-    in
-    drawLine startX startY endX endY settings
-
-
-drawLowHorizontalExtendVerticalBottomLeft : Int -> Int -> Settings -> Svg a
-drawLowHorizontalExtendVerticalBottomLeft x y settings =
-    let
-        startX =
-            measureX x - textWidth / 2
-
-        endX =
-            measureX x + textWidth
-
-        startY =
-            measureY y + textHeight
-
-        endY =
-            startY
-    in
-    drawLine startX startY endX endY settings
-
-
-drawLowHorizontalExtendVerticalBottomRight : Int -> Int -> Settings -> Svg a
-drawLowHorizontalExtendVerticalBottomRight x y settings =
-    let
-        startX =
-            measureX x
-
-        endX =
-            measureX x + textWidth + textWidth / 2
-
-        startY =
-            measureY y + textHeight
-
-        endY =
-            startY
-    in
-    drawLine startX startY endX endY settings
-
-
-drawLowHorizontalExtendRight : Int -> Int -> Settings -> Svg a
-drawLowHorizontalExtendRight x y settings =
-    let
-        startX =
-            measureX x
-
-        endX =
-            measureX x + textWidth * 2
-
-        startY =
-            measureY y + textHeight
-
-        endY =
-            startY
-    in
-    drawLine startX startY endX endY settings
-
-
-drawLowHorizontalExtendVerticalRight : Int -> Int -> Settings -> Svg a
-drawLowHorizontalExtendVerticalRight x y settings =
-    let
-        startX =
-            measureX x
-
-        endX =
-            measureX x + textWidth + textWidth / 2
-
-        startY =
-            measureY y + textHeight
-
-        endY =
-            startY
-    in
-    drawLine startX startY endX endY settings
-
-
-drawVerticalLine : Int -> Int -> Settings -> Svg a
-drawVerticalLine x y settings =
-    let
-        startX =
-            measureX x + textWidth / 2
-
-        endX =
-            startX
-
-        startY =
-            measureY y
-
-        endY =
-            startY + textHeight
-    in
-    drawLine startX startY endX endY settings
-
-
-drawSlantRightLine : Int -> Int -> Settings -> Svg a
-drawSlantRightLine x y settings =
-    let
-        startX =
-            measureX x
-
-        endX =
-            startX + textWidth
-
-        startY =
-            measureY y + textHeight
-
-        endY =
-            measureY y
-    in
-    drawLine startX startY endX endY settings
-
-
-drawSlantLeftLine : Int -> Int -> Settings -> Svg a
-drawSlantLeftLine x y settings =
-    let
-        startX =
-            measureX x
-
-        endX =
-            startX + textWidth
-
-        startY =
-            measureY y
-
-        endY =
-            measureY y + textHeight
-    in
-    drawLine startX startY endX endY settings
+        Ext dir1 dir2 ->
+            Ext (opposite dir1) (opposite dir2)
 
 
 drawOpenCurve : Int -> Int -> Settings -> List (Svg a)
@@ -2296,28 +2075,29 @@ colorText color =
         { red, green, blue, alpha } =
             Color.toRgba color
     in
-    "rgb(" ++ String.fromFloat red ++ "," ++ String.fromFloat green ++ "," ++ String.fromFloat blue ++ ")"
+    "rgb("
+        ++ String.fromFloat red
+        ++ ","
+        ++ String.fromFloat green
+        ++ ","
+        ++ String.fromFloat blue
+        ++ ")"
 
 
 drawArrowX : Settings -> Point -> Direction -> Svg a
-drawArrowX settings pos start =
-    let
-        pos1 =
-            move start pos
-
-        pos2 =
-            move (opposite start) pos1
-    in
-    line
-        [ x1 <| String.fromFloat pos1.x
-        , x2 <| String.fromFloat pos2.x
-        , y1 <| String.fromFloat pos1.y
-        , y2 <| String.fromFloat pos2.y
-        , Svg.Attributes.style ("stroke: " ++ colorText settings.color ++ ";stroke-width:" ++ String.fromFloat settings.lineWidth)
+drawArrowX settings pos dir =
+    toLine
+        [ Svg.Attributes.style
+            ("stroke: "
+                ++ colorText settings.color
+                ++ ";stroke-width:"
+                ++ String.fromFloat settings.lineWidth
+            )
         , markerEnd "url(#triangle)"
         , vectorEffect
         ]
-        []
+        (move dir pos)
+        (opposite dir)
 
 
 drawLine : Float -> Float -> Float -> Float -> Settings -> Svg a
@@ -2336,21 +2116,25 @@ drawLine startX startY endX endY s =
         []
 
 
-toLine : List (Svg.Attribute msg) -> Point -> Point -> Svg msg
-toLine misc position orientation =
+toLine : List (Svg.Attribute msg) -> Point -> Direction -> Svg msg
+toLine misc pos dir =
+    let
+        pos2 =
+            move dir pos
+    in
     line
         (List.append
             misc
-            [ x1 <| String.fromFloat position.x
-            , x2 <| String.fromFloat (position.x + orientation.x)
-            , y1 <| String.fromFloat position.y
-            , y2 <| String.fromFloat (position.y + orientation.y)
+            [ x1 <| String.fromFloat pos.x
+            , x2 <| String.fromFloat pos2.x
+            , y1 <| String.fromFloat pos.y
+            , y2 <| String.fromFloat pos2.y
             ]
         )
         []
 
 
-drawLineX : Settings -> Point -> Point -> Svg a
+drawLineX : Settings -> Point -> Direction -> Svg a
 drawLineX s =
     toLine
         [ stroke <| colorText s.color

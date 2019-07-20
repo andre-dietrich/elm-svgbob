@@ -44,19 +44,9 @@ type Position
 type Element
     = Empty
     | Intersection Type -- also corner
-    | Horizontal
-    | LowHorizontal
-    | LowHorizontalExtendLeft
-    | LowHorizontalExtendVerticalLeft
-    | LowHorizontalExtendRight
-    | LowHorizontalExtendVerticalRight
-    | LowHorizontalExtendVerticalBottomLeft
-    | LowHorizontalExtendVerticalBottomRight
-    | Vertical
+    | Line Direction Direction
     | RoundCorner Position
     | Arrow Direction
-    | SlantRight
-    | SlantLeft
     | OpenCurve
     | CloseCurve
     | BigOpenCurve
@@ -67,10 +57,9 @@ type Element
 type Direction
     = East
     | South
-    | South_ Direction
     | North
-    | North_ Direction
     | West
+    | Ext Direction Direction
 
 
 
