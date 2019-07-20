@@ -57,16 +57,16 @@ mult i dir =
 move : Direction -> Point -> Point
 move dir pt =
     case dir of
-        North ->
+        South ->
             { pt | y = pt.y + textHeight / 2 }
 
-        South ->
+        North ->
             { pt | y = pt.y - textHeight / 2 }
 
-        East ->
+        West ->
             { pt | x = pt.x + textWidth / 2 }
 
-        West ->
+        East ->
             { pt | x = pt.x - textWidth / 2 }
 
         Ext dir1 dir2 ->
@@ -331,57 +331,57 @@ getElement x y model =
                     && not (isNeighbor left isAlphaNumeric)
                     && not (isNeighbor right isAlphaNumeric)
             then
-                Line North (Ext South South)
+                Line South (Ext North North)
 
             else if
                 isHorizontal char_
                     && not (isNeighbor left isAlphaNumeric)
                     && not (isNeighbor right isAlphaNumeric)
             then
-                Line East (Ext West West)
+                Line West (Ext East East)
 
             else if
                 isLowHorizontal char_
                     && isNeighbor left isSlantRight
             then
-                Line (Ext North East) (mult 4 West)
+                Line (Ext South West) (mult 4 East)
 
             else if
                 isLowHorizontal char_
                     && isNeighbor left isVertical
             then
-                Line (Ext North East) (mult 3 West)
+                Line (Ext South West) (mult 3 East)
 
             else if
                 isLowHorizontal char_
                     && isNeighbor right isSlantLeft
             then
-                Line (Ext North West) (mult 4 East)
+                Line (Ext South East) (mult 4 West)
 
             else if
                 isLowHorizontal char_
                     && isNeighbor right isVertical
             then
-                Line (Ext North West) (mult 3 East)
+                Line (Ext South East) (mult 3 West)
 
             else if
                 isLowHorizontal char_
                     && isNeighbor bottomLeft isVertical
             then
-                Line (Ext North (Ext West West)) (mult 3 East)
+                Line (Ext South (Ext East East)) (mult 3 West)
 
             else if
                 isLowHorizontal char_
                     && isNeighbor bottomRight isVertical
             then
-                Line (Ext North West) (mult 3 East)
+                Line (Ext South East) (mult 3 West)
 
             else if
                 isLowHorizontal char_
                     && not (isNeighbor left isAlphaNumeric)
                     && not (isNeighbor right isAlphaNumeric)
             then
-                Line (Ext North East) (Ext West West)
+                Line (Ext South West) (Ext East East)
 
             else if isIntersection char_ then
                 let
@@ -706,55 +706,55 @@ getElement x y model =
                     Text char_
 
             else if isArrowRight char_ then
-                Arrow West
+                Arrow East
 
             else if isArrowDown char_ then
                 if isNeighbor top isVertical then
-                    Arrow South
-
-                else if isNeighbor topRight isSlantRight then
-                    Arrow <| Ext South East
-
-                else if isNeighbor topLeft isSlantLeft then
-                    Arrow <| Ext South West
-
-                else
-                    Text char_
-
-            else if isArrowLeft char_ then
-                Arrow East
-
-            else if isArrowUp char_ then
-                if isNeighbor bottom isVertical then
                     Arrow North
 
-                else if isNeighbor bottomLeft isSlantRight then
+                else if isNeighbor topRight isSlantRight then
                     Arrow <| Ext North West
 
-                else if isNeighbor bottomRight isSlantLeft then
+                else if isNeighbor topLeft isSlantLeft then
                     Arrow <| Ext North East
 
                 else
                     Text char_
 
+            else if isArrowLeft char_ then
+                Arrow West
+
+            else if isArrowUp char_ then
+                if isNeighbor bottom isVertical then
+                    Arrow South
+
+                else if isNeighbor bottomLeft isSlantRight then
+                    Arrow <| Ext South East
+
+                else if isNeighbor bottomRight isSlantLeft then
+                    Arrow <| Ext South West
+
+                else
+                    Text char_
+
             else if isSlantRight char_ then
-                Line (Ext South East) (mult 2 (Ext North West))
+                Line (Ext North West) (mult 2 (Ext South East))
 
             else if isSlantLeft char_ then
-                Line (Ext North East) (mult 2 (Ext South West))
+                Line (Ext South West) (mult 2 (Ext North East))
 
             else if isOpenCurve char_ then
                 if
                     isNeighbor topRight isSlantRight
                         && isNeighbor bottomRight isSlantLeft
                 then
-                    OpenCurve
+                    Curve (Ext North West) (Ext South South)
 
                 else if
                     isNeighbor topRight isRoundCorner
                         && isNeighbor bottomRight isRoundCorner
                 then
-                    BigOpenCurve
+                    Curve North (Ext South South)
 
                 else
                     Text char_
@@ -764,14 +764,14 @@ getElement x y model =
                     && isNeighbor topLeft isRoundCorner
                     && isNeighbor bottomLeft isRoundCorner
             then
-                BigCloseCurve
+                Curve South (Ext North North)
 
             else if
                 isCloseCurve char_
                     && isNeighbor topLeft isSlantLeft
                     && isNeighbor bottomLeft isSlantRight
             then
-                CloseCurve
+                Curve (Ext South East) (Ext North North)
 
             else if char_ /= ' ' then
                 Text char_
@@ -810,6 +810,38 @@ drawArc startX startY endX endY radius s =
                 |> String.join " "
     in
     path [ d paths, stroke "black", strokeWidth <| String.fromFloat s.lineWidth, fill "transparent", vectorEffect ] []
+
+
+drawArcX : Settings -> Float -> Point -> Direction -> Svg a
+drawArcX s faktor pos dir =
+    let
+        pos2 =
+            move dir pos
+
+        radius =
+            s.arcRadius * faktor
+    in
+    path
+        [ [ "M"
+          , String.fromFloat pos.x
+          , String.fromFloat pos.y
+          , "A"
+          , String.fromFloat radius
+          , String.fromFloat radius
+          , "0"
+          , "0"
+          , "0"
+          , String.fromFloat pos2.x
+          , String.fromFloat pos2.y
+          ]
+            |> String.join " "
+            |> d
+        , stroke "black"
+        , strokeWidth <| String.fromFloat s.lineWidth
+        , fill "transparent"
+        , vectorEffect
+        ]
+        []
 
 
 arrowMarker : Svg a
@@ -892,17 +924,13 @@ drawElement x y model =
         Arrow dir ->
             [ drawArrowX model.settings position dir ]
 
-        OpenCurve ->
-            drawOpenCurve x y model.settings
-
-        CloseCurve ->
-            drawCloseCurve x y model.settings
-
-        BigOpenCurve ->
-            drawBigOpenCurve x y model.settings
-
-        BigCloseCurve ->
-            drawBigCloseCurve x y model.settings
+        Curve start stop ->
+            [ drawArcX
+                model.settings
+                4
+                (move start position)
+                stop
+            ]
 
         Text char ->
             [ drawText x y char model.settings ]
@@ -914,56 +942,20 @@ drawElement x y model =
 opposite : Direction -> Direction
 opposite dir =
     case dir of
-        East ->
-            West
-
         West ->
             East
 
-        South ->
-            North
+        East ->
+            West
 
         North ->
             South
 
+        South ->
+            North
+
         Ext dir1 dir2 ->
             Ext (opposite dir1) (opposite dir2)
-
-
-drawOpenCurve : Int -> Int -> Settings -> List (Svg a)
-drawOpenCurve x y settings =
-    let
-        startX =
-            measureX x + textWidth
-
-        startY =
-            measureY y
-
-        endX =
-            measureX x + textWidth
-
-        endY =
-            measureY y + textHeight
-    in
-    [ drawArc startX startY endX endY (settings.arcRadius * 4) settings ]
-
-
-drawBigOpenCurve : Int -> Int -> Settings -> List (Svg a)
-drawBigOpenCurve x y settings =
-    let
-        startX =
-            measureX x + textWidth / 2
-
-        startY =
-            measureY y
-
-        endX =
-            measureX x + textWidth / 2
-
-        endY =
-            measureY y + textHeight
-    in
-    [ drawArc startX startY endX endY (settings.arcRadius * 4) settings ]
 
 
 drawBigCloseCurve : Int -> Int -> Settings -> List (Svg a)
@@ -982,27 +974,6 @@ drawBigCloseCurve x y settings =
             measureY y
     in
     [ drawArc startX startY endX endY (settings.arcRadius * 4) settings ]
-
-
-drawCloseCurve : Int -> Int -> Settings -> List (Svg a)
-drawCloseCurve x y settings =
-    let
-        startX =
-            measureX x
-
-        startY =
-            measureY y + textHeight
-
-        endX =
-            measureX x
-
-        endY =
-            measureY y
-
-        radius =
-            textHeight
-    in
-    [ drawArc startX startY endX endY radius settings ]
 
 
 drawRoundCorner : Int -> Int -> Position -> Settings -> List (Svg a)

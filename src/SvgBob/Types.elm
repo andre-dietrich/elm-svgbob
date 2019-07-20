@@ -47,10 +47,7 @@ type Element
     | Line Direction Direction
     | RoundCorner Position
     | Arrow Direction
-    | OpenCurve
-    | CloseCurve
-    | BigOpenCurve
-    | BigCloseCurve
+    | Curve Direction Direction
     | Text Char
 
 
