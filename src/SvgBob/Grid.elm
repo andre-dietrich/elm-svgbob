@@ -532,49 +532,53 @@ getElement x y model =
                     isNeighbor right isHorizontal
                         && isNeighbor bottomLeft isOpenCurve
                 then
-                    RoundCorner TopLeftBigCurve
+                    Curve West (Ext South (mult 3 East))
 
                 else if
                     isNeighbor right isRoundCorner
                         && isNeighbor bottomLeft isOpenCurve
                 then
-                    RoundCorner TopLeftBigCurve
+                    Curve West (Ext South (mult 3 East))
 
                 else if
                     isNeighbor left isHorizontal
                         && isNeighbor bottomRight isCloseCurve
                 then
-                    RoundCorner TopRightBigCurve
+                    Curve (Ext South (mult 2 West)) (Ext North (mult 3 East))
 
                 else if
                     isNeighbor left isRoundCorner
                         && isNeighbor bottomRight isCloseCurve
                 then
-                    RoundCorner TopRightBigCurve
+                    Curve (Ext South (mult 2 West)) (Ext North (mult 3 East))
 
                 else if
                     isNeighbor right isHorizontal
                         && isNeighbor topLeft isOpenCurve
                 then
-                    RoundCorner BottomLeftBigCurve
+                    Curve
+                        (Ext North (mult 2 East))
+                        (Ext South (mult 3 West))
 
                 else if
                     isNeighbor left isHorizontal
                         && isNeighbor topRight isCloseCurve
                 then
-                    RoundCorner BottomRightBigCurve
+                    Curve East (Ext North (mult 3 West))
 
                 else if
                     isNeighbor right isRoundCorner
                         && isNeighbor topLeft isOpenCurve
                 then
-                    RoundCorner BottomLeftBigCurve
+                    Curve
+                        (Ext North (mult 2 East))
+                        (Ext South (mult 3 West))
 
                 else if
                     isNeighbor left isRoundCorner
                         && isNeighbor topRight isCloseCurve
                 then
-                    RoundCorner BottomRightBigCurve
+                    Curve East (Ext North (mult 3 West))
 
                 else if
                     isNeighbor top isVertical
@@ -922,7 +926,15 @@ drawElement x y model =
             drawRoundCorner x y pos model.settings
 
         Arrow dir ->
-            [ drawArrowX model.settings position dir ]
+            [ drawArrow model.settings position dir ]
+
+        Corner start stop ext ->
+            [ drawArcX
+                model.settings
+                4
+                (move start position)
+                stop
+            ]
 
         Curve start stop ->
             [ drawArcX
@@ -956,24 +968,6 @@ opposite dir =
 
         Ext dir1 dir2 ->
             Ext (opposite dir1) (opposite dir2)
-
-
-drawBigCloseCurve : Int -> Int -> Settings -> List (Svg a)
-drawBigCloseCurve x y settings =
-    let
-        startX =
-            measureX x + textWidth / 2
-
-        startY =
-            measureY y + textHeight
-
-        endX =
-            measureX x + textWidth / 2
-
-        endY =
-            measureY y
-    in
-    [ drawArc startX startY endX endY (settings.arcRadius * 4) settings ]
 
 
 drawRoundCorner : Int -> Int -> Position -> Settings -> List (Svg a)
@@ -1063,18 +1057,6 @@ drawRoundCorner x y pos settings =
         VerticalTopDownJunctionTopRight ->
             drawVerticalTopDownJunctionTopRight x y settings
 
-        TopLeftBigCurve ->
-            drawTopLeftBigCurve x y settings
-
-        TopRightBigCurve ->
-            drawTopRightBigCurve x y settings
-
-        BottomLeftBigCurve ->
-            drawBottomLeftBigCurve x y settings
-
-        BottomRightBigCurve ->
-            drawBottomRightBigCurve x y settings
-
 
 drawRoundTopLeftCorner x y s =
     let
@@ -1096,74 +1078,6 @@ drawRoundTopLeftCorner x y s =
     [ drawArc startX startY endX endY s.arcRadius s
     , drawLine endX endY endX (measureY y + textHeight) s
     ]
-
-
-drawTopLeftBigCurve x y s =
-    let
-        startX =
-            measureX x + textWidth
-
-        startY =
-            measureY y + textHeight / 2
-
-        endX =
-            measureX x - textWidth / 2
-
-        endY =
-            measureY y + textHeight
-    in
-    [ drawArc startX startY endX endY (s.arcRadius * 4) s ]
-
-
-drawBottomLeftBigCurve x y s =
-    let
-        startX =
-            measureX x - textWidth / 2
-
-        startY =
-            measureY y
-
-        endX =
-            measureX x + textWidth
-
-        endY =
-            measureY y + textHeight / 2
-    in
-    [ drawArc startX startY endX endY (s.arcRadius * 4) s ]
-
-
-drawBottomRightBigCurve x y s =
-    let
-        startX =
-            measureX x
-
-        startY =
-            measureY y + textHeight / 2
-
-        endX =
-            measureX x + textWidth + textWidth / 2
-
-        endY =
-            measureY y
-    in
-    [ drawArc startX startY endX endY (s.arcRadius * 4) s ]
-
-
-drawTopRightBigCurve x y s =
-    let
-        startX =
-            measureX x + textWidth + textWidth / 2
-
-        startY =
-            measureY y + textHeight
-
-        endX =
-            measureX x
-
-        endY =
-            measureY y + textHeight / 2
-    in
-    [ drawArc startX startY endX endY (s.arcRadius * 4) s ]
 
 
 drawRoundTopLeftSlantedTopRightCorner x y s =
@@ -2055,8 +1969,8 @@ colorText color =
         ++ ")"
 
 
-drawArrowX : Settings -> Point -> Direction -> Svg a
-drawArrowX settings pos dir =
+drawArrow : Settings -> Point -> Direction -> Svg a
+drawArrow settings pos dir =
     toLine
         [ Svg.Attributes.style
             ("stroke: "

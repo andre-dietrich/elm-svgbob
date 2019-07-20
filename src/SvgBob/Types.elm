@@ -35,20 +35,17 @@ type Position
     | TopLeftSlantedTopRight
     | VerticalTopDownJunctionTopRight
     | VerticalTopDownJunctionTopLeft
-    | TopLeftBigCurve
-    | TopRightBigCurve
-    | BottomLeftBigCurve
-    | BottomRightBigCurve
 
 
 type Element
     = Empty
+    | Text Char
     | Intersection Type -- also corner
     | Line Direction Direction
     | RoundCorner Position
     | Arrow Direction
     | Curve Direction Direction
-    | Text Char
+    | Corner Direction Direction Direction
 
 
 type Direction
