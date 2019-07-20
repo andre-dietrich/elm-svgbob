@@ -6,33 +6,8 @@ import Color
 import Html exposing (Attribute, Html)
 import Html.Attributes exposing (attribute)
 import String
-import Svg exposing (Svg, defs, line, marker, path, svg)
-import Svg.Attributes
-    exposing
-        ( d
-        , fill
-        , height
-        , id
-        , markerEnd
-        , markerHeight
-        , markerUnits
-        , markerWidth
-        , orient
-        , refX
-        , refY
-        , stroke
-        , strokeLinecap
-        , strokeLinejoin
-        , strokeWidth
-        , viewBox
-        , width
-        , x
-        , x1
-        , x2
-        , y
-        , y1
-        , y2
-        )
+import Svg exposing (Svg)
+import Svg.Attributes as Attr
 import SvgBob.Model exposing (..)
 import SvgBob.Types exposing (..)
 
@@ -60,14 +35,29 @@ move dir pt =
         South ->
             { pt | y = pt.y + textHeight / 2 }
 
+        South_ n ->
+            { pt | y = pt.y + textHeight / 2 * n }
+
         North ->
             { pt | y = pt.y - textHeight / 2 }
+
+        North_ n ->
+            { pt | y = pt.y - textHeight / 2 * n }
 
         West ->
             { pt | x = pt.x + textWidth / 2 }
 
+        West_ n ->
+            { pt | x = pt.x + textWidth / 2 * n }
+
         East ->
             { pt | x = pt.x - textWidth / 2 }
+
+        East_ n ->
+            { pt | x = pt.x - textWidth / 2 * n }
+
+        Pos x y ->
+            { pt | x = pt.x + x, y = pt.y + y }
 
         Ext dir1 dir2 ->
             pt
@@ -514,13 +504,19 @@ getElement x y model =
                     isNeighbor bottom isVertical
                         && isNeighbor right isHorizontal
                 then
-                    RoundCorner TopLeftCorner
+                    Sequence
+                        [ Curve 1 West (Pos (-textWidth / 2) (textWidth / 2))
+                        , Line South (Pos 0 (-textWidth / 2))
+                        ]
 
                 else if
                     isNeighbor bottom isVertical
                         && isNeighbor left isHorizontal
                 then
-                    RoundCorner TopRightCorner
+                    Sequence
+                        [ Curve 1 (Pos 0 (textWidth / 2)) (Pos (-textWidth / 2) (-textWidth / 2))
+                        , Line South (Pos 0 (-textWidth / 2))
+                        ]
 
                 else if
                     isNeighbor bottom isVertical
@@ -532,31 +528,39 @@ getElement x y model =
                     isNeighbor right isHorizontal
                         && isNeighbor bottomLeft isOpenCurve
                 then
-                    Curve West (Ext South (mult 3 East))
+                    Curve 4
+                        West
+                        (Ext South (mult 3 East))
 
                 else if
                     isNeighbor right isRoundCorner
                         && isNeighbor bottomLeft isOpenCurve
                 then
-                    Curve West (Ext South (mult 3 East))
+                    Curve 4
+                        West
+                        (Ext South (mult 3 East))
 
                 else if
                     isNeighbor left isHorizontal
                         && isNeighbor bottomRight isCloseCurve
                 then
-                    Curve (Ext South (mult 2 West)) (Ext North (mult 3 East))
+                    Curve 4
+                        (Ext South (mult 2 West))
+                        (Ext North (mult 3 East))
 
                 else if
                     isNeighbor left isRoundCorner
                         && isNeighbor bottomRight isCloseCurve
                 then
-                    Curve (Ext South (mult 2 West)) (Ext North (mult 3 East))
+                    Curve 4
+                        (Ext South (mult 2 West))
+                        (Ext North (mult 3 East))
 
                 else if
                     isNeighbor right isHorizontal
                         && isNeighbor topLeft isOpenCurve
                 then
-                    Curve
+                    Curve 4
                         (Ext North (mult 2 East))
                         (Ext South (mult 3 West))
 
@@ -564,13 +568,15 @@ getElement x y model =
                     isNeighbor left isHorizontal
                         && isNeighbor topRight isCloseCurve
                 then
-                    Curve East (Ext North (mult 3 West))
+                    Curve 4
+                        East
+                        (Ext North (mult 3 West))
 
                 else if
                     isNeighbor right isRoundCorner
                         && isNeighbor topLeft isOpenCurve
                 then
-                    Curve
+                    Curve 4
                         (Ext North (mult 2 East))
                         (Ext South (mult 3 West))
 
@@ -578,13 +584,18 @@ getElement x y model =
                     isNeighbor left isRoundCorner
                         && isNeighbor topRight isCloseCurve
                 then
-                    Curve East (Ext North (mult 3 West))
+                    Curve 4
+                        East
+                        (Ext North (mult 3 West))
 
                 else if
                     isNeighbor top isVertical
                         && isNeighbor right isHorizontal
                 then
-                    RoundCorner BottomLeftCorner
+                    Sequence
+                        [ Curve 1 (Pos 0 (-textWidth / 2)) (Pos (textWidth / 2) (textWidth / 2))
+                        , Line North (Pos 0 (textWidth / 2))
+                        ]
 
                 else if
                     isNeighbor top isVertical
@@ -650,31 +661,46 @@ getElement x y model =
                     isNeighbor top isVertical
                         && isNeighbor left isHorizontal
                 then
-                    RoundCorner BottomRightCorner
+                    Sequence
+                        [ Curve 1 (Pos (-textWidth / 2) 0) (Pos (textWidth / 2) (-textWidth / 2))
+                        , Line North (Pos 0 (textWidth / 2))
+                        ]
 
                 else if
                     isNeighbor right isHorizontal
                         && isNeighbor bottom isRoundCorner
                 then
-                    RoundCorner TopLeftCorner
+                    Sequence
+                        [ Curve 1 West (Pos (-textWidth / 2) (textWidth / 2))
+                        , Line South (Pos 0 (-textWidth / 2))
+                        ]
 
                 else if
                     isNeighbor left isHorizontal
                         && isNeighbor bottom isRoundCorner
                 then
-                    RoundCorner TopRightCorner
+                    Sequence
+                        [ Curve 1 (Pos 0 (textWidth / 2)) (Pos (-textWidth / 2) (-textWidth / 2))
+                        , Line South (Pos 0 (-textWidth / 2))
+                        ]
 
                 else if
                     isNeighbor left isHorizontal
                         && isNeighbor top isRoundCorner
                 then
-                    RoundCorner BottomRightCorner
+                    Sequence
+                        [ Curve 1 (Pos (-textWidth / 2) 0) (Pos (textWidth / 2) (-textWidth / 2))
+                        , Line North (Pos 0 (textWidth / 2))
+                        ]
 
                 else if
                     isNeighbor right isHorizontal
                         && isNeighbor top isRoundCorner
                 then
-                    RoundCorner BottomLeftCorner
+                    Sequence
+                        [ Curve 1 (Pos 0 (-textWidth / 2)) (Pos (textWidth / 2) (textWidth / 2))
+                        , Line North (Pos 0 (textWidth / 2))
+                        ]
 
                 else if
                     isNeighbor right isHorizontal
@@ -692,7 +718,38 @@ getElement x y model =
                     isNeighbor left isHorizontal
                         && isNeighbor bottomRight isSlantLeft
                 then
-                    RoundCorner TopRightSlantedBottomRight
+                    Sequence
+                        [ Curve 2
+                            (Pos (textWidth / 4) (textHeight / 4))
+                            (Pos -textWidth (-textHeight / 4))
+                        , Line
+                            (Ext South West)
+                            (Pos (-textWidth / 4) (-textHeight / 4))
+                        ]
+                    {- drawRoundTopRightSlantedBottomRight x y s =
+                       let
+                           startX =
+                               measureX x
+
+                           startY =
+                               measureY y + textHeight / 2
+
+                           lstartX =
+                               measureX x + textWidth
+
+                           lstartY =
+                               measureY y + textHeight
+
+                           lendX =
+                               measureX x + textWidth * 3 / 4
+
+                           lendY =
+                               measureY y + textHeight * 3 / 4
+                       in
+                       [ drawArc lendX lendY startX startY (s.arcRadius * 2) s
+                       , drawLine lstartX lstartY lendX lendY s
+                       ]
+                    -}
 
                 else if
                     isNeighbor left isHorizontal
@@ -752,13 +809,17 @@ getElement x y model =
                     isNeighbor topRight isSlantRight
                         && isNeighbor bottomRight isSlantLeft
                 then
-                    Curve (Ext North West) (Ext South South)
+                    Curve 4
+                        (Ext North West)
+                        (Ext South South)
 
                 else if
                     isNeighbor topRight isRoundCorner
                         && isNeighbor bottomRight isRoundCorner
                 then
-                    Curve North (Ext South South)
+                    Curve 4
+                        North
+                        (Ext South South)
 
                 else
                     Text char_
@@ -768,14 +829,18 @@ getElement x y model =
                     && isNeighbor topLeft isRoundCorner
                     && isNeighbor bottomLeft isRoundCorner
             then
-                Curve South (Ext North North)
+                Curve 4
+                    South
+                    (Ext North North)
 
             else if
                 isCloseCurve char_
                     && isNeighbor topLeft isSlantLeft
                     && isNeighbor bottomLeft isSlantRight
             then
-                Curve (Ext South East) (Ext North North)
+                Curve 4
+                    (Ext South East)
+                    (Ext North North)
 
             else if char_ /= ' ' then
                 Text char_
@@ -813,7 +878,14 @@ drawArc startX startY endX endY radius s =
             ]
                 |> String.join " "
     in
-    path [ d paths, stroke "black", strokeWidth <| String.fromFloat s.lineWidth, fill "transparent", vectorEffect ] []
+    Svg.path
+        [ Attr.d paths
+        , Attr.stroke "black"
+        , Attr.strokeWidth <| String.fromFloat s.lineWidth
+        , Attr.fill "transparent"
+        , vectorEffect
+        ]
+        []
 
 
 drawArcX : Settings -> Float -> Point -> Direction -> Svg a
@@ -825,7 +897,7 @@ drawArcX s faktor pos dir =
         radius =
             s.arcRadius * faktor
     in
-    path
+    Svg.path
         [ [ "M"
           , String.fromFloat pos.x
           , String.fromFloat pos.y
@@ -839,10 +911,10 @@ drawArcX s faktor pos dir =
           , String.fromFloat pos2.y
           ]
             |> String.join " "
-            |> d
-        , stroke "black"
-        , strokeWidth <| String.fromFloat s.lineWidth
-        , fill "transparent"
+            |> Attr.d
+        , Attr.stroke "black"
+        , Attr.strokeWidth <| String.fromFloat s.lineWidth
+        , Attr.fill "transparent"
         , vectorEffect
         ]
         []
@@ -850,17 +922,17 @@ drawArcX s faktor pos dir =
 
 arrowMarker : Svg a
 arrowMarker =
-    marker
-        [ id "triangle"
-        , viewBox "0 0 14 14"
-        , refX "0"
-        , refY "5"
-        , markerUnits "strokeWidth"
-        , markerWidth "10"
-        , markerHeight "10"
-        , orient "auto"
+    Svg.marker
+        [ Attr.id "triangle"
+        , Attr.viewBox "0 0 14 14"
+        , Attr.refX "0"
+        , Attr.refY "5"
+        , Attr.markerUnits "strokeWidth"
+        , Attr.markerWidth "10"
+        , Attr.markerHeight "10"
+        , Attr.orient "auto"
         ]
-        [ path [ d "M 0 0 L 10 5 L 0 10 z", vectorEffect ]
+        [ Svg.path [ Attr.d "M 0 0 L 10 5 L 0 10 z", vectorEffect ]
             []
         ]
 
@@ -874,8 +946,8 @@ getSvg attr model =
         gheight =
             String.fromFloat <| measureY model.rows + 10
     in
-    svg (viewBox ("0 0 " ++ gwidth ++ " " ++ gheight) :: attr)
-        (defs []
+    Svg.svg (Attr.viewBox ("0 0 " ++ gwidth ++ " " ++ gheight) :: attr)
+        (Svg.defs []
             [ arrowMarker ]
             :: drawPaths model
         )
@@ -912,42 +984,37 @@ drawElement x y model =
                 (measureY y + textHeight / 2)
     in
     case getElement x y model of
-        Line start stop ->
-            [ drawLineX
-                model.settings
-                (move start position)
-                stop
-            ]
-
         Intersection itype ->
             drawIntersection x y itype model
 
         RoundCorner pos ->
             drawRoundCorner x y pos model.settings
 
+        element ->
+            draw model.settings position element
+
+
+draw : Settings -> Point -> Element -> List (Svg a)
+draw settings pos element =
+    case element of
         Arrow dir ->
-            [ drawArrow model.settings position dir ]
-
-        Corner start stop ext ->
-            [ drawArcX
-                model.settings
-                4
-                (move start position)
-                stop
-            ]
-
-        Curve start stop ->
-            [ drawArcX
-                model.settings
-                4
-                (move start position)
-                stop
-            ]
+            [ drawArrow settings pos dir ]
 
         Text char ->
-            [ drawText x y char model.settings ]
+            [ drawText settings pos char ]
 
-        Empty ->
+        Line start stop ->
+            [ drawLineX settings (move start pos) stop ]
+
+        Curve faktor start stop ->
+            [ drawArcX settings faktor (move start pos) stop ]
+
+        Sequence elements ->
+            elements
+                |> List.map (draw settings pos)
+                |> List.concat
+
+        _ ->
             []
 
 
@@ -957,42 +1024,42 @@ opposite dir =
         West ->
             East
 
+        West_ n ->
+            East_ n
+
         East ->
             West
+
+        East_ n ->
+            West_ n
 
         North ->
             South
 
+        North_ n ->
+            South_ n
+
         South ->
             North
 
+        South_ n ->
+            North_ n
+
         Ext dir1 dir2 ->
             Ext (opposite dir1) (opposite dir2)
+
+        Pos x y ->
+            Pos -x -y
 
 
 drawRoundCorner : Int -> Int -> Position -> Settings -> List (Svg a)
 drawRoundCorner x y pos settings =
     case pos of
-        TopLeftCorner ->
-            drawRoundTopLeftCorner x y settings
-
-        TopRightCorner ->
-            drawRoundTopRightCorner x y settings
-
-        BottomLeftCorner ->
-            drawRoundBottomLeftCorner x y settings
-
-        BottomRightCorner ->
-            drawRoundBottomRightCorner x y settings
-
         TopLeftSlantedBottomLeft ->
             drawRoundTopLeftSlantedBottomLeftCorner x y settings
 
         TopLeftSlantedBottomRight ->
             drawRoundTopLeftSlantedBottomRightCorner x y settings
-
-        TopRightSlantedBottomRight ->
-            drawRoundTopRightSlantedBottomRight x y settings
 
         TopRightSlantedBottomLeft ->
             drawRoundTopRightSlantedBottomLeft x y settings
@@ -1056,28 +1123,6 @@ drawRoundCorner x y pos settings =
 
         VerticalTopDownJunctionTopRight ->
             drawVerticalTopDownJunctionTopRight x y settings
-
-
-drawRoundTopLeftCorner x y s =
-    let
-        startX =
-            measureX x + textWidth
-
-        startY =
-            measureY y + textHeight / 2
-
-        endX =
-            measureX x + textWidth / 2
-
-        --circular arc
-        endY =
-            measureY y + textHeight / 2 + textWidth / 2
-
-        --then the rest is line
-    in
-    [ drawArc startX startY endX endY s.arcRadius s
-    , drawLine endX endY endX (measureY y + textHeight) s
-    ]
 
 
 drawRoundTopLeftSlantedTopRightCorner x y s =
@@ -1154,31 +1199,6 @@ drawVerticalTopDownJunctionTopRight x y s =
     , drawLine lstartX lstartY lendX lendY s
     , drawLine l2startX l2startY l2endX l2endY s
     , drawLine l3startX l3startY l3endX l3endY s
-    ]
-
-
-drawRoundTopRightSlantedBottomRight x y s =
-    let
-        startX =
-            measureX x
-
-        startY =
-            measureY y + textHeight / 2
-
-        lstartX =
-            measureX x + textWidth
-
-        lstartY =
-            measureY y + textHeight
-
-        lendX =
-            measureX x + textWidth * 3 / 4
-
-        lendY =
-            measureY y + textHeight * 3 / 4
-    in
-    [ drawArc lendX lendY startX startY (s.arcRadius * 2) s
-    , drawLine lstartX lstartY lendX lendY s
     ]
 
 
@@ -1762,25 +1782,6 @@ drawVerticalTopDownJunctionBottomRight x y s =
     ]
 
 
-drawRoundBottomLeftCorner x y s =
-    let
-        startX =
-            measureX x + textWidth / 2
-
-        startY =
-            measureY y + textHeight / 2 - textWidth / 2
-
-        endX =
-            measureX x + textWidth
-
-        endY =
-            measureY y + textHeight / 2
-    in
-    [ drawArc startX startY endX endY s.arcRadius s
-    , drawLine startX startY startX (measureY y) s
-    ]
-
-
 drawRoundBottomLeftLowHorizontalCorner x y s =
     let
         startX =
@@ -1813,45 +1814,6 @@ drawRoundBottomRightLowHorizontalCorner x y s =
 
         endY =
             measureY y + textHeight - textWidth / 2
-    in
-    [ drawArc startX startY endX endY s.arcRadius s
-    , drawLine endX endY endX (measureY y) s
-    ]
-
-
-drawRoundTopRightCorner x y s =
-    let
-        startX =
-            measureX x + textWidth / 2
-
-        startY =
-            measureY y + textWidth / 2 + textHeight / 2
-
-        endX =
-            measureX x
-
-        endY =
-            measureY y + textHeight / 2
-    in
-    [ drawArc startX startY endX endY s.arcRadius s
-    , drawLine startX startY startX (measureY y + textHeight) s
-    ]
-
-
-drawRoundBottomRightCorner : Int -> Int -> Settings -> List (Svg a)
-drawRoundBottomRightCorner x y s =
-    let
-        startX =
-            measureX x
-
-        startY =
-            measureY y + textHeight / 2
-
-        endX =
-            measureX x + textWidth / 2
-
-        endY =
-            measureY y + textHeight / 2 - textWidth / 2
     in
     [ drawArc startX startY endX endY s.arcRadius s
     , drawLine endX endY endX (measureY y) s
@@ -1972,13 +1934,13 @@ colorText color =
 drawArrow : Settings -> Point -> Direction -> Svg a
 drawArrow settings pos dir =
     toLine
-        [ Svg.Attributes.style
+        [ Attr.style
             ("stroke: "
                 ++ colorText settings.color
                 ++ ";stroke-width:"
                 ++ String.fromFloat settings.lineWidth
             )
-        , markerEnd "url(#triangle)"
+        , Attr.markerEnd "url(#triangle)"
         , vectorEffect
         ]
         (move dir pos)
@@ -1987,15 +1949,15 @@ drawArrow settings pos dir =
 
 drawLine : Float -> Float -> Float -> Float -> Settings -> Svg a
 drawLine startX startY endX endY s =
-    line
-        [ x1 <| String.fromFloat startX
-        , x2 <| String.fromFloat endX
-        , y1 <| String.fromFloat startY
-        , y2 <| String.fromFloat endY
-        , stroke <| colorText s.color
-        , strokeWidth <| String.fromFloat s.lineWidth
-        , strokeLinecap "round"
-        , strokeLinejoin "mitter"
+    Svg.line
+        [ Attr.x1 <| String.fromFloat startX
+        , Attr.x2 <| String.fromFloat endX
+        , Attr.y1 <| String.fromFloat startY
+        , Attr.y2 <| String.fromFloat endY
+        , Attr.stroke <| colorText s.color
+        , Attr.strokeWidth <| String.fromFloat s.lineWidth
+        , Attr.strokeLinecap "round"
+        , Attr.strokeLinejoin "mitter"
         , vectorEffect
         ]
         []
@@ -2007,13 +1969,13 @@ toLine misc pos dir =
         pos2 =
             move dir pos
     in
-    line
+    Svg.line
         (List.append
             misc
-            [ x1 <| String.fromFloat pos.x
-            , x2 <| String.fromFloat pos2.x
-            , y1 <| String.fromFloat pos.y
-            , y2 <| String.fromFloat pos2.y
+            [ Attr.x1 <| String.fromFloat pos.x
+            , Attr.x2 <| String.fromFloat pos2.x
+            , Attr.y1 <| String.fromFloat pos.y
+            , Attr.y2 <| String.fromFloat pos2.y
             ]
         )
         []
@@ -2022,27 +1984,28 @@ toLine misc pos dir =
 drawLineX : Settings -> Point -> Direction -> Svg a
 drawLineX s =
     toLine
-        [ stroke <| colorText s.color
-        , strokeWidth <| String.fromFloat s.lineWidth
-        , strokeLinecap "round"
-        , strokeLinejoin "mitter"
+        [ Attr.stroke <| colorText s.color
+        , Attr.strokeWidth <| String.fromFloat s.lineWidth
+        , Attr.strokeLinecap "round"
+        , Attr.strokeLinejoin "mitter"
         , vectorEffect
         ]
 
 
-drawText : Int -> Int -> Char -> Settings -> Svg a
-drawText x_ y_ char s =
+drawText : Settings -> Point -> Char -> Svg a
+drawText s pos char =
     let
-        x__ =
-            measureX x_ - textWidth / 4
-
-        y__ =
-            measureY y_ + textHeight * 3 / 4
+        pos2 =
+            move (Ext (South_ 0.5) East) pos
     in
     Svg.node "text"
-        [ x <| String.fromFloat x__
-        , y <| String.fromFloat y__
-        , Svg.Attributes.style ("font-size:" ++ String.fromFloat s.fontSize ++ "px;font-family:monospace")
+        [ Attr.x <| String.fromFloat pos2.x
+        , Attr.y <| String.fromFloat pos2.y
+        , Attr.style
+            ("font-size:"
+                ++ String.fromFloat s.fontSize
+                ++ "px;font-family:monospace"
+            )
         ]
         [ Svg.text <| String.fromChar char ]
 

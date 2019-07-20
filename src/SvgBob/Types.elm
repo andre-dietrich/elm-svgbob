@@ -7,11 +7,7 @@ module SvgBob.Types exposing
 
 
 type Position
-    = TopRightCorner
-    | TopLeftCorner
-    | BottomRightCorner
-    | BottomLeftCorner
-    | BottomLeftLowHorizontal
+    = BottomLeftLowHorizontal
     | BottomRightLowHorizontal
     | BottomLeftSlantedTopLeft
     | BottomLeftSlantedTopRight
@@ -23,7 +19,6 @@ type Position
     | BottomRightSlantedBottomLeft
     | TopLeftSlantedBottomLeft
     | TopLeftSlantedBottomRight
-    | TopRightSlantedBottomRight
     | TopRightSlantedBottomLeft
     | TopRightSlantedTopLeft
     | SlantedRightJunctionRight
@@ -44,16 +39,21 @@ type Element
     | Line Direction Direction
     | RoundCorner Position
     | Arrow Direction
-    | Curve Direction Direction
-    | Corner Direction Direction Direction
+    | Curve Float Direction Direction
+    | Sequence (List Element)
 
 
 type Direction
     = East
+    | East_ Float
     | South
+    | South_ Float
     | North
+    | North_ Float
     | West
+    | West_ Float
     | Ext Direction Direction
+    | Pos Float Float
 
 
 
