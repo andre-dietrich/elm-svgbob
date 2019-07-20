@@ -19,7 +19,6 @@ type Position
     | BottomRightSlantedBottomLeft
     | TopLeftSlantedBottomLeft
     | TopLeftSlantedBottomRight
-    | TopRightSlantedBottomLeft
     | TopRightSlantedTopLeft
     | SlantedRightJunctionRight
     | SlantedLeftJunctionLeft

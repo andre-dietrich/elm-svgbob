@@ -44,16 +44,16 @@ move dir pt =
         North_ n ->
             { pt | y = pt.y - textHeight / 2 * n }
 
-        West ->
+        East ->
             { pt | x = pt.x + textWidth / 2 }
 
-        West_ n ->
+        East_ n ->
             { pt | x = pt.x + textWidth / 2 * n }
 
-        East ->
+        West ->
             { pt | x = pt.x - textWidth / 2 }
 
-        East_ n ->
+        West_ n ->
             { pt | x = pt.x - textWidth / 2 * n }
 
         Pos x y ->
@@ -328,50 +328,50 @@ getElement x y model =
                     && not (isNeighbor left isAlphaNumeric)
                     && not (isNeighbor right isAlphaNumeric)
             then
-                Line West (Ext East East)
+                Line East (Ext West West)
 
             else if
                 isLowHorizontal char_
                     && isNeighbor left isSlantRight
             then
-                Line (Ext South West) (mult 4 East)
+                Line (Ext South East) (mult 4 West)
 
             else if
                 isLowHorizontal char_
                     && isNeighbor left isVertical
             then
-                Line (Ext South West) (mult 3 East)
+                Line (Ext South East) (mult 3 West)
 
             else if
                 isLowHorizontal char_
                     && isNeighbor right isSlantLeft
             then
-                Line (Ext South East) (mult 4 West)
+                Line (Ext South West) (mult 4 East)
 
             else if
                 isLowHorizontal char_
                     && isNeighbor right isVertical
             then
-                Line (Ext South East) (mult 3 West)
+                Line (Ext South West) (mult 3 East)
 
             else if
                 isLowHorizontal char_
                     && isNeighbor bottomLeft isVertical
             then
-                Line (Ext South (Ext East East)) (mult 3 West)
+                Line (Ext South (Ext West West)) (mult 3 East)
 
             else if
                 isLowHorizontal char_
                     && isNeighbor bottomRight isVertical
             then
-                Line (Ext South East) (mult 3 West)
+                Line (Ext South West) (mult 3 East)
 
             else if
                 isLowHorizontal char_
                     && not (isNeighbor left isAlphaNumeric)
                     && not (isNeighbor right isAlphaNumeric)
             then
-                Line (Ext South West) (Ext East East)
+                Line (Ext South East) (Ext West West)
 
             else if isIntersection char_ then
                 let
@@ -505,8 +505,10 @@ getElement x y model =
                         && isNeighbor right isHorizontal
                 then
                     Sequence
-                        [ Curve 1 West (Pos (-textWidth / 2) (textWidth / 2))
-                        , Line South (Pos 0 (-textWidth / 2))
+                        [ Curve 1
+                            East
+                            (Ext (South_ 0.5) West)
+                        , Line South (North_ 0.5)
                         ]
 
                 else if
@@ -514,8 +516,10 @@ getElement x y model =
                         && isNeighbor left isHorizontal
                 then
                     Sequence
-                        [ Curve 1 (Pos 0 (textWidth / 2)) (Pos (-textWidth / 2) (-textWidth / 2))
-                        , Line South (Pos 0 (-textWidth / 2))
+                        [ Curve 1
+                            (South_ 0.5)
+                            (Ext (North_ 0.5) West)
+                        , Line South (North_ 0.5)
                         ]
 
                 else if
@@ -529,72 +533,74 @@ getElement x y model =
                         && isNeighbor bottomLeft isOpenCurve
                 then
                     Curve 4
-                        West
-                        (Ext South (mult 3 East))
+                        East
+                        (Ext South (West_ 3))
 
                 else if
                     isNeighbor right isRoundCorner
                         && isNeighbor bottomLeft isOpenCurve
                 then
                     Curve 4
-                        West
-                        (Ext South (mult 3 East))
+                        East
+                        (Ext South (West_ 3))
 
                 else if
                     isNeighbor left isHorizontal
                         && isNeighbor bottomRight isCloseCurve
                 then
                     Curve 4
-                        (Ext South (mult 2 West))
-                        (Ext North (mult 3 East))
+                        (Ext South (East_ 2))
+                        (Ext North (West_ 3))
 
                 else if
                     isNeighbor left isRoundCorner
                         && isNeighbor bottomRight isCloseCurve
                 then
                     Curve 4
-                        (Ext South (mult 2 West))
-                        (Ext North (mult 3 East))
+                        (Ext South (East_ 2))
+                        (Ext North (West_ 3))
 
                 else if
                     isNeighbor right isHorizontal
                         && isNeighbor topLeft isOpenCurve
                 then
                     Curve 4
-                        (Ext North (mult 2 East))
-                        (Ext South (mult 3 West))
+                        (Ext North (West_ 2))
+                        (Ext South (East_ 3))
 
                 else if
                     isNeighbor left isHorizontal
                         && isNeighbor topRight isCloseCurve
                 then
                     Curve 4
-                        East
-                        (Ext North (mult 3 West))
+                        West
+                        (Ext North (East_ 3))
 
                 else if
                     isNeighbor right isRoundCorner
                         && isNeighbor topLeft isOpenCurve
                 then
                     Curve 4
-                        (Ext North (mult 2 East))
-                        (Ext South (mult 3 West))
+                        (Ext North (West_ 2))
+                        (Ext South (East_ 3))
 
                 else if
                     isNeighbor left isRoundCorner
                         && isNeighbor topRight isCloseCurve
                 then
                     Curve 4
-                        East
-                        (Ext North (mult 3 West))
+                        West
+                        (Ext North (East_ 3))
 
                 else if
                     isNeighbor top isVertical
                         && isNeighbor right isHorizontal
                 then
                     Sequence
-                        [ Curve 1 (Pos 0 (-textWidth / 2)) (Pos (textWidth / 2) (textWidth / 2))
-                        , Line North (Pos 0 (textWidth / 2))
+                        [ Curve 1
+                            (North_ 0.5)
+                            (Ext (South_ 0.5) East)
+                        , Line North (South_ 0.5)
                         ]
 
                 else if
@@ -671,7 +677,7 @@ getElement x y model =
                         && isNeighbor bottom isRoundCorner
                 then
                     Sequence
-                        [ Curve 1 West (Pos (-textWidth / 2) (textWidth / 2))
+                        [ Curve 1 East (Pos (-textWidth / 2) (textWidth / 2))
                         , Line South (Pos 0 (-textWidth / 2))
                         ]
 
@@ -723,39 +729,23 @@ getElement x y model =
                             (Pos (textWidth / 4) (textHeight / 4))
                             (Pos -textWidth (-textHeight / 4))
                         , Line
-                            (Ext South West)
-                            (Pos (-textWidth / 4) (-textHeight / 4))
+                            (Ext South East)
+                            (Ext (North_ 0.5) (East_ 0.5))
                         ]
-                    {- drawRoundTopRightSlantedBottomRight x y s =
-                       let
-                           startX =
-                               measureX x
-
-                           startY =
-                               measureY y + textHeight / 2
-
-                           lstartX =
-                               measureX x + textWidth
-
-                           lstartY =
-                               measureY y + textHeight
-
-                           lendX =
-                               measureX x + textWidth * 3 / 4
-
-                           lendY =
-                               measureY y + textHeight * 3 / 4
-                       in
-                       [ drawArc lendX lendY startX startY (s.arcRadius * 2) s
-                       , drawLine lstartX lstartY lendX lendY s
-                       ]
-                    -}
 
                 else if
                     isNeighbor left isHorizontal
                         && isNeighbor bottomLeft isSlantRight
                 then
-                    RoundCorner TopRightSlantedBottomLeft
+                    --Todo
+                    Sequence
+                        [ Curve 2
+                            (Pos (textWidth / 4) (textHeight / 4))
+                            (Pos (-textWidth / 2) (-textHeight / 4))
+                        , Line
+                            (Ext South West)
+                            (Ext (North_ 0.5) (West_ 0.5))
+                        ]
 
                 else if
                     isNeighbor bottom isVertical
@@ -767,42 +757,42 @@ getElement x y model =
                     Text char_
 
             else if isArrowRight char_ then
-                Arrow East
+                Arrow West
 
             else if isArrowDown char_ then
                 if isNeighbor top isVertical then
                     Arrow North
 
                 else if isNeighbor topRight isSlantRight then
-                    Arrow <| Ext North West
+                    Arrow <| Ext North East
 
                 else if isNeighbor topLeft isSlantLeft then
-                    Arrow <| Ext North East
+                    Arrow <| Ext North West
 
                 else
                     Text char_
 
             else if isArrowLeft char_ then
-                Arrow West
+                Arrow East
 
             else if isArrowUp char_ then
                 if isNeighbor bottom isVertical then
                     Arrow South
 
                 else if isNeighbor bottomLeft isSlantRight then
-                    Arrow <| Ext South East
+                    Arrow <| Ext South West
 
                 else if isNeighbor bottomRight isSlantLeft then
-                    Arrow <| Ext South West
+                    Arrow <| Ext South East
 
                 else
                     Text char_
 
             else if isSlantRight char_ then
-                Line (Ext North West) (mult 2 (Ext South East))
+                Line (Ext North East) (mult 2 (Ext South West))
 
             else if isSlantLeft char_ then
-                Line (Ext South West) (mult 2 (Ext North East))
+                Line (Ext South East) (mult 2 (Ext North West))
 
             else if isOpenCurve char_ then
                 if
@@ -810,7 +800,7 @@ getElement x y model =
                         && isNeighbor bottomRight isSlantLeft
                 then
                     Curve 4
-                        (Ext North West)
+                        (Ext North East)
                         (Ext South South)
 
                 else if
@@ -839,7 +829,7 @@ getElement x y model =
                     && isNeighbor bottomLeft isSlantRight
             then
                 Curve 4
-                    (Ext South East)
+                    (Ext South West)
                     (Ext North North)
 
             else if char_ /= ' ' then
@@ -1021,17 +1011,17 @@ draw settings pos element =
 opposite : Direction -> Direction
 opposite dir =
     case dir of
-        West ->
-            East
-
-        West_ n ->
-            East_ n
-
         East ->
             West
 
         East_ n ->
             West_ n
+
+        West ->
+            East
+
+        West_ n ->
+            East_ n
 
         North ->
             South
@@ -1060,9 +1050,6 @@ drawRoundCorner x y pos settings =
 
         TopLeftSlantedBottomRight ->
             drawRoundTopLeftSlantedBottomRightCorner x y settings
-
-        TopRightSlantedBottomLeft ->
-            drawRoundTopRightSlantedBottomLeft x y settings
 
         TopRightSlantedTopLeft ->
             drawRoundTopRightSlantedTopLeft x y settings
@@ -1199,31 +1186,6 @@ drawVerticalTopDownJunctionTopRight x y s =
     , drawLine lstartX lstartY lendX lendY s
     , drawLine l2startX l2startY l2endX l2endY s
     , drawLine l3startX l3startY l3endX l3endY s
-    ]
-
-
-drawRoundTopRightSlantedBottomLeft x y s =
-    let
-        startX =
-            measureX x
-
-        startY =
-            measureY y + textHeight / 2
-
-        lstartX =
-            measureX x
-
-        lstartY =
-            measureY y + textHeight
-
-        lendX =
-            measureX x + textWidth * 1 / 4
-
-        lendY =
-            measureY y + textHeight * 3 / 4
-    in
-    [ drawArc lendX lendY startX startY (s.arcRadius * 3 / 4) s
-    , drawLine lstartX lstartY lendX lendY s
     ]
 
 
@@ -1996,7 +1958,7 @@ drawText : Settings -> Point -> Char -> Svg a
 drawText s pos char =
     let
         pos2 =
-            move (Ext (South_ 0.5) East) pos
+            move (Ext (South_ 0.5) West) pos
     in
     Svg.node "text"
         [ Attr.x <| String.fromFloat pos2.x
