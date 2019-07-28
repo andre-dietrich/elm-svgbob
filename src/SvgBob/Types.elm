@@ -10,7 +10,6 @@ type Position
     = BottomLeftSlantedTopRight
     | BottomLeftSlantedBottomRight
     | BottomLeftSlantedTopRightLowHorizontal
-    | BottomRightSlantedTopRight
     | BottomRightSlantedTopLeftLowHorizontal
     | BottomRightSlantedBottomLeft
     | TopRightSlantedTopLeft

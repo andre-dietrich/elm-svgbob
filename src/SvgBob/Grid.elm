@@ -638,7 +638,12 @@ getElement x y model =
                     isNeighbor left isHorizontal
                         && isNeighbor topRight isSlantRight
                 then
-                    RoundCorner BottomRightSlantedTopRight
+                    Sequence
+                        [ Curve 2
+                            (West_ 1)
+                            (Ext (North_ 0.5) (East_ 1.5))
+                        , Line (Ext (North_ 0.5) (East_ 0.5)) (Ext (North_ 0.5) (East_ 0.5))
+                        ]
 
                 else if
                     isNeighbor right isLowHorizontal
@@ -1095,9 +1100,6 @@ drawRoundCorner x y pos settings =
         BottomLeftSlantedTopRightLowHorizontal ->
             drawRoundBottomLeftSlantedTopRightLowHorizontal x y settings
 
-        BottomRightSlantedTopRight ->
-            drawRoundBottomRightSlantedTopRightCorner x y settings
-
         BottomRightSlantedTopLeftLowHorizontal ->
             drawRoundBottomRightSlantedTopLeftLowHorizontal x y settings
 
@@ -1498,31 +1500,6 @@ drawRoundSlantedLeftJunctionRight x y s =
             measureY y + textHeight
     in
     [ drawArc startX startY endX endY (s.arcRadius * 2) s
-    , drawLine lstartX lstartY lendX lendY s
-    ]
-
-
-drawRoundBottomRightSlantedTopRightCorner x y s =
-    let
-        startX =
-            measureX x
-
-        startY =
-            measureY y + textHeight / 2
-
-        lstartX =
-            measureX x + textWidth
-
-        lstartY =
-            measureY y
-
-        lendX =
-            measureX x + textWidth * 3 / 4
-
-        lendY =
-            measureY y + textHeight * 1 / 4
-    in
-    [ drawArc startX startY lendX lendY (s.arcRadius * 2) s
     , drawLine lstartX lstartY lendX lendY s
     ]
 
