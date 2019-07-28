@@ -17,7 +17,6 @@ type Position
     | BottomRightSlantedTopLeftLowHorizontal
     | BottomRightSlantedTopLeft
     | BottomRightSlantedBottomLeft
-    | TopLeftSlantedBottomLeft
     | TopLeftSlantedBottomRight
     | TopRightSlantedTopLeft
     | SlantedRightJunctionRight
@@ -52,7 +51,6 @@ type Direction
     | West
     | West_ Float
     | Ext Direction Direction
-    | Pos Float Float
 
 
 
