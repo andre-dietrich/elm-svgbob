@@ -593,19 +593,34 @@ getElement x y model =
                     isNeighbor top isVertical
                         && isNeighbor right isLowHorizontal
                 then
-                    RoundCorner BottomLeftLowHorizontal
+                    Sequence
+                        [ Curve 1
+                            (South_ 0.5)
+                            (Ext (South_ 0.5) East)
+                        , Line North (South_ 1.5)
+                        ]
 
                 else if
                     isNeighbor top isVertical
                         && isNeighbor left isLowHorizontal
                 then
-                    RoundCorner BottomRightLowHorizontal
+                    Sequence
+                        [ Curve 1
+                            (Ext South West)
+                            (Ext (North_ 0.5) East)
+                        , Line North (South_ 1.5)
+                        ]
 
                 else if
                     isNeighbor right isHorizontal
                         && isNeighbor topLeft isSlantLeft
                 then
-                    RoundCorner BottomLeftSlantedTopLeft
+                    Sequence
+                        [ Curve 2
+                            (Ext (North_ 0.5) (West_ 0.5))
+                            (Ext (South_ 0.5) (East_ 1.5))
+                        , Line (Ext North West) (Ext (South_ 0.5) (East_ 0.5))
+                        ]
 
                 else if
                     isNeighbor right isHorizontal
@@ -641,7 +656,12 @@ getElement x y model =
                     isNeighbor left isHorizontal
                         && isNeighbor topLeft isSlantLeft
                 then
-                    RoundCorner BottomRightSlantedTopLeft
+                    Sequence
+                        [ Curve 1
+                            West
+                            (Ext (North_ 0.5) (East_ 0.5))
+                        , Line (Ext North West) (Ext (South_ 0.5) (East_ 0.5))
+                        ]
 
                 else if
                     isNeighbor top isVertical
@@ -710,7 +730,7 @@ getElement x y model =
                 then
                     Sequence
                         [ Curve 2
-                            (East_ 1)
+                            East
                             (Ext (South_ 0.5) (West_ 1.5))
                         , Line (Ext South West) (Ext (North_ 0.5) (East_ 0.5))
                         ]
@@ -719,7 +739,12 @@ getElement x y model =
                     isNeighbor right isHorizontal
                         && isNeighbor bottomRight isSlantLeft
                 then
-                    RoundCorner TopLeftSlantedBottomRight
+                    Sequence
+                        [ Curve 1
+                            East
+                            (Ext (South_ 0.5) (West_ 0.5))
+                        , Line (Ext South East) (Ext (North_ 0.5) (West_ 0.5))
+                        ]
 
                 else if
                     isNeighbor left isHorizontal
@@ -1043,9 +1068,6 @@ opposite dir =
 drawRoundCorner : Int -> Int -> Position -> Settings -> List (Svg a)
 drawRoundCorner x y pos settings =
     case pos of
-        TopLeftSlantedBottomRight ->
-            drawRoundTopLeftSlantedBottomRightCorner x y settings
-
         TopRightSlantedTopLeft ->
             drawRoundTopRightSlantedTopLeft x y settings
 
@@ -1064,15 +1086,6 @@ drawRoundCorner x y pos settings =
         SlantedLeftJunctionRight ->
             drawRoundSlantedLeftJunctionRight x y settings
 
-        BottomLeftLowHorizontal ->
-            drawRoundBottomLeftLowHorizontalCorner x y settings
-
-        BottomRightLowHorizontal ->
-            drawRoundBottomRightLowHorizontalCorner x y settings
-
-        BottomLeftSlantedTopLeft ->
-            drawRoundBottomLeftSlantedTopLeftCorner x y settings
-
         BottomLeftSlantedTopRight ->
             drawRoundBottomLeftSlantedTopRightCorner x y settings
 
@@ -1087,9 +1100,6 @@ drawRoundCorner x y pos settings =
 
         BottomRightSlantedTopLeftLowHorizontal ->
             drawRoundBottomRightSlantedTopLeftLowHorizontal x y settings
-
-        BottomRightSlantedTopLeft ->
-            drawRoundBottomRightSlantedTopLeftCorner x y settings
 
         BottomRightSlantedBottomLeft ->
             drawRoundBottomRightSlantedBottomLeft x y settings
@@ -1258,56 +1268,6 @@ drawVerticalTopDownJunctionTopLeft x y s =
     , drawLine lstartX lstartY lendX lendY s
     , drawLine l2startX l2startY l2endX l2endY s
     , drawLine l3startX l3startY l3endX l3endY s
-    ]
-
-
-drawRoundTopLeftSlantedBottomRightCorner x y s =
-    let
-        startX =
-            measureX x + textWidth
-
-        startY =
-            measureY y + textHeight / 2
-
-        lstartX =
-            measureX x + textWidth
-
-        lstartY =
-            measureY y + textHeight
-
-        lendX =
-            measureX x + textWidth * 3 / 4
-
-        lendY =
-            measureY y + textHeight * 3 / 4
-    in
-    [ drawArc startX startY lendX lendY (s.arcRadius * 3 / 4) s
-    , drawLine lstartX lstartY lendX lendY s
-    ]
-
-
-drawRoundBottomLeftSlantedTopLeftCorner x y s =
-    let
-        startX =
-            measureX x + textWidth
-
-        startY =
-            measureY y + textHeight / 2
-
-        lstartX =
-            measureX x
-
-        lstartY =
-            measureY y
-
-        lendX =
-            measureX x + textWidth * 1 / 4
-
-        lendY =
-            measureY y + textHeight * 1 / 4
-    in
-    [ drawArc lendX lendY startX startY (s.arcRadius * 2) s
-    , drawLine lstartX lstartY lendX lendY s
     ]
 
 
@@ -1567,31 +1527,6 @@ drawRoundBottomRightSlantedTopRightCorner x y s =
     ]
 
 
-drawRoundBottomRightSlantedTopLeftCorner x y s =
-    let
-        startX =
-            measureX x
-
-        startY =
-            measureY y + textHeight / 2
-
-        lstartX =
-            measureX x
-
-        lstartY =
-            measureY y
-
-        lendX =
-            measureX x + textWidth * 1 / 4
-
-        lendY =
-            measureY y + textHeight * 1 / 4
-    in
-    [ drawArc startX startY lendX lendY (s.arcRadius * 3 / 4) s
-    , drawLine lstartX lstartY lendX lendY s
-    ]
-
-
 drawRoundBottomRightSlantedBottomLeft x y s =
     let
         lstartX =
@@ -1711,44 +1646,6 @@ drawVerticalTopDownJunctionBottomRight x y s =
     , drawLine lstartX lstartY lendX lendY s
     , drawLine l2startX l2startY l2endX l2endY s
     , drawLine l3startX l3startY l3endX l3endY s
-    ]
-
-
-drawRoundBottomLeftLowHorizontalCorner x y s =
-    let
-        startX =
-            measureX x + textWidth / 2
-
-        startY =
-            measureY y + textHeight - textWidth / 2
-
-        endX =
-            measureX x + textWidth
-
-        endY =
-            measureY y + textHeight
-    in
-    [ drawArc startX startY endX endY s.arcRadius s
-    , drawLine startX startY startX (measureY y) s
-    ]
-
-
-drawRoundBottomRightLowHorizontalCorner x y s =
-    let
-        startX =
-            measureX x
-
-        startY =
-            measureY y + textHeight
-
-        endX =
-            measureX x + textWidth / 2
-
-        endY =
-            measureY y + textHeight - textWidth / 2
-    in
-    [ drawArc startX startY endX endY s.arcRadius s
-    , drawLine endX endY endX (measureY y) s
     ]
 
 

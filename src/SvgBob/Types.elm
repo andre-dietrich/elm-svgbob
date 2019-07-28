@@ -7,17 +7,12 @@ module SvgBob.Types exposing
 
 
 type Position
-    = BottomLeftLowHorizontal
-    | BottomRightLowHorizontal
-    | BottomLeftSlantedTopLeft
-    | BottomLeftSlantedTopRight
+    = BottomLeftSlantedTopRight
     | BottomLeftSlantedBottomRight
     | BottomLeftSlantedTopRightLowHorizontal
     | BottomRightSlantedTopRight
     | BottomRightSlantedTopLeftLowHorizontal
-    | BottomRightSlantedTopLeft
     | BottomRightSlantedBottomLeft
-    | TopLeftSlantedBottomRight
     | TopRightSlantedTopLeft
     | SlantedRightJunctionRight
     | SlantedLeftJunctionLeft
