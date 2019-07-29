@@ -95,6 +95,17 @@ type alias Vector =
     }
 
 
+type alias Matrix =
+    ( ( Char, Char, Char ), ( Char, Char, Char ), ( Char, Char, Char ) )
+
+
+getNeigborhood : Int -> Int -> { a | lines : Array (Array c) } -> Array (Array c)
+getNeigborhood x y { lines } =
+    lines
+        |> Array.slice (y - 1) (y + 1)
+        |> Array.map (Array.slice (x - 1) (x + 1))
+
+
 textWidth : Float
 textWidth =
     8.0
@@ -264,38 +275,47 @@ isSlantLeft =
     member slantLeft
 
 
-leftOf x y model =
-    get (x - 1) y model
+leftOf : Int -> Int -> Array (Array c) -> Maybe c
+leftOf x y =
+    get (x - 1) y
 
 
-rightOf x y model =
-    get (x + 1) y model
+rightOf : Int -> Int -> Array (Array c) -> Maybe c
+rightOf x y =
+    get (x + 1) y
 
 
-topOf x y model =
-    get x (y - 1) model
+topOf : Int -> Int -> Array (Array c) -> Maybe c
+topOf x y =
+    get x (y - 1)
 
 
-bottomOf x y model =
-    get x (y + 1) model
+bottomOf : Int -> Int -> Array (Array c) -> Maybe c
+bottomOf x y =
+    get x (y + 1)
 
 
-topLeftOf x y model =
-    get (x - 1) (y - 1) model
+topLeftOf : Int -> Int -> Array (Array c) -> Maybe c
+topLeftOf x y =
+    get (x - 1) (y - 1)
 
 
-topRightOf x y model =
-    get (x + 1) (y - 1) model
+topRightOf : Int -> Int -> Array (Array c) -> Maybe c
+topRightOf x y =
+    get (x + 1) (y - 1)
 
 
-bottomLeftOf x y model =
-    get (x - 1) (y + 1) model
+bottomLeftOf : Int -> Int -> Array (Array c) -> Maybe c
+bottomLeftOf x y =
+    get (x - 1) (y + 1)
 
 
-bottomRightOf x y model =
-    get (x + 1) (y + 1) model
+bottomRightOf : Int -> Int -> Array (Array c) -> Maybe c
+bottomRightOf x y =
+    get (x + 1) (y + 1)
 
 
+isNeighbor : Maybe c -> (c -> Bool) -> Bool
 isNeighbor neighbor check =
     case neighbor of
         Just neighbor_ ->
@@ -308,32 +328,35 @@ isNeighbor neighbor check =
 getElement : Int -> Int -> Model -> Element
 getElement x y model =
     let
+        lines =
+            model.lines
+
         char =
-            get x y model
+            get x y lines
 
         top =
-            topOf x y model
+            topOf x y lines
 
         bottom =
-            bottomOf x y model
+            bottomOf x y lines
 
         left =
-            leftOf x y model
+            leftOf x y lines
 
         right =
-            rightOf x y model
+            rightOf x y lines
 
         topLeft =
-            topLeftOf x y model
+            topLeftOf x y lines
 
         topRight =
-            topRightOf x y model
+            topRightOf x y lines
 
         bottomLeft =
-            bottomLeftOf x y model
+            bottomLeftOf x y lines
 
         bottomRight =
-            bottomRightOf x y model
+            bottomRightOf x y lines
     in
     case char of
         Nothing ->
@@ -401,8 +424,8 @@ getElement x y model =
                 let
                     isVerticalJunctionLeft =
                         isNeighbor top isVertical
-                            && isNeighbor (bottomOf x y model) isVertical
-                            && isNeighbor (leftOf x y model) isHorizontal
+                            && isNeighbor (bottomOf x y lines) isVertical
+                            && isNeighbor (leftOf x y lines) isHorizontal
 
                     isVerticalJunctionRight =
                         isNeighbor top isVertical
@@ -1445,8 +1468,8 @@ measureY y =
     toFloat y * textHeight
 
 
-get : Int -> Int -> { a | lines : Array (Array c) } -> Maybe c
-get x y { lines } =
+get : Int -> Int -> Array (Array c) -> Maybe c
+get x y lines =
     lines
         |> Array.get y
         |> Maybe.map (Array.get x)
