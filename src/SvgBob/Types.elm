@@ -1,20 +1,8 @@
 module SvgBob.Types exposing
     ( Direction(..)
     , Element(..)
-    , Position(..)
     , Type(..)
     )
-
-
-type Position
-    = BottomLeftSlantedBottomRight
-    | BottomRightSlantedBottomLeft
-    | TopRightSlantedTopLeft
-    | VerticalTopDownJunctionBottomLeft
-    | VerticalTopDownJunctionBottomRight
-    | TopLeftSlantedTopRight
-    | VerticalTopDownJunctionTopRight
-    | VerticalTopDownJunctionTopLeft
 
 
 type Element
@@ -22,7 +10,6 @@ type Element
     | Text Char
     | Intersection Type -- also corner
     | Line Direction Direction
-    | RoundCorner Position
     | Arrow Direction
     | Curve Float Direction Direction
     | Sequence (List Element)
