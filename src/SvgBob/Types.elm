@@ -1,8 +1,15 @@
 module SvgBob.Types exposing
     ( Direction(..)
     , Element(..)
+    , Point
     , Type(..)
     )
+
+
+type alias Point =
+    { x : Float
+    , y : Float
+    }
 
 
 type Element

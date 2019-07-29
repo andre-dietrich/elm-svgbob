@@ -8,14 +8,14 @@ import Html.Attributes exposing (attribute)
 import String
 import Svg exposing (Svg)
 import Svg.Attributes as Attr
-import SvgBob.Model exposing (..)
-import SvgBob.Types exposing (..)
-
-
-type alias Point =
-    { x : Float
-    , y : Float
-    }
+import SvgBob.Model exposing (Model, Settings)
+import SvgBob.Types
+    exposing
+        ( Direction(..)
+        , Element(..)
+        , Point
+        , Type(..)
+        )
 
 
 move : Direction -> Point -> Point
@@ -56,6 +56,7 @@ move dir pt =
                 |> move (moveExt n dir2)
 
 
+moveExt : Float -> Direction -> Direction
 moveExt n dir =
     case dir of
         South ->
@@ -87,16 +88,6 @@ moveExt n dir =
 
         Ext_ m dir1 dir2 ->
             Ext (moveExt (n * m) dir1) (moveExt (n * m) dir2)
-
-
-type alias Vector =
-    { orientation : Point
-    , position : Point
-    }
-
-
-type alias Matrix =
-    ( ( Char, Char, Char ), ( Char, Char, Char ), ( Char, Char, Char ) )
 
 
 getNeigborhood : Int -> Int -> { a | lines : Array (Array c) } -> Array (Array c)
@@ -1073,42 +1064,8 @@ vectorEffect =
     attribute "vector-effect" "none"
 
 
-drawArc : Float -> Float -> Float -> Float -> Float -> Settings -> Svg a
-drawArc startX startY endX endY radius s =
-    let
-        rx =
-            radius
-
-        ry =
-            radius
-
-        paths =
-            [ "M"
-            , String.fromFloat startX
-            , String.fromFloat startY
-            , "A"
-            , String.fromFloat rx
-            , String.fromFloat ry
-            , "0"
-            , "0"
-            , "0"
-            , String.fromFloat endX
-            , String.fromFloat endY
-            ]
-                |> String.join " "
-    in
-    Svg.path
-        [ Attr.d paths
-        , Attr.stroke "black"
-        , Attr.strokeWidth <| String.fromFloat s.lineWidth
-        , Attr.fill "transparent"
-        , vectorEffect
-        ]
-        []
-
-
-drawArcX : Settings -> Float -> Point -> Direction -> Svg a
-drawArcX s faktor pos dir =
+drawArc : Settings -> Float -> Point -> Direction -> Svg a
+drawArc s faktor pos dir =
     let
         pos2 =
             move dir pos
@@ -1183,7 +1140,7 @@ drawPaths model =
         |> Array.indexedMap
             (\r line ->
                 Array.indexedMap
-                    (\c char ->
+                    (\c _ ->
                         drawElement c r model
                     )
                     line
@@ -1223,7 +1180,7 @@ draw settings pos element =
             [ drawLineX settings (move start pos) stop ]
 
         Curve faktor start stop ->
-            [ drawArcX settings faktor (move start pos) stop ]
+            [ drawArc settings faktor (move start pos) stop ]
 
         Sequence elements ->
             elements
