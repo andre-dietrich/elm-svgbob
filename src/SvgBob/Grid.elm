@@ -90,11 +90,37 @@ moveExt n dir =
             Ext (moveExt (n * m) dir1) (moveExt (n * m) dir2)
 
 
-getNeigborhood : Int -> Int -> { a | lines : Array (Array c) } -> Array (Array c)
-getNeigborhood x y { lines } =
-    lines
-        |> Array.slice (y - 1) (y + 1)
-        |> Array.map (Array.slice (x - 1) (x + 1))
+type alias Matrix =
+    { north_west : Maybe Char
+    , north : Maybe Char
+    , north_east : Maybe Char
+    , west : Maybe Char
+    , center : Char
+    , east : Maybe Char
+    , south_west : Maybe Char
+    , south : Maybe Char
+    , south_east : Maybe Char
+    }
+
+
+getMatrix : Int -> Int -> Array (Array Char) -> Maybe Matrix
+getMatrix x y lines =
+    case get x y lines of
+        Just center ->
+            Just
+                { north_west = get (x - 1) (y - 1) lines
+                , north = get x (y - 1) lines
+                , north_east = get (x + 1) (y - 1) lines
+                , west = get (x - 1) y lines
+                , center = center
+                , east = get (x + 1) y lines
+                , south_west = get (x - 1) (y + 1) lines
+                , south = get x (y + 1) lines
+                , south_east = get (x + 1) (y + 1) lines
+                }
+
+        _ ->
+            Nothing
 
 
 textWidth : Float
@@ -316,14 +342,113 @@ isNeighbor neighbor check =
             False
 
 
+lowHorizontalLine : Matrix -> Element
+lowHorizontalLine { center, west, east, south_west, south_east } =
+    if isNeighbor west isSlantRight then
+        Line (Ext South East) (West_ 4)
+
+    else if isNeighbor west isVertical then
+        Line (Ext South East) (West_ 3)
+
+    else if isNeighbor east isSlantLeft then
+        Line (Ext South West) (East_ 4)
+
+    else if isNeighbor east isVertical then
+        Line (Ext South West) (East_ 3)
+
+    else if isNeighbor south_west isVertical then
+        Line (Ext South (West_ 2)) (East_ 3)
+
+    else if isNeighbor south_east isVertical then
+        Line (Ext South West) (East_ 3)
+
+    else if
+        not (isNeighbor west isAlphaNumeric)
+            && not (isNeighbor east isAlphaNumeric)
+    then
+        Line (Ext South East) (West_ 2)
+
+    else
+        Text center
+
+
+intersection : Matrix -> Element
+intersection { center, south, west, north, east, south_west, south_east } =
+    let
+        isVerticalJunctionLeft =
+            isNeighbor north isVertical
+                && isNeighbor south isVertical
+                && isNeighbor west isHorizontal
+
+        isVerticalJunctionRight =
+            isNeighbor north isVertical
+                && isNeighbor south isVertical
+                && isNeighbor east isHorizontal
+
+        isHorizontalJunctionTop =
+            isNeighbor west isHorizontal
+                && isNeighbor east isHorizontal
+                && isNeighbor north isVertical
+
+        isHorizontalJunctionBot =
+            isNeighbor west isHorizontal
+                && isNeighbor east isHorizontal
+                && isNeighbor south isVertical
+
+        isTopLeftIntersection =
+            isNeighbor south isVertical && isNeighbor east isHorizontal
+
+        isTopRightIntersection =
+            isNeighbor south isVertical && isNeighbor west isHorizontal
+
+        isBottomRightIntersection =
+            isNeighbor north isVertical && isNeighbor west isHorizontal
+
+        isBottomLeftIntersection =
+            isNeighbor north isVertical && isNeighbor east isHorizontal
+
+        isCrossIntersection =
+            isNeighbor north isVertical
+                && isNeighbor south isVertical
+                && isNeighbor west isHorizontal
+                && isNeighbor east isHorizontal
+    in
+    if isCrossIntersection then
+        Intersection Cross
+
+    else if isVerticalJunctionLeft then
+        Intersection VertJunctionLeft
+
+    else if isVerticalJunctionRight then
+        Intersection VertJunctionRight
+
+    else if isHorizontalJunctionTop then
+        Intersection HorJunctionTop
+
+    else if isHorizontalJunctionBot then
+        Intersection HorJunctionBot
+
+    else if isTopRightIntersection then
+        Intersection TopRight
+
+    else if isTopLeftIntersection then
+        Intersection TopLeft
+
+    else if isBottomRightIntersection then
+        Intersection BottomRight
+
+    else if isBottomLeftIntersection then
+        Intersection BottomLeft
+
+    else
+        Empty
+
+
 getElement : Int -> Int -> Model -> Element
 getElement x y model =
     let
         lines =
             model.lines
-
-        char =
-            get x y lines
 
         top =
             topOf x y lines
@@ -349,139 +474,32 @@ getElement x y model =
         bottomRight =
             bottomRightOf x y lines
     in
-    case char of
+    case getMatrix x y model.lines of
         Nothing ->
             Empty
 
-        Just char_ ->
+        Just m ->
             if
-                isVertical char_
+                isVertical m.center
                     && not (isNeighbor left isAlphaNumeric)
                     && not (isNeighbor right isAlphaNumeric)
             then
                 Line South (Ext North North)
 
             else if
-                isHorizontal char_
+                isHorizontal m.center
                     && not (isNeighbor left isAlphaNumeric)
                     && not (isNeighbor right isAlphaNumeric)
             then
                 Line East (West_ 2)
 
-            else if
-                isLowHorizontal char_
-                    && isNeighbor left isSlantRight
-            then
-                Line (Ext South East) (West_ 4)
+            else if isLowHorizontal m.center then
+                lowHorizontalLine m
 
-            else if
-                isLowHorizontal char_
-                    && isNeighbor left isVertical
-            then
-                Line (Ext South East) (West_ 3)
+            else if isIntersection m.center then
+                intersection m
 
-            else if
-                isLowHorizontal char_
-                    && isNeighbor right isSlantLeft
-            then
-                Line (Ext South West) (East_ 4)
-
-            else if
-                isLowHorizontal char_
-                    && isNeighbor right isVertical
-            then
-                Line (Ext South West) (East_ 3)
-
-            else if
-                isLowHorizontal char_
-                    && isNeighbor bottomLeft isVertical
-            then
-                Line (Ext South (West_ 2)) (East_ 3)
-
-            else if
-                isLowHorizontal char_
-                    && isNeighbor bottomRight isVertical
-            then
-                Line (Ext South West) (East_ 3)
-
-            else if
-                isLowHorizontal char_
-                    && not (isNeighbor left isAlphaNumeric)
-                    && not (isNeighbor right isAlphaNumeric)
-            then
-                Line (Ext South East) (West_ 2)
-
-            else if isIntersection char_ then
-                let
-                    isVerticalJunctionLeft =
-                        isNeighbor top isVertical
-                            && isNeighbor (bottomOf x y lines) isVertical
-                            && isNeighbor (leftOf x y lines) isHorizontal
-
-                    isVerticalJunctionRight =
-                        isNeighbor top isVertical
-                            && isNeighbor bottom isVertical
-                            && isNeighbor right isHorizontal
-
-                    isHorizontalJunctionTop =
-                        isNeighbor left isHorizontal
-                            && isNeighbor right isHorizontal
-                            && isNeighbor top isVertical
-
-                    isHorizontalJunctionBot =
-                        isNeighbor left isHorizontal
-                            && isNeighbor right isHorizontal
-                            && isNeighbor bottom isVertical
-
-                    isTopLeftIntersection =
-                        isNeighbor bottom isVertical && isNeighbor right isHorizontal
-
-                    isTopRightIntersection =
-                        isNeighbor bottom isVertical && isNeighbor left isHorizontal
-
-                    isBottomRightIntersection =
-                        isNeighbor top isVertical && isNeighbor left isHorizontal
-
-                    isBottomLeftIntersection =
-                        isNeighbor top isVertical && isNeighbor right isHorizontal
-
-                    isCrossIntersection =
-                        isNeighbor top isVertical
-                            && isNeighbor bottom isVertical
-                            && isNeighbor left isHorizontal
-                            && isNeighbor right isHorizontal
-                in
-                if isCrossIntersection then
-                    Intersection Cross
-
-                else if isVerticalJunctionLeft then
-                    Intersection VertJunctionLeft
-
-                else if isVerticalJunctionRight then
-                    Intersection VertJunctionRight
-
-                else if isHorizontalJunctionTop then
-                    Intersection HorJunctionTop
-
-                else if isHorizontalJunctionBot then
-                    Intersection HorJunctionBot
-
-                else if isTopRightIntersection then
-                    Intersection TopRight
-
-                else if isTopLeftIntersection then
-                    Intersection TopLeft
-
-                else if isBottomRightIntersection then
-                    Intersection BottomRight
-
-                else if isBottomLeftIntersection then
-                    Intersection BottomLeft
-
-                else
-                    Empty
-
-            else if isRoundCorner char_ then
+            else if isRoundCorner m.center then
                 if
                     isNeighbor topRight isSlantRight
                         && isNeighbor bottomLeft isSlantRight
@@ -970,12 +988,12 @@ getElement x y model =
                         ]
 
                 else
-                    Text char_
+                    Text m.center
 
-            else if isArrowRight char_ then
+            else if isArrowRight m.center then
                 Arrow West
 
-            else if isArrowDown char_ then
+            else if isArrowDown m.center then
                 if isNeighbor top isVertical then
                     Arrow North
 
@@ -986,12 +1004,12 @@ getElement x y model =
                     Arrow <| Ext North West
 
                 else
-                    Text char_
+                    Text m.center
 
-            else if isArrowLeft char_ then
+            else if isArrowLeft m.center then
                 Arrow East
 
-            else if isArrowUp char_ then
+            else if isArrowUp m.center then
                 if isNeighbor bottom isVertical then
                     Arrow South
 
@@ -1002,19 +1020,19 @@ getElement x y model =
                     Arrow <| Ext South East
 
                 else
-                    Text char_
+                    Text m.center
 
-            else if isSlantRight char_ then
+            else if isSlantRight m.center then
                 Line
                     (Ext North East)
                     (Ext_ 2 South West)
 
-            else if isSlantLeft char_ then
+            else if isSlantLeft m.center then
                 Line
                     (Ext South East)
                     (Ext_ 2 North West)
 
-            else if isOpenCurve char_ then
+            else if isOpenCurve m.center then
                 if
                     isNeighbor topRight isSlantRight
                         && isNeighbor bottomRight isSlantLeft
@@ -1032,10 +1050,10 @@ getElement x y model =
                         (Ext South South)
 
                 else
-                    Text char_
+                    Text m.center
 
             else if
-                isCloseCurve char_
+                isCloseCurve m.center
                     && isNeighbor topLeft isRoundCorner
                     && isNeighbor bottomLeft isRoundCorner
             then
@@ -1044,7 +1062,7 @@ getElement x y model =
                     (Ext North North)
 
             else if
-                isCloseCurve char_
+                isCloseCurve m.center
                     && isNeighbor topLeft isSlantLeft
                     && isNeighbor bottomLeft isSlantRight
             then
@@ -1052,8 +1070,8 @@ getElement x y model =
                     (Ext South West)
                     (Ext North North)
 
-            else if char_ /= ' ' then
-                Text char_
+            else if m.center /= ' ' then
+                Text m.center
 
             else
                 Empty
