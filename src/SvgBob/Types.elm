@@ -38,6 +38,7 @@ type Direction
     | West
     | West_ Float
     | Ext Direction Direction
+    | Ext_ Float Direction Direction
 
 
 

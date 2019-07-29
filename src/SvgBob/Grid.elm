@@ -50,6 +50,44 @@ move dir pt =
                 |> move dir1
                 |> move dir2
 
+        Ext_ n dir1 dir2 ->
+            pt
+                |> move (moveExt n dir1)
+                |> move (moveExt n dir2)
+
+
+moveExt n dir =
+    case dir of
+        South ->
+            South_ n
+
+        South_ m ->
+            South_ (n * m)
+
+        North ->
+            North_ n
+
+        North_ m ->
+            North_ (n * m)
+
+        East ->
+            East_ n
+
+        East_ m ->
+            East_ (n * m)
+
+        West ->
+            West_ n
+
+        West_ m ->
+            West_ (n * m)
+
+        Ext dir1 dir2 ->
+            Ext (moveExt n dir1) (moveExt n dir2)
+
+        Ext_ m dir1 dir2 ->
+            Ext (moveExt (n * m) dir1) (moveExt (n * m) dir2)
+
 
 type alias Vector =
     { orientation : Point
@@ -440,7 +478,9 @@ getElement x y model =
                         [ Curve 2
                             East
                             (Ext (South_ 0.5) (West_ 1.5))
-                        , Line (Ext North East) (Ext (South_ 2) (West_ 2))
+                        , Line
+                            (Ext North East)
+                            (Ext_ 2 South West)
                         ]
 
                 else if
@@ -458,9 +498,9 @@ getElement x y model =
                     -- RoundCorner SlantedLeftJunctionLeft
                     Sequence
                         [ Curve 2
-                            (Ext (South_ 0.5) (East_ 0.5))
+                            (Ext_ 0.5 South East)
                             (Ext (North_ 0.5) (West_ 1.5))
-                        , Line (Ext North West) (Ext (South_ 2) (East_ 2))
+                        , Line (Ext North West) (Ext_ 2 South East)
                         ]
 
                 else if
@@ -473,7 +513,9 @@ getElement x y model =
                         [ Curve 2
                             West
                             (Ext (North_ 0.5) (East_ 1.5))
-                        , Line (Ext North East) (Ext (South_ 2) (West_ 2))
+                        , Line
+                            (Ext North East)
+                            (Ext_ 2 South West)
                         ]
 
                 else if
@@ -486,7 +528,9 @@ getElement x y model =
                         [ Curve 2
                             (Ext (North_ 0.5) (West_ 0.5))
                             (Ext (South_ 0.5) (East_ 1.5))
-                        , Line (Ext North West) (Ext (South_ 2) (East_ 2))
+                        , Line
+                            (Ext North West)
+                            (Ext (South_ 2) (East_ 2))
                         ]
 
                 else if
@@ -536,7 +580,16 @@ getElement x y model =
                     isNeighbor bottom isVertical
                         && isNeighbor topRight isSlantRight
                 then
-                    RoundCorner TopLeftSlantedTopRight
+                    -- RoundCorner TopLeftSlantedTopRight
+                    Sequence
+                        [ Curve 4
+                            (Ext_ 0.5 North East)
+                            (Ext South (West_ 0.5))
+                        , Line South (North_ 0.5)
+                        , Line
+                            (Ext North East)
+                            (Ext_ 0.5 South West)
+                        ]
 
                 else if
                     isNeighbor right isHorizontal
@@ -641,9 +694,11 @@ getElement x y model =
                 then
                     Sequence
                         [ Curve 2
-                            (Ext (North_ 0.5) (West_ 0.5))
+                            (Ext_ 0.5 North West)
                             (Ext (South_ 0.5) (East_ 1.5))
-                        , Line (Ext North West) (Ext (South_ 0.5) (East_ 0.5))
+                        , Line
+                            (Ext North West)
+                            (Ext_ 0.5 South East)
                         ]
 
                 else if
@@ -653,9 +708,11 @@ getElement x y model =
                     -- RoundCorner BottomLeftSlantedTopRight
                     Sequence
                         [ Curve 1
-                            (Ext (North_ 0.5) (East_ 0.5))
-                            (Ext (South_ 0.5) (East_ 0.5))
-                        , Line (Ext North East) (Ext (South_ 0.5) (West_ 0.5))
+                            (Ext_ 0.5 North East)
+                            (Ext_ 0.5 South East)
+                        , Line
+                            (Ext North East)
+                            (Ext_ 0.5 South West)
                         ]
 
                 else if
@@ -670,9 +727,11 @@ getElement x y model =
                 then
                     Sequence
                         [ Curve 2
-                            (West_ 1)
+                            West
                             (Ext (North_ 0.5) (East_ 1.5))
-                        , Line (Ext (North_ 0.5) (East_ 0.5)) (Ext (North_ 0.5) (East_ 0.5))
+                        , Line
+                            (Ext_ 0.5 North East)
+                            (Ext_ 0.5 North East)
                         ]
 
                 else if
@@ -696,7 +755,9 @@ getElement x y model =
                         [ Curve 1.5
                             (Ext South West)
                             (Ext North East)
-                        , Line (Ext North West) (Ext South East)
+                        , Line
+                            (Ext North West)
+                            (Ext South East)
                         ]
 
                 else if
@@ -706,8 +767,10 @@ getElement x y model =
                     Sequence
                         [ Curve 1
                             West
-                            (Ext (North_ 0.5) (East_ 0.5))
-                        , Line (Ext North West) (Ext (South_ 0.5) (East_ 0.5))
+                            (Ext_ 0.5 North East)
+                        , Line
+                            (Ext North West)
+                            (Ext_ 0.5 South East)
                         ]
 
                 else if
@@ -779,7 +842,8 @@ getElement x y model =
                         [ Curve 2
                             East
                             (Ext (South_ 0.5) (West_ 1.5))
-                        , Line (Ext South West) (Ext (North_ 0.5) (East_ 0.5))
+                        , Line (Ext South West)
+                            (Ext (North_ 0.5) (East_ 0.5))
                         ]
 
                 else if
@@ -790,7 +854,9 @@ getElement x y model =
                         [ Curve 1
                             East
                             (Ext (South_ 0.5) (West_ 0.5))
-                        , Line (Ext South East) (Ext (North_ 0.5) (West_ 0.5))
+                        , Line
+                            (Ext South East)
+                            (Ext_ 0.5 North West)
                         ]
 
                 else if
@@ -799,11 +865,11 @@ getElement x y model =
                 then
                     Sequence
                         [ Curve 2
-                            (Ext (South_ 0.5) (East_ 0.5))
+                            (Ext_ 0.5 South East)
                             (Ext (North_ 0.5) (West_ 1.5))
                         , Line
                             (Ext South East)
-                            (Ext (North_ 0.5) (West_ 0.5))
+                            (Ext_ 0.5 North West)
                         ]
 
                 else if
@@ -813,11 +879,11 @@ getElement x y model =
                     --Todo
                     Sequence
                         [ Curve 1
-                            (Ext (South_ 0.5) (West_ 0.5))
-                            (Ext (North_ 0.5) (West_ 0.5))
+                            (Ext_ 0.5 South West)
+                            (Ext_ 0.5 North West)
                         , Line
                             (Ext South West)
-                            (Ext (North_ 0.5) (East_ 0.5))
+                            (Ext_ 0.5 North East)
                         ]
 
                 else if
@@ -862,10 +928,14 @@ getElement x y model =
                     Text char_
 
             else if isSlantRight char_ then
-                Line (Ext North East) (Ext (South_ 2) (West_ 2))
+                Line
+                    (Ext North East)
+                    (Ext_ 2 South West)
 
             else if isSlantLeft char_ then
-                Line (Ext South East) (Ext (North_ 2) (West_ 2))
+                Line
+                    (Ext South East)
+                    (Ext_ 2 North West)
 
             else if isOpenCurve char_ then
                 if
@@ -1110,6 +1180,9 @@ opposite dir =
 
         Ext dir1 dir2 ->
             Ext (opposite dir1) (opposite dir2)
+
+        Ext_ n dir1 dir2 ->
+            Ext_ n (opposite dir1) (opposite dir2)
 
 
 drawRoundCorner : Int -> Int -> Position -> Settings -> List (Svg a)
