@@ -314,7 +314,7 @@ getElement x y model =
                     && not (isNeighbor left isAlphaNumeric)
                     && not (isNeighbor right isAlphaNumeric)
             then
-                Line East (Ext West West)
+                Line East (West_ 2)
 
             else if
                 isLowHorizontal char_
@@ -332,7 +332,7 @@ getElement x y model =
                 isLowHorizontal char_
                     && isNeighbor right isSlantLeft
             then
-                Line (Ext South West) (East_ 3)
+                Line (Ext South West) (East_ 4)
 
             else if
                 isLowHorizontal char_
@@ -344,7 +344,7 @@ getElement x y model =
                 isLowHorizontal char_
                     && isNeighbor bottomLeft isVertical
             then
-                Line (Ext South (Ext West West)) (East_ 3)
+                Line (Ext South (West_ 2)) (East_ 3)
 
             else if
                 isLowHorizontal char_
@@ -357,7 +357,7 @@ getElement x y model =
                     && not (isNeighbor left isAlphaNumeric)
                     && not (isNeighbor right isAlphaNumeric)
             then
-                Line (Ext South East) (Ext West West)
+                Line (Ext South East) (West_ 2)
 
             else if isIntersection char_ then
                 let
