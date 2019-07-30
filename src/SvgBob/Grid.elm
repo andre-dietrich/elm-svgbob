@@ -133,19 +133,9 @@ textHeight =
     16.0
 
 
-vertical : List Char
-vertical =
-    [ '|' ]
-
-
 verticalDashed : List Char
 verticalDashed =
     [ ':' ]
-
-
-horizontal : List Char
-horizontal =
-    [ '-' ]
 
 
 horizontalDouble : List Char
@@ -153,219 +143,117 @@ horizontalDouble =
     [ '=' ]
 
 
-lowHorizontal : List Char
-lowHorizontal =
-    [ '_' ]
-
-
-intersections : List Char
-intersections =
-    [ '+' ]
-
-
-roundCorners : List Char
-roundCorners =
-    [ '.', '\'' ]
-
-
-arrowRight : List Char
-arrowRight =
-    [ '>' ]
-
-
-arrowDown : List Char
-arrowDown =
-    [ 'V', 'v' ]
-
-
-arrowLeft : List Char
-arrowLeft =
-    [ '<' ]
-
-
-arrowUp : List Char
-arrowUp =
-    [ '^', 'î' ]
-
-
-slantRight : List Char
-slantRight =
-    [ '/' ]
-
-
-slantLeft : List Char
-slantLeft =
-    [ '\\' ]
-
-
-openCurve : List Char
-openCurve =
-    [ '(' ]
-
-
-closeCurve : List Char
-closeCurve =
-    [ ')' ]
-
-
-member : List Char -> Char -> Bool
+member : List Char -> Maybe Char -> Bool
 member list char =
-    List.member char list
-
-
-isOpenCurve : Char -> Bool
-isOpenCurve =
-    member openCurve
-
-
-
---close parenthesis
-
-
-isCloseCurve : Char -> Bool
-isCloseCurve =
-    member closeCurve
-
-
-isVertical : Char -> Bool
-isVertical =
-    member vertical
-
-
-isAlphaNumeric : Char -> Bool
-isAlphaNumeric char =
-    Char.isDigit char || Char.isUpper char || Char.isLower char
-
-
-isHorizontal : Char -> Bool
-isHorizontal =
-    member horizontal
-
-
-isLowHorizontal : Char -> Bool
-isLowHorizontal =
-    member lowHorizontal
-
-
-isIntersection : Char -> Bool
-isIntersection =
-    member intersections
-
-
-isLine : Char -> Bool
-isLine char =
-    isVertical char || isHorizontal char || isLowHorizontal char
-
-
-isRoundCorner : Char -> Bool
-isRoundCorner =
-    member roundCorners
-
-
-isArrowRight : Char -> Bool
-isArrowRight =
-    member arrowRight
-
-
-isArrowLeft : Char -> Bool
-isArrowLeft =
-    member arrowLeft
-
-
-isArrowDown : Char -> Bool
-isArrowDown =
-    member arrowDown
-
-
-isArrowUp : Char -> Bool
-isArrowUp =
-    member arrowUp
-
-
-isSlantRight : Char -> Bool
-isSlantRight =
-    member slantRight
-
-
-isSlantLeft : Char -> Bool
-isSlantLeft =
-    member slantLeft
-
-
-leftOf : Int -> Int -> Array (Array c) -> Maybe c
-leftOf x y =
-    get (x - 1) y
-
-
-rightOf : Int -> Int -> Array (Array c) -> Maybe c
-rightOf x y =
-    get (x + 1) y
-
-
-topOf : Int -> Int -> Array (Array c) -> Maybe c
-topOf x y =
-    get x (y - 1)
-
-
-bottomOf : Int -> Int -> Array (Array c) -> Maybe c
-bottomOf x y =
-    get x (y + 1)
-
-
-topLeftOf : Int -> Int -> Array (Array c) -> Maybe c
-topLeftOf x y =
-    get (x - 1) (y - 1)
-
-
-topRightOf : Int -> Int -> Array (Array c) -> Maybe c
-topRightOf x y =
-    get (x + 1) (y - 1)
-
-
-bottomLeftOf : Int -> Int -> Array (Array c) -> Maybe c
-bottomLeftOf x y =
-    get (x - 1) (y + 1)
-
-
-bottomRightOf : Int -> Int -> Array (Array c) -> Maybe c
-bottomRightOf x y =
-    get (x + 1) (y + 1)
-
-
-isNeighbor : Maybe c -> (c -> Bool) -> Bool
-isNeighbor neighbor check =
-    case neighbor of
-        Just neighbor_ ->
-            check neighbor_
+    case char of
+        Just c ->
+            List.member c list
 
         Nothing ->
             False
 
 
+isOpenCurve : Maybe Char -> Bool
+isOpenCurve =
+    member [ '(' ]
+
+
+isCloseCurve : Maybe Char -> Bool
+isCloseCurve =
+    member [ ')' ]
+
+
+isVertical : Maybe Char -> Bool
+isVertical =
+    member [ '|' ]
+
+
+isAlphaNumeric : Maybe Char -> Bool
+isAlphaNumeric char =
+    case char of
+        Just c ->
+            Char.isDigit c || Char.isUpper c || Char.isLower c
+
+        _ ->
+            False
+
+
+isHorizontal : Maybe Char -> Bool
+isHorizontal =
+    member [ '-' ]
+
+
+isLowHorizontal : Maybe Char -> Bool
+isLowHorizontal =
+    member [ '_' ]
+
+
+isIntersection : Maybe Char -> Bool
+isIntersection =
+    member [ '+' ]
+
+
+isLine : Maybe Char -> Bool
+isLine char =
+    isVertical char || isHorizontal char || isLowHorizontal char
+
+
+isRoundCorner : Maybe Char -> Bool
+isRoundCorner =
+    member [ '.', '\'' ]
+
+
+isArrowRight : Maybe Char -> Bool
+isArrowRight =
+    member [ '>' ]
+
+
+isArrowLeft : Maybe Char -> Bool
+isArrowLeft =
+    member [ '<' ]
+
+
+isArrowDown : Maybe Char -> Bool
+isArrowDown =
+    member [ 'V', 'v' ]
+
+
+isArrowUp : Maybe Char -> Bool
+isArrowUp =
+    member [ '^', 'î' ]
+
+
+isSlantRight : Maybe Char -> Bool
+isSlantRight =
+    member [ '/' ]
+
+
+isSlantLeft : Maybe Char -> Bool
+isSlantLeft =
+    member [ '\\' ]
+
+
 lowHorizontalLine : Matrix -> Element
 lowHorizontalLine { center, west, east, south_west, south_east } =
-    if isNeighbor west isSlantRight then
+    if isSlantRight west then
         Line (Ext South East) (West_ 4)
 
-    else if isNeighbor west isVertical then
+    else if isVertical west then
         Line (Ext South East) (West_ 3)
 
-    else if isNeighbor east isSlantLeft then
+    else if isSlantLeft east then
         Line (Ext South West) (East_ 4)
 
-    else if isNeighbor east isVertical then
+    else if isVertical east then
         Line (Ext South West) (East_ 3)
 
-    else if isNeighbor south_west isVertical then
+    else if isVertical south_west then
         Line (Ext South (West_ 2)) (East_ 3)
 
-    else if isNeighbor south_east isVertical then
+    else if isVertical south_east then
         Line (Ext South West) (East_ 3)
 
-    else if
-        not (isNeighbor west isAlphaNumeric)
-            && not (isNeighbor east isAlphaNumeric)
-    then
+    else if not (isAlphaNumeric west) && not (isAlphaNumeric east) then
         Line (Ext South East) (West_ 2)
 
     else
@@ -376,42 +264,40 @@ intersection : Matrix -> Element
 intersection { center, south, west, north, east, south_west, south_east } =
     let
         isVerticalJunctionLeft =
-            isNeighbor north isVertical
-                && isNeighbor south isVertical
-                && isNeighbor west isHorizontal
+            isVertical north && isVertical south && isHorizontal west
 
         isVerticalJunctionRight =
-            isNeighbor north isVertical
-                && isNeighbor south isVertical
-                && isNeighbor east isHorizontal
+            isVertical north
+                && isVertical south
+                && isHorizontal east
 
         isHorizontalJunctionTop =
-            isNeighbor west isHorizontal
-                && isNeighbor east isHorizontal
-                && isNeighbor north isVertical
+            isHorizontal west
+                && isHorizontal east
+                && isVertical north
 
         isHorizontalJunctionBot =
-            isNeighbor west isHorizontal
-                && isNeighbor east isHorizontal
-                && isNeighbor south isVertical
+            isHorizontal west
+                && isHorizontal east
+                && isVertical south
 
         isTopLeftIntersection =
-            isNeighbor south isVertical && isNeighbor east isHorizontal
+            isVertical south && isHorizontal east
 
         isTopRightIntersection =
-            isNeighbor south isVertical && isNeighbor west isHorizontal
+            isVertical south && isHorizontal west
 
         isBottomRightIntersection =
-            isNeighbor north isVertical && isNeighbor west isHorizontal
+            isVertical north && isHorizontal west
 
         isBottomLeftIntersection =
-            isNeighbor north isVertical && isNeighbor east isHorizontal
+            isVertical north && isHorizontal east
 
         isCrossIntersection =
-            isNeighbor north isVertical
-                && isNeighbor south isVertical
-                && isNeighbor west isHorizontal
-                && isNeighbor east isHorizontal
+            isVertical north
+                && isVertical south
+                && isHorizontal west
+                && isHorizontal east
     in
     if isCrossIntersection then
         Intersection Cross
@@ -446,64 +332,40 @@ intersection { center, south, west, north, east, south_west, south_east } =
 
 getElement : Int -> Int -> Model -> Element
 getElement x y model =
-    let
-        lines =
-            model.lines
-
-        top =
-            topOf x y lines
-
-        bottom =
-            bottomOf x y lines
-
-        left =
-            leftOf x y lines
-
-        right =
-            rightOf x y lines
-
-        topLeft =
-            topLeftOf x y lines
-
-        topRight =
-            topRightOf x y lines
-
-        bottomLeft =
-            bottomLeftOf x y lines
-
-        bottomRight =
-            bottomRightOf x y lines
-    in
     case getMatrix x y model.lines of
         Nothing ->
             Empty
 
         Just m ->
+            let
+                center =
+                    Just m.center
+            in
             if
-                isVertical m.center
-                    && not (isNeighbor left isAlphaNumeric)
-                    && not (isNeighbor right isAlphaNumeric)
+                isVertical center
+                    && not (isAlphaNumeric m.west)
+                    && not (isAlphaNumeric m.east)
             then
                 Line South (Ext North North)
 
             else if
-                isHorizontal m.center
-                    && not (isNeighbor left isAlphaNumeric)
-                    && not (isNeighbor right isAlphaNumeric)
+                isHorizontal center
+                    && not (isAlphaNumeric m.west)
+                    && not (isAlphaNumeric m.east)
             then
                 Line East (West_ 2)
 
-            else if isLowHorizontal m.center then
+            else if isLowHorizontal center then
                 lowHorizontalLine m
 
-            else if isIntersection m.center then
+            else if isIntersection center then
                 intersection m
 
-            else if isRoundCorner m.center then
+            else if isRoundCorner center then
                 if
-                    isNeighbor topRight isSlantRight
-                        && isNeighbor bottomLeft isSlantRight
-                        && isNeighbor right isHorizontal
+                    isSlantRight m.north_east
+                        && isSlantRight m.south_west
+                        && isHorizontal m.east
                 then
                     -- RoundCorner SlantedRightJunctionRight
                     Sequence
@@ -516,9 +378,9 @@ getElement x y model =
                         ]
 
                 else if
-                    isNeighbor top isVertical
-                        && isNeighbor bottom isVertical
-                        && isNeighbor topLeft isSlantLeft
+                    isVertical m.north
+                        && isVertical m.south
+                        && isSlantLeft m.north_west
                 then
                     -- RoundCorner VerticalTopDownJunctionTopLeft
                     Sequence
@@ -532,9 +394,9 @@ getElement x y model =
                         ]
 
                 else if
-                    isNeighbor topLeft isSlantLeft
-                        && isNeighbor bottomRight isSlantLeft
-                        && isNeighbor left isHorizontal
+                    isSlantLeft m.north_west
+                        && isSlantLeft m.south_east
+                        && isHorizontal m.west
                 then
                     -- RoundCorner SlantedLeftJunctionLeft
                     Sequence
@@ -545,11 +407,11 @@ getElement x y model =
                         ]
 
                 else if
-                    isNeighbor topRight isSlantRight
-                        && isNeighbor bottomLeft isSlantRight
-                        && isNeighbor left isHorizontal
+                    isSlantRight m.north_east
+                        && isSlantRight m.south_west
+                        && isHorizontal m.west
                 then
-                    -- RoundCorner SlantedRightJunctionLeft XXX
+                    -- RoundCorner SlantedRightJunctionLeft
                     Sequence
                         [ Curve 2
                             West
@@ -560,24 +422,24 @@ getElement x y model =
                         ]
 
                 else if
-                    isNeighbor topLeft isSlantLeft
-                        && isNeighbor bottomRight isSlantLeft
-                        && isNeighbor right isHorizontal
+                    isSlantLeft m.north_west
+                        && isSlantLeft m.south_east
+                        && isHorizontal m.east
                 then
                     -- RoundCorner SlantedLeftJunctionRight
                     Sequence
                         [ Curve 2
-                            (Ext (North_ 0.5) (West_ 0.5))
+                            (Ext_ 0.5 North West)
                             (Ext (South_ 0.5) (East_ 1.5))
                         , Line
                             (Ext North West)
-                            (Ext (South_ 2) (East_ 2))
+                            (Ext_ 2 South East)
                         ]
 
                 else if
-                    isNeighbor top isVertical
-                        && isNeighbor bottom isVertical
-                        && isNeighbor bottomLeft isSlantRight
+                    isVertical m.north
+                        && isVertical m.south
+                        && isSlantRight m.south_west
                 then
                     -- RoundCorner VerticalTopDownJunctionBottomLeft
                     Sequence
@@ -591,9 +453,9 @@ getElement x y model =
                         ]
 
                 else if
-                    isNeighbor top isVertical
-                        && isNeighbor bottom isVertical
-                        && isNeighbor bottomRight isSlantLeft
+                    isVertical m.north
+                        && isVertical m.south
+                        && isSlantLeft m.south_east
                 then
                     -- RoundCorner VerticalTopDownJunctionBottomRight
                     Sequence
@@ -607,9 +469,9 @@ getElement x y model =
                         ]
 
                 else if
-                    isNeighbor top isVertical
-                        && isNeighbor bottom isVertical
-                        && isNeighbor topRight isSlantRight
+                    isVertical m.north
+                        && isVertical m.south
+                        && isSlantRight m.north_east
                 then
                     -- RoundCorner VerticalTopDownJunctionTopRight
                     Sequence
@@ -622,10 +484,7 @@ getElement x y model =
                             (Ext_ 0.5 South West)
                         ]
 
-                else if
-                    isNeighbor bottom isVertical
-                        && isNeighbor right isHorizontal
-                then
+                else if isVertical m.south && isHorizontal m.east then
                     Sequence
                         [ Curve 1
                             East
@@ -633,10 +492,7 @@ getElement x y model =
                         , Line South (North_ 0.5)
                         ]
 
-                else if
-                    isNeighbor bottom isVertical
-                        && isNeighbor left isHorizontal
-                then
+                else if isVertical m.south && isHorizontal m.west then
                     Sequence
                         [ Curve 1
                             (South_ 0.5)
@@ -644,10 +500,7 @@ getElement x y model =
                         , Line South (North_ 0.5)
                         ]
 
-                else if
-                    isNeighbor bottom isVertical
-                        && isNeighbor topRight isSlantRight
-                then
+                else if isVertical m.south && isSlantRight m.north_east then
                     -- RoundCorner TopLeftSlantedTopRight
                     Sequence
                         [ Curve 4
@@ -659,74 +512,47 @@ getElement x y model =
                             (Ext_ 0.5 South West)
                         ]
 
-                else if
-                    isNeighbor right isHorizontal
-                        && isNeighbor bottomLeft isOpenCurve
-                then
+                else if isHorizontal m.east && isOpenCurve m.south_west then
                     Curve 4
                         East
                         (Ext South (West_ 3))
 
-                else if
-                    isNeighbor right isRoundCorner
-                        && isNeighbor bottomLeft isOpenCurve
-                then
+                else if isRoundCorner m.east && isOpenCurve m.south_west then
                     Curve 4
                         East
                         (Ext South (West_ 3))
 
-                else if
-                    isNeighbor left isHorizontal
-                        && isNeighbor bottomRight isCloseCurve
-                then
+                else if isHorizontal m.west && isCloseCurve m.south_east then
                     Curve 4
                         (Ext South (East_ 2))
                         (Ext North (West_ 3))
 
-                else if
-                    isNeighbor left isRoundCorner
-                        && isNeighbor bottomRight isCloseCurve
-                then
+                else if isRoundCorner m.west && isCloseCurve m.south_east then
                     Curve 4
                         (Ext South (East_ 2))
                         (Ext North (West_ 3))
 
-                else if
-                    isNeighbor right isHorizontal
-                        && isNeighbor topLeft isOpenCurve
-                then
+                else if isHorizontal m.east && isOpenCurve m.north_west then
                     Curve 4
                         (Ext North (West_ 2))
                         (Ext South (East_ 3))
 
-                else if
-                    isNeighbor left isHorizontal
-                        && isNeighbor topRight isCloseCurve
-                then
+                else if isHorizontal m.west && isCloseCurve m.north_east then
                     Curve 4
                         West
                         (Ext North (East_ 3))
 
-                else if
-                    isNeighbor right isRoundCorner
-                        && isNeighbor topLeft isOpenCurve
-                then
+                else if isRoundCorner m.east && isOpenCurve m.north_west then
                     Curve 4
                         (Ext North (West_ 2))
                         (Ext South (East_ 3))
 
-                else if
-                    isNeighbor left isRoundCorner
-                        && isNeighbor topRight isCloseCurve
-                then
+                else if isRoundCorner m.west && isCloseCurve m.north_east then
                     Curve 4
                         West
                         (Ext North (East_ 3))
 
-                else if
-                    isNeighbor top isVertical
-                        && isNeighbor right isHorizontal
-                then
+                else if isVertical m.north && isHorizontal m.east then
                     Sequence
                         [ Curve 1
                             (North_ 0.5)
@@ -734,10 +560,7 @@ getElement x y model =
                         , Line North (South_ 0.5)
                         ]
 
-                else if
-                    isNeighbor top isVertical
-                        && isNeighbor right isLowHorizontal
-                then
+                else if isVertical m.north && isLowHorizontal m.east then
                     Sequence
                         [ Curve 1
                             (South_ 0.5)
@@ -745,10 +568,7 @@ getElement x y model =
                         , Line North (South_ 1.5)
                         ]
 
-                else if
-                    isNeighbor top isVertical
-                        && isNeighbor left isLowHorizontal
-                then
+                else if isVertical m.north && isLowHorizontal m.west then
                     Sequence
                         [ Curve 1
                             (Ext South West)
@@ -756,10 +576,7 @@ getElement x y model =
                         , Line North (South_ 1.5)
                         ]
 
-                else if
-                    isNeighbor right isHorizontal
-                        && isNeighbor topLeft isSlantLeft
-                then
+                else if isHorizontal m.east && isSlantLeft m.north_west then
                     Sequence
                         [ Curve 2
                             (Ext_ 0.5 North West)
@@ -769,10 +586,7 @@ getElement x y model =
                             (Ext_ 0.5 South East)
                         ]
 
-                else if
-                    isNeighbor right isHorizontal
-                        && isNeighbor topRight isSlantRight
-                then
+                else if isHorizontal m.east && isSlantRight m.north_east then
                     -- RoundCorner BottomLeftSlantedTopRight
                     Sequence
                         [ Curve 1
@@ -783,10 +597,7 @@ getElement x y model =
                             (Ext_ 0.5 South West)
                         ]
 
-                else if
-                    isNeighbor top isVertical
-                        && isNeighbor bottomRight isSlantLeft
-                then
+                else if isVertical m.north && isSlantLeft m.south_east then
                     -- RoundCorner BottomLeftSlantedBottomRight
                     Sequence
                         [ Curve 4
@@ -798,10 +609,7 @@ getElement x y model =
                             (Ext_ 0.5 North West)
                         ]
 
-                else if
-                    isNeighbor left isHorizontal
-                        && isNeighbor topRight isSlantRight
-                then
+                else if isHorizontal m.west && isSlantRight m.north_east then
                     Sequence
                         [ Curve 2
                             West
@@ -811,10 +619,7 @@ getElement x y model =
                             (Ext_ 0.5 North East)
                         ]
 
-                else if
-                    isNeighbor right isLowHorizontal
-                        && isNeighbor topRight isSlantRight
-                then
+                else if isLowHorizontal m.east && isSlantRight m.north_east then
                     -- RoundCorner BottomLeftSlantedTopRightLowHorizontal
                     Sequence
                         [ Curve 1.5
@@ -823,10 +628,7 @@ getElement x y model =
                         , Line (Ext North East) (Ext South West)
                         ]
 
-                else if
-                    isNeighbor left isLowHorizontal
-                        && isNeighbor topLeft isSlantLeft
-                then
+                else if isLowHorizontal m.west && isSlantLeft m.north_west then
                     -- RoundCorner BottomRightSlantedTopLeftLowHorizontal
                     Sequence
                         [ Curve 1.5
@@ -837,10 +639,7 @@ getElement x y model =
                             (Ext South East)
                         ]
 
-                else if
-                    isNeighbor left isHorizontal
-                        && isNeighbor topLeft isSlantLeft
-                then
+                else if isHorizontal m.west && isSlantLeft m.north_west then
                     Sequence
                         [ Curve 1
                             West
@@ -850,10 +649,7 @@ getElement x y model =
                             (Ext_ 0.5 South East)
                         ]
 
-                else if
-                    isNeighbor top isVertical
-                        && isNeighbor bottomLeft isSlantRight
-                then
+                else if isVertical m.north && isSlantRight m.south_west then
                     --  RoundCorner BottomRightSlantedBottomLeft
                     Sequence
                         [ Curve 4
@@ -865,10 +661,7 @@ getElement x y model =
                             (Ext_ 0.5 North East)
                         ]
 
-                else if
-                    isNeighbor top isVertical
-                        && isNeighbor left isHorizontal
-                then
+                else if isVertical m.north && isHorizontal m.west then
                     Sequence
                         [ Curve 1
                             West
@@ -876,10 +669,7 @@ getElement x y model =
                         , Line North (South_ 0.5)
                         ]
 
-                else if
-                    isNeighbor right isHorizontal
-                        && isNeighbor bottom isRoundCorner
-                then
+                else if isHorizontal m.east && isRoundCorner m.south then
                     Sequence
                         [ Curve 1
                             East
@@ -887,10 +677,7 @@ getElement x y model =
                         , Line South (North_ 0.5)
                         ]
 
-                else if
-                    isNeighbor left isHorizontal
-                        && isNeighbor bottom isRoundCorner
-                then
+                else if isHorizontal m.west && isRoundCorner m.south then
                     Sequence
                         [ Curve 1
                             (South_ 0.5)
@@ -898,10 +685,7 @@ getElement x y model =
                         , Line South (North_ 0.5)
                         ]
 
-                else if
-                    isNeighbor left isHorizontal
-                        && isNeighbor top isRoundCorner
-                then
+                else if isHorizontal m.west && isRoundCorner m.north then
                     Sequence
                         [ Curve 1
                             West
@@ -909,10 +693,7 @@ getElement x y model =
                         , Line North (South_ 0.5)
                         ]
 
-                else if
-                    isNeighbor right isHorizontal
-                        && isNeighbor top isRoundCorner
-                then
+                else if isHorizontal m.east && isRoundCorner m.north then
                     Sequence
                         [ Curve 1
                             (North_ 0.5)
@@ -920,35 +701,26 @@ getElement x y model =
                         , Line North (South_ 0.5)
                         ]
 
-                else if
-                    isNeighbor right isHorizontal
-                        && isNeighbor bottomLeft isSlantRight
-                then
+                else if isHorizontal m.east && isSlantRight m.south_west then
                     Sequence
                         [ Curve 2
                             East
                             (Ext (South_ 0.5) (West_ 1.5))
                         , Line (Ext South West)
-                            (Ext (North_ 0.5) (East_ 0.5))
+                            (Ext_ 0.5 North East)
                         ]
 
-                else if
-                    isNeighbor right isHorizontal
-                        && isNeighbor bottomRight isSlantLeft
-                then
+                else if isHorizontal m.east && isSlantLeft m.south_east then
                     Sequence
                         [ Curve 1
                             East
-                            (Ext (South_ 0.5) (West_ 0.5))
+                            (Ext_ 0.5 South West)
                         , Line
                             (Ext South East)
                             (Ext_ 0.5 North West)
                         ]
 
-                else if
-                    isNeighbor left isHorizontal
-                        && isNeighbor bottomRight isSlantLeft
-                then
+                else if isHorizontal m.west && isSlantLeft m.south_east then
                     Sequence
                         [ Curve 2
                             (Ext_ 0.5 South East)
@@ -958,10 +730,7 @@ getElement x y model =
                             (Ext_ 0.5 North West)
                         ]
 
-                else if
-                    isNeighbor left isHorizontal
-                        && isNeighbor bottomLeft isSlantRight
-                then
+                else if isHorizontal m.west && isSlantRight m.south_west then
                     --Todo
                     Sequence
                         [ Curve 1
@@ -972,10 +741,7 @@ getElement x y model =
                             (Ext_ 0.5 North East)
                         ]
 
-                else if
-                    isNeighbor bottom isVertical
-                        && isNeighbor topLeft isSlantLeft
-                then
+                else if isVertical m.south && isSlantLeft m.north_west then
                     -- RoundCorner TopRightSlantedTopLeft
                     Sequence
                         [ Curve 4
@@ -990,60 +756,58 @@ getElement x y model =
                 else
                     Text m.center
 
-            else if isArrowRight m.center then
+            else if isArrowRight center then
                 Arrow West
 
-            else if isArrowDown m.center then
-                if isNeighbor top isVertical then
+            else if isArrowDown center then
+                if isVertical m.north then
                     Arrow North
 
-                else if isNeighbor topRight isSlantRight then
+                else if isSlantRight m.north_east then
                     Arrow <| Ext North East
 
-                else if isNeighbor topLeft isSlantLeft then
+                else if isSlantLeft m.north_west then
                     Arrow <| Ext North West
 
                 else
                     Text m.center
 
-            else if isArrowLeft m.center then
+            else if isArrowLeft center then
                 Arrow East
 
-            else if isArrowUp m.center then
-                if isNeighbor bottom isVertical then
+            else if isArrowUp center then
+                if isVertical m.south then
                     Arrow South
 
-                else if isNeighbor bottomLeft isSlantRight then
+                else if isSlantRight m.south_west then
                     Arrow <| Ext South West
 
-                else if isNeighbor bottomRight isSlantLeft then
+                else if isSlantLeft m.south_east then
                     Arrow <| Ext South East
 
                 else
-                    Text m.center
+                    Maybe.map Text center
+                        |> Maybe.withDefault Empty
 
-            else if isSlantRight m.center then
+            else if isSlantRight center then
                 Line
                     (Ext North East)
                     (Ext_ 2 South West)
 
-            else if isSlantLeft m.center then
+            else if isSlantLeft center then
                 Line
                     (Ext South East)
                     (Ext_ 2 North West)
 
-            else if isOpenCurve m.center then
-                if
-                    isNeighbor topRight isSlantRight
-                        && isNeighbor bottomRight isSlantLeft
-                then
+            else if isOpenCurve center then
+                if isSlantRight m.north_east && isSlantLeft m.south_east then
                     Curve 4
                         (Ext North East)
                         (Ext South South)
 
                 else if
-                    isNeighbor topRight isRoundCorner
-                        && isNeighbor bottomRight isRoundCorner
+                    isRoundCorner m.north_east
+                        && isRoundCorner m.south_east
                 then
                     Curve 4
                         North
@@ -1053,18 +817,18 @@ getElement x y model =
                     Text m.center
 
             else if
-                isCloseCurve m.center
-                    && isNeighbor topLeft isRoundCorner
-                    && isNeighbor bottomLeft isRoundCorner
+                isCloseCurve center
+                    && isRoundCorner m.north_west
+                    && isRoundCorner m.south_west
             then
                 Curve 4
                     South
                     (Ext North North)
 
             else if
-                isCloseCurve m.center
-                    && isNeighbor topLeft isSlantLeft
-                    && isNeighbor bottomLeft isSlantRight
+                isCloseCurve center
+                    && isSlantLeft m.north_west
+                    && isSlantRight m.south_west
             then
                 Curve 4
                     (Ext South West)
