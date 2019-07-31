@@ -2,8 +2,11 @@ module SvgBob.Types exposing
     ( Direction(..)
     , Element(..)
     , Point
+    , Scan(..)
     , Type(..)
     )
+
+import Array exposing (Array)
 
 
 type alias Point =
@@ -23,7 +26,8 @@ type Element
 
 
 type Direction
-    = East
+    = Center
+    | East
     | East_ Float
     | South
     | South_ Float
@@ -50,3 +54,22 @@ type Type
     | TopRight
     | BottomLeft
     | BottomRight
+
+
+type Scan
+    = OpenCurve
+    | CloseCurve
+    | Vertical
+    | AlphaNumeric
+    | Horizontal
+    | LowHorizontal
+    | IntersectionX
+    | LineX
+    | RoundCorner
+    | ArrowRight
+    | ArrowLeft
+    | ArrowDown
+    | ArrowUp
+    | SlantRight
+    | SlantLeft
+    | None

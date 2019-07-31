@@ -17,7 +17,7 @@ type alias Settings =
 type alias Model =
     { rows : Int
     , columns : Int
-    , lines : Array (Array Char)
+    , lines : List (List Char)
     , settings : Settings
     }
 
@@ -34,15 +34,9 @@ init str =
                 |> List.maximum
 
         lineChar =
-            lines
-                |> Array.fromList
-                |> Array.map
-                    (String.trimRight
-                        >> String.toList
-                        >> Array.fromList
-                    )
+            List.map (String.trimRight >> String.toList) lines
     in
-    { rows = Array.length lineChar
+    { rows = List.length lineChar
     , columns = Maybe.withDefault 0 max
     , lines = lineChar
     , settings =
