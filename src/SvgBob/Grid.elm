@@ -109,10 +109,7 @@ type alias Matrix =
     }
 
 
-
---getMatrix : Int -> Int -> Dict Array (Array Char) -> Maybe Matrix
-
-
+getMatrix : Int -> Int -> Dict ( Int, Int ) ( Char, Scan ) -> Matrix
 getMatrix x y dict =
     { north_west = get ( x - 1, y - 1 ) dict
     , north = get ( x, y - 1 ) dict
@@ -190,6 +187,7 @@ lowHorizontal char matrix =
         |> sequenceWithDefault char
 
 
+sequenceWithDefault : Char -> List Element -> Element
 sequenceWithDefault char list =
     if list == [] then
         Text char
@@ -200,8 +198,12 @@ sequenceWithDefault char list =
 
 intersection : Char -> Matrix -> Element
 intersection char matrix =
-    [ ( .north >> (==) Vertical, Line Center North )
-    , ( .south >> (==) Vertical, Line Center South )
+    [ ( \{ north } -> north == Vertical || north == Intersection || north == Corner
+      , Line Center North
+      )
+    , ( \m -> m.south == Vertical || m.south == Intersection || m.south == Corner
+      , Line Center South
+      )
     , ( .east >> (==) Horizontal, Line Center East )
     , ( .west >> (==) Horizontal, Line Center West )
     , ( .north_west >> (==) SlantLeft, Line Center (Ext North West) )
@@ -239,6 +241,7 @@ openCurve char matrix =
         |> sequenceWithDefault char
 
 
+roundedCorner : Char -> Matrix -> Element
 roundedCorner char matrix =
     [ ( \m -> (Horizontal == m.west) && (Horizontal == m.east)
       , Line West (East_ 2)
@@ -252,49 +255,43 @@ roundedCorner char matrix =
     , ( \m -> (SlantLeft == m.north_west) && (SlantLeft == m.south_east)
       , Line (Ext North West) (Ext_ 2 South East)
       )
-    , ( \m -> (Vertical == m.north || Corner == m.north) && (Horizontal == m.west)
+    , ( \m -> (Vertical == m.north || Corner == m.north || Intersection == m.north) && (Horizontal == m.west)
       , Sequence
             [ Curve 1 West (Ext (North_ 0.5) East)
             , Line North (South_ 0.5)
             ]
       )
-    , ( \m -> (Vertical == m.north || Corner == m.north) && (Horizontal == m.east)
+    , ( \m -> (Vertical == m.north || Corner == m.north || Intersection == m.north) && (Horizontal == m.east)
       , Sequence
             [ Curve 1 (North_ 0.5) (Ext (South_ 0.5) East)
             , Line North (South_ 0.5)
             ]
       )
-    , ( \m -> (Vertical == m.south || Corner == m.south) && (Horizontal == m.west)
+    , ( \m -> (Vertical == m.south || Corner == m.south || Intersection == m.south) && (Horizontal == m.west)
       , Sequence
             [ Curve 1 (South_ 0.5) (Ext (North_ 0.5) West)
             , Line South (North_ 0.5)
             ]
       )
-    , ( \m -> (Vertical == m.north || Corner == m.north) && (LowHorizontal == m.west)
+    , ( \m -> (Vertical == m.north || Corner == m.north || Intersection == m.north) && (LowHorizontal == m.west)
       , Sequence
             [ Curve 1 (Ext South West) (Ext (North_ 0.5) East)
             , Line North (South_ 1.5)
             ]
       )
-
-    --  _.  _.
-    --   |   '
-    , ( \m -> (Vertical == m.south || Corner == m.south) && (LowHorizontal == m.west)
+    , ( \m -> (Vertical == m.south || Corner == m.south || Intersection == m.south) && (LowHorizontal == m.west)
       , Curve 1 (South_ 1.5) (Ext (North_ 0.5) West)
       )
-
-    --  _.  _.
-    --   |   '
-    , ( \m -> (Vertical == m.south || Corner == m.south) && (LowHorizontal == m.east)
+    , ( \m -> (Vertical == m.south || Corner == m.south || Intersection == m.south) && (LowHorizontal == m.east)
       , Curve 1 (Ext South East) (Ext (South_ 0.5) West)
       )
-    , ( \m -> (Vertical == m.north || Corner == m.north) && (LowHorizontal == m.east)
+    , ( \m -> (Vertical == m.north || Corner == m.north || Intersection == m.north) && (LowHorizontal == m.east)
       , Sequence
             [ Curve 1 (South_ 0.5) (Ext (South_ 0.5) East)
             , Line North (South_ 1.5)
             ]
       )
-    , ( \m -> (Vertical == m.south || Corner == m.south) && (Horizontal == m.east)
+    , ( \m -> (Vertical == m.south || Corner == m.south || Intersection == m.south) && (Horizontal == m.east)
       , Sequence
             [ Curve 1 East (Ext (South_ 0.5) West)
             , Line South (North_ 0.5)
@@ -348,24 +345,34 @@ roundedCorner char matrix =
     , ( \m -> (Horizontal == m.west) && (CloseCurve == m.south_east)
       , Curve 4 (Ext South (East_ 2)) (Ext North (West_ 3))
       )
-    , ( \m -> (Horizontal == m.east || Corner == m.east) && (OpenCurve == m.south_west)
+    , ( \m -> OpenCurve == m.south_west
       , Curve 4 East (Ext South (West_ 3))
       )
-    , ( \m -> (Horizontal == m.west || Corner == m.west) && (CloseCurve == m.south_east)
+    , ( \m -> CloseCurve == m.south_east
       , Curve 4 (Ext South (East_ 2)) (Ext North (West_ 3))
       )
-    , ( \m -> (Horizontal == m.east || Corner == m.east) && (OpenCurve == m.north_west)
+    , ( \m -> OpenCurve == m.north_west
       , Curve 4 (Ext North (West_ 2)) (Ext South (East_ 3))
       )
-    , ( \m -> (Horizontal == m.west || Corner == m.west) && (CloseCurve == m.north_east)
+    , ( \m -> CloseCurve == m.north_east
       , Curve 4 West (Ext North (East_ 3))
+      )
+    , ( \m -> Vertical == m.north && SlantRight == m.north_east
+      , Sequence [ Line Center North, Line Center (Ext North East) ]
+      )
+    , ( \m -> Vertical == m.north && SlantLeft == m.north_west
+      , Sequence [ Line Center North, Line Center (Ext North West) ]
+      )
+    , ( \m -> SlantRight == m.north_east && SlantLeft == m.north_west
+      , Sequence [ Line Center (Ext North East), Line Center (Ext North West) ]
       )
     ]
         |> apply matrix
         |> sequenceWithDefault char
 
 
-getElement m ( char, elem ) model =
+getElement : Matrix -> ( Char, Scan ) -> Element
+getElement m ( char, elem ) =
     case elem of
         Vertical ->
             if AlphaNumeric /= m.west && AlphaNumeric /= m.east then
@@ -387,34 +394,34 @@ getElement m ( char, elem ) model =
         Intersection ->
             intersection char m
 
-        ArrowX South ->
+        Arrow South ->
             if Vertical == m.north then
-                Arrow North
+                Triangle North
 
             else if SlantRight == m.north_east then
-                Arrow <| Ext North East
+                Triangle <| Ext North East
 
             else if SlantLeft == m.north_west then
-                Arrow <| Ext North West
+                Triangle <| Ext North West
 
             else
                 Text char
 
-        ArrowX North ->
+        Arrow North ->
             if Vertical == m.south then
-                Arrow South
+                Triangle South
 
             else if SlantRight == m.south_west then
-                Arrow <| Ext South West
+                Triangle <| Ext South West
 
             else if SlantLeft == m.south_east then
-                Arrow <| Ext South East
+                Triangle <| Ext South East
 
             else
                 Text char
 
-        ArrowX dir ->
-            Arrow dir
+        Arrow dir ->
+            Triangle dir
 
         Corner ->
             roundedCorner char m
@@ -430,6 +437,19 @@ getElement m ( char, elem ) model =
 
         CloseCurve ->
             closeCurve char m
+
+        Square ->
+            case intersection char m of
+                Sequence list ->
+                    Box
+                        :: list
+                        |> Sequence
+
+                _ ->
+                    Text char
+
+        O ->
+            Circle
 
         _ ->
             Text char
@@ -484,8 +504,23 @@ arrowMarker =
         , Attr.markerHeight "10"
         , Attr.orient "auto"
         ]
-        [ Svg.path [ Attr.d "M 0 0 L 10 5 L 0 10 z", vectorEffect ]
-            []
+        [ Svg.path [ Attr.d "M 0 0 L 10 5 L 0 10 z", vectorEffect ] []
+        ]
+
+
+squareMarker : Svg a
+squareMarker =
+    Svg.marker
+        [ Attr.id "square"
+        , Attr.viewBox "0 0 16 16"
+        , Attr.refX "2"
+        , Attr.refY "8"
+        , Attr.markerUnits "strokeWidth"
+        , Attr.markerWidth "10"
+        , Attr.markerHeight "10"
+        , Attr.orient "auto"
+        ]
+        [ Svg.path [ Attr.d "M 0 0 L 16 0 L 16 16 L 0 16 z", vectorEffect ] []
         ]
 
 
@@ -500,22 +535,21 @@ getSvg attr model =
     in
     Svg.svg (Attr.viewBox ("0 0 " ++ gwidth ++ " " ++ gheight) :: attr)
         (Svg.defs []
-            [ arrowMarker ]
+            [ arrowMarker, squareMarker ]
             :: drawPaths model
         )
 
 
-drawElement : Dict ( Int, Int ) ( Char, Scan ) -> Model -> ( ( Int, Int ), ( Char, Scan ) ) -> List (Svg a)
-drawElement dict model ( ( x, y ), ( char, element ) ) =
+drawElement : Dict ( Int, Int ) ( Char, Scan ) -> Settings -> ( ( Int, Int ), ( Char, Scan ) ) -> List (Svg a)
+drawElement dict settings ( ( x, y ), ( char, element ) ) =
     let
         position =
             Point
                 (measureX x + textWidth / 2)
                 (measureY y + textHeight / 2)
     in
-    model
-        |> getElement (getMatrix x y dict) ( char, element )
-        |> draw model.settings position
+    getElement (getMatrix x y dict) ( char, element )
+        |> draw settings position
 
 
 drawPaths : Model -> List (Svg a)
@@ -530,7 +564,7 @@ drawPaths model =
             Dict.fromList elements
 
         fn =
-            drawElement dict model
+            drawElement dict model.settings
     in
     List.map fn elements
         |> List.concat
@@ -583,22 +617,22 @@ getScan char =
             Just Corner
 
         '>' ->
-            Just <| ArrowX East
+            Just <| Arrow West
 
         '<' ->
-            Just <| ArrowX West
+            Just <| Arrow East
 
         'V' ->
-            Just <| ArrowX South
+            Just <| Arrow South
 
         'v' ->
-            Just <| ArrowX South
+            Just <| Arrow South
 
         '^' ->
-            Just <| ArrowX North
+            Just <| Arrow North
 
         'î' ->
-            Just <| ArrowX North
+            Just <| Arrow North
 
         '/' ->
             Just SlantRight
@@ -615,6 +649,15 @@ getScan char =
         '|' ->
             Just Vertical
 
+        '#' ->
+            Just Square
+
+        'O' ->
+            Just O
+
+        'o' ->
+            Just O
+
         x ->
             if Char.isAlphaNum x then
                 Just AlphaNumeric
@@ -626,7 +669,7 @@ getScan char =
 draw : Settings -> Point -> Element -> List (Svg a)
 draw settings pos element =
     case element of
-        Arrow dir ->
+        Triangle dir ->
             [ drawArrow settings pos dir ]
 
         Text char ->
@@ -643,6 +686,11 @@ draw settings pos element =
                 |> List.map (draw settings pos)
                 |> List.concat
 
+        Box ->
+            [ drawSquare settings pos ]
+
+        --  Circle ->
+        --      [ drawArc settings 4 pos (Ext_ 2 South East) ]
         _ ->
             []
 
@@ -713,6 +761,22 @@ drawArrow settings pos dir =
         ]
         (move dir pos)
         (opposite dir)
+
+
+drawSquare : Settings -> Point -> Svg a
+drawSquare settings pos =
+    toLine
+        [ Attr.style
+            ("stroke: "
+                ++ colorText settings.color
+                ++ ";stroke-width:"
+                ++ String.fromFloat settings.lineWidth
+            )
+        , Attr.markerEnd "url(#square)"
+        , vectorEffect
+        ]
+        (move West pos)
+        Center
 
 
 drawLine : Float -> Float -> Float -> Float -> Settings -> Svg a
@@ -788,6 +852,7 @@ measureY y =
     toFloat y * textHeight
 
 
+get : ( Int, Int ) -> Dict ( Int, Int ) ( Char, Scan ) -> Scan
 get pos dict =
     dict
         |> Dict.get pos

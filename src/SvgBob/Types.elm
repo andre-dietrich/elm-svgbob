@@ -18,9 +18,11 @@ type Element
     = Empty
     | Text Char
     | Line Direction Direction
-    | Arrow Direction
+    | Triangle Direction
     | Curve Float Direction Direction
     | Sequence (List Element)
+    | Box
+    | Circle
 
 
 type Direction
@@ -46,7 +48,9 @@ type Scan
     | LowHorizontal
     | Intersection
     | Corner
-    | ArrowX Direction
+    | Arrow Direction
     | SlantRight
     | SlantLeft
+    | Square
     | None
+    | O
