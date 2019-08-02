@@ -238,20 +238,10 @@ intersection char { south, west, north, east, south_west, south_east } =
 
 
 getElement m ( char, elem ) model =
-    if
-        elem
-            == Vertical
-            && (AlphaNumeric /= m.west)
-            && (AlphaNumeric /= m.east)
-    then
+    if (elem == Vertical) && (AlphaNumeric /= m.west) && (AlphaNumeric /= m.east) then
         Line South (Ext North North)
 
-    else if
-        Horizontal
-            == elem
-            && (AlphaNumeric /= m.west)
-            && (AlphaNumeric /= m.east)
-    then
+    else if (Horizontal == elem) && (AlphaNumeric /= m.west) && (AlphaNumeric /= m.east) then
         Line East (West_ 2)
 
     else if LowHorizontal == elem then
@@ -841,83 +831,95 @@ drawPaths model =
         |> List.concat
 
 
+scanLine : Int -> List Char -> List ( ( Int, Int ), ( Char, Scan ) )
 scanLine y =
-    List.indexedMap (scanElement y) >> List.filter filterElement
+    List.foldl (scanElement y) ( [], 0 )
+        >> Tuple.first
 
 
-filterElement ( _, ( _, e ) ) =
-    e /= None
+
+--scanElement : Int -> Int -> Char -> ( ( Int, Int ), ( Char, Scan ) )
 
 
-scanElement : Int -> Int -> Char -> ( ( Int, Int ), ( Char, Scan ) )
-scanElement y x char =
-    ( ( x, y )
-    , ( char
-      , case char of
-            '-' ->
-                Horizontal
+scanElement : Int -> Char -> ( List ( ( Int, Int ), ( Char, Scan ) ), Int ) -> ( List ( ( Int, Int ), ( Char, Scan ) ), Int )
+scanElement y char ( rslt, x ) =
+    case getScan char of
+        Nothing ->
+            ( rslt, x + 1 )
 
-            '_' ->
-                LowHorizontal
+        Just elem ->
+            ( ( ( x, y ), ( char, elem ) ) :: rslt, x + 1 )
 
-            '+' ->
-                IntersectionX
 
-            '.' ->
-                RoundCorner
+getScan : Char -> Maybe Scan
+getScan char =
+    case char of
+        ' ' ->
+            Nothing
 
-            '\'' ->
-                RoundCorner
+        '-' ->
+            Just Horizontal
 
-            ',' ->
-                RoundCorner
+        '_' ->
+            Just LowHorizontal
 
-            '`' ->
-                RoundCorner
+        '+' ->
+            Just IntersectionX
 
-            '´' ->
-                RoundCorner
+        '.' ->
+            Just RoundCorner
 
-            '>' ->
-                ArrowRight
+        '\'' ->
+            Just RoundCorner
 
-            '<' ->
-                ArrowLeft
+        ',' ->
+            Just RoundCorner
 
-            'V' ->
-                ArrowDown
+        '`' ->
+            Just RoundCorner
 
-            'v' ->
-                ArrowDown
+        '´' ->
+            Just RoundCorner
 
-            '^' ->
-                ArrowUp
+        '>' ->
+            Just ArrowRight
 
-            'î' ->
-                ArrowUp
+        '<' ->
+            Just ArrowLeft
 
-            '/' ->
-                SlantRight
+        'V' ->
+            Just ArrowDown
 
-            '\\' ->
-                SlantLeft
+        'v' ->
+            Just ArrowDown
 
-            '(' ->
-                OpenCurve
+        '^' ->
+            Just ArrowUp
 
-            ')' ->
-                CloseCurve
+        'î' ->
+            Just ArrowUp
 
-            '|' ->
-                Vertical
+        '/' ->
+            Just SlantRight
 
-            ' ' ->
-                None
+        '\\' ->
+            Just SlantLeft
 
-            _ ->
-                AlphaNumeric
-      )
-    )
+        '(' ->
+            Just OpenCurve
+
+        ')' ->
+            Just CloseCurve
+
+        '|' ->
+            Just Vertical
+
+        x ->
+            if Char.isAlphaNum x then
+                Just AlphaNumeric
+
+            else
+                Just None
 
 
 draw : Settings -> Point -> Element -> List (Svg a)
