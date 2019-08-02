@@ -3,7 +3,6 @@ module SvgBob.Types exposing
     , Element(..)
     , Point
     , Scan(..)
-    , Type(..)
     )
 
 import Array exposing (Array)
@@ -18,7 +17,6 @@ type alias Point =
 type Element
     = Empty
     | Text Char
-    | Intersection Type -- also corner
     | Line Direction Direction
     | Arrow Direction
     | Curve Float Direction Direction
@@ -39,23 +37,6 @@ type Direction
     | Ext_ Float Direction Direction
 
 
-
-{--intersection types
---}
-
-
-type Type
-    = Cross
-    | HorJunctionTop
-    | HorJunctionBot
-    | VertJunctionLeft
-    | VertJunctionRight
-    | TopLeft
-    | TopRight
-    | BottomLeft
-    | BottomRight
-
-
 type Scan
     = OpenCurve
     | CloseCurve
@@ -63,13 +44,12 @@ type Scan
     | AlphaNumeric
     | Horizontal
     | LowHorizontal
-    | IntersectionX
-    | LineX
-    | RoundCorner
-    | ArrowRight
-    | ArrowLeft
-    | ArrowDown
+    | Intersection
+    | Corner
     | ArrowUp
+    | ArrowDown
+    | ArrowLeft
+    | ArrowRight
     | SlantRight
     | SlantLeft
     | None

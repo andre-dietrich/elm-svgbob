@@ -16,7 +16,6 @@ import SvgBob.Types
         , Element(..)
         , Point
         , Scan(..)
-        , Type(..)
         )
 
 
@@ -146,95 +145,224 @@ horizontalDouble =
     [ '=' ]
 
 
-lowHorizontalLine : Char -> Matrix -> Element
-lowHorizontalLine char { west, east, south_west, south_east } =
-    if SlantRight == west then
-        Line (Ext South East) (West_ 4)
+apply : Matrix -> List ( Matrix -> Bool, Element ) -> List Element
+apply matrix list =
+    case list of
+        [] ->
+            []
 
-    else if Vertical == west then
-        Line (Ext South East) (West_ 3)
+        ( if_, then_ ) :: fns ->
+            if if_ matrix then
+                then_ :: apply matrix fns
 
-    else if SlantLeft == east then
-        Line (Ext South West) (East_ 4)
+            else
+                apply matrix fns
 
-    else if Vertical == east then
-        Line (Ext South West) (East_ 3)
 
-    else if Vertical == south_west then
-        Line (Ext South (West_ 2)) (East_ 3)
+lowHorizontal : Char -> Matrix -> Element
+lowHorizontal char matrix =
+    [ ( .west >> (==) SlantRight
+      , Line (Ext South East) (West_ 4)
+      )
+    , ( .west >> (==) Vertical
+      , Line (Ext South East) (West_ 3)
+      )
+    , ( .east >> (==) SlantLeft
+      , Line (Ext South West) (East_ 4)
+      )
+    , ( .east >> (==) SlantLeft
+      , Line (Ext South West) (East_ 4)
+      )
+    , ( .east >> (==) Vertical
+      , Line (Ext South West) (East_ 3)
+      )
+    , ( .south_west >> (==) Vertical
+      , Line (Ext South (West_ 2)) (East_ 3)
+      )
+    , ( .south_east >> (==) Vertical
+      , Line (Ext South West) (East_ 3)
+      )
+    , ( \m -> (AlphaNumeric /= m.west) && (AlphaNumeric /= m.east)
+      , Line (Ext South East) (West_ 2)
+      )
+    ]
+        |> apply matrix
+        |> sequenceWithDefault char
 
-    else if Vertical == south_east then
-        Line (Ext South West) (East_ 3)
 
-    else if (AlphaNumeric /= west) && (AlphaNumeric /= east) then
-        Line (Ext South East) (West_ 2)
+sequenceWithDefault char list =
+    if list == [] then
+        Text char
 
     else
-        Text char
+        Sequence list
 
 
 intersection : Char -> Matrix -> Element
-intersection char { south, west, north, east, south_west, south_east } =
-    let
-        isVerticalJunctionLeft =
-            (Vertical == north) && (Vertical == south) && (Horizontal == west)
+intersection char matrix =
+    [ ( .north >> (==) Vertical, Line Center North )
+    , ( .south >> (==) Vertical, Line Center South )
+    , ( .east >> (==) Horizontal, Line Center East )
+    , ( .west >> (==) Horizontal, Line Center West )
+    , ( .north_west >> (==) SlantLeft, Line Center (Ext North West) )
+    , ( .north_east >> (==) SlantRight, Line Center (Ext North East) )
+    , ( .south_west >> (==) SlantRight, Line Center (Ext South West) )
+    , ( .south_east >> (==) SlantLeft, Line Center (Ext South East) )
+    ]
+        |> apply matrix
+        |> sequenceWithDefault char
 
-        isVerticalJunctionRight =
-            (Vertical == north) && (Vertical == south) && (Horizontal == east)
 
-        isHorizontalJunctionTop =
-            (Horizontal == west) && (Horizontal == east) && (Vertical == north)
+closeCurve : Char -> Matrix -> Element
+closeCurve char matrix =
+    [ ( \m -> Corner == m.north_west && Corner == m.south_west
+      , Curve 4 South (Ext North North)
+      )
+    , ( \m -> SlantLeft == m.north_west && SlantRight == m.south_west
+      , Curve 4 (Ext South West) (Ext North North)
+      )
+    ]
+        |> apply matrix
+        |> sequenceWithDefault char
 
-        isHorizontalJunctionBot =
-            (Horizontal == west) && (Horizontal == east) && (Vertical == south)
 
-        isTopLeftIntersection =
-            (Vertical == south) && (Horizontal == east)
+openCurve : Char -> Matrix -> Element
+openCurve char matrix =
+    [ ( \m -> Corner == m.north_east && Corner == m.south_east
+      , Curve 4 North (Ext South South)
+      )
+    , ( \m -> SlantRight == m.north_east && SlantLeft == m.south_east
+      , Curve 4 (Ext North East) (Ext South South)
+      )
+    ]
+        |> apply matrix
+        |> sequenceWithDefault char
 
-        isTopRightIntersection =
-            (Vertical == south) && (Horizontal == west)
 
-        isBottomRightIntersection =
-            (Vertical == north) && (Horizontal == west)
+roundedCorner char matrix =
+    [ ( \m -> (Horizontal == m.west) && (Horizontal == m.east)
+      , Line West (East_ 2)
+      )
+    , ( \m -> (Vertical == m.north) && (Vertical == m.south)
+      , Line North (South_ 2)
+      )
+    , ( \m -> (SlantRight == m.north_east) && (SlantRight == m.south_west)
+      , Line (Ext North East) (Ext_ 2 South West)
+      )
+    , ( \m -> (SlantLeft == m.north_west) && (SlantLeft == m.south_east)
+      , Line (Ext North West) (Ext_ 2 South East)
+      )
+    , ( \m -> (Vertical == m.north || Corner == m.north) && (Horizontal == m.west)
+      , Sequence
+            [ Curve 1 West (Ext (North_ 0.5) East)
+            , Line North (South_ 0.5)
+            ]
+      )
+    , ( \m -> (Vertical == m.north || Corner == m.north) && (Horizontal == m.east)
+      , Sequence
+            [ Curve 1 (North_ 0.5) (Ext (South_ 0.5) East)
+            , Line North (South_ 0.5)
+            ]
+      )
+    , ( \m -> (Vertical == m.south || Corner == m.south) && (Horizontal == m.west)
+      , Sequence
+            [ Curve 1 (South_ 0.5) (Ext (North_ 0.5) West)
+            , Line South (North_ 0.5)
+            ]
+      )
+    , ( \m -> (Vertical == m.north || Corner == m.north) && (LowHorizontal == m.west)
+      , Sequence
+            [ Curve 1 (Ext South West) (Ext (North_ 0.5) East)
+            , Line North (South_ 1.5)
+            ]
+      )
 
-        isBottomLeftIntersection =
-            (Vertical == north) && (Horizontal == east)
+    --  _.  _.
+    --   |   '
+    , ( \m -> (Vertical == m.south || Corner == m.south) && (LowHorizontal == m.west)
+      , Curve 1 (South_ 1.5) (Ext (North_ 0.5) West)
+      )
 
-        isCrossIntersection =
-            (Vertical == north)
-                && (Vertical == south)
-                && (Horizontal == west)
-                && (Horizontal == east)
-    in
-    if isCrossIntersection then
-        Intersection Cross
-
-    else if isVerticalJunctionLeft then
-        Intersection VertJunctionLeft
-
-    else if isVerticalJunctionRight then
-        Intersection VertJunctionRight
-
-    else if isHorizontalJunctionTop then
-        Intersection HorJunctionTop
-
-    else if isHorizontalJunctionBot then
-        Intersection HorJunctionBot
-
-    else if isTopRightIntersection then
-        Intersection TopRight
-
-    else if isTopLeftIntersection then
-        Intersection TopLeft
-
-    else if isBottomRightIntersection then
-        Intersection BottomRight
-
-    else if isBottomLeftIntersection then
-        Intersection BottomLeft
-
-    else
-        Empty
+    --  _.  _.
+    --   |   '
+    , ( \m -> (Vertical == m.south || Corner == m.south) && (LowHorizontal == m.east)
+      , Curve 1 (Ext South East) (Ext (South_ 0.5) West)
+      )
+    , ( \m -> (Vertical == m.north || Corner == m.north) && (LowHorizontal == m.east)
+      , Sequence
+            [ Curve 1 (South_ 0.5) (Ext (South_ 0.5) East)
+            , Line North (South_ 1.5)
+            ]
+      )
+    , ( \m -> (Vertical == m.south || Corner == m.south) && (Horizontal == m.east)
+      , Sequence
+            [ Curve 1 East (Ext (South_ 0.5) West)
+            , Line South (North_ 0.5)
+            ]
+      )
+    , ( \m -> (SlantLeft == m.south_east) && (Horizontal == m.west)
+      , Curve 3 (Ext South East) (Ext_ 2 (North_ 0.5) West)
+      )
+    , ( \m -> (SlantRight == m.north_east) && (Horizontal == m.west)
+      , Curve 3 West (Ext North (East_ 2))
+      )
+    , ( \m -> (SlantLeft == m.north_west) && (Horizontal == m.east)
+      , Curve 3 (Ext North West) (Ext South (East_ 2))
+      )
+    , ( \m -> (SlantRight == m.north_west) && (Horizontal == m.east)
+      , Curve 3 (Ext North West) (Ext South (East_ 20))
+      )
+    , ( \m -> (SlantRight == m.south_west) && (Horizontal == m.east)
+      , Curve 3 East (Ext South (West_ 2))
+      )
+    , ( \m -> (Vertical == m.north) && (SlantRight == m.south_west)
+      , Curve 8 (Ext South West) (Ext_ 2 North (East_ 0.5))
+      )
+    , ( \m -> (Vertical == m.north) && (SlantLeft == m.south_east)
+      , Curve 8 North (Ext_ 2 South (East_ 0.5))
+      )
+    , ( \m -> (Vertical == m.south) && (SlantRight == m.north_east)
+      , Curve 8 (Ext North East) (Ext_ 2 South (West_ 0.5))
+      )
+    , ( \m -> (Vertical == m.south) && (SlantLeft == m.north_west)
+      , Curve 8 South (Ext_ 2 North (West_ 0.5))
+      )
+    , ( \m -> (Horizontal == m.east) && (SlantRight == m.north_east)
+      , Curve 2 (Ext North East) South
+      )
+    , ( \m -> (Horizontal == m.west) && (SlantLeft == m.north_west)
+      , Curve 2 West North
+      )
+    , ( \m -> (Horizontal == m.west) && (SlantRight == m.south_west)
+      , Curve 2 (Ext South West) North
+      )
+    , ( \m -> (Horizontal == m.east) && (SlantLeft == m.south_east)
+      , Curve 2 East South
+      )
+    , ( \m -> (LowHorizontal == m.east) && (SlantRight == m.north_east)
+      , Curve 4 (Ext North East) (South_ 2)
+      )
+    , ( \m -> (LowHorizontal == m.west) && (SlantLeft == m.north_west)
+      , Curve 4 (Ext South West) (North_ 2)
+      )
+    , ( \m -> (Horizontal == m.west) && (CloseCurve == m.south_east)
+      , Curve 4 (Ext South (East_ 2)) (Ext North (West_ 3))
+      )
+    , ( \m -> (Horizontal == m.east || Corner == m.east) && (OpenCurve == m.south_west)
+      , Curve 4 East (Ext South (West_ 3))
+      )
+    , ( \m -> (Horizontal == m.west || Corner == m.west) && (CloseCurve == m.south_east)
+      , Curve 4 (Ext South (East_ 2)) (Ext North (West_ 3))
+      )
+    , ( \m -> (Horizontal == m.east || Corner == m.east) && (OpenCurve == m.north_west)
+      , Curve 4 (Ext North (West_ 2)) (Ext South (East_ 3))
+      )
+    , ( \m -> (Horizontal == m.west || Corner == m.west) && (CloseCurve == m.north_east)
+      , Curve 4 West (Ext North (East_ 3))
+      )
+    ]
+        |> apply matrix
+        |> sequenceWithDefault char
 
 
 getElement m ( char, elem ) model =
@@ -245,404 +373,10 @@ getElement m ( char, elem ) model =
         Line East (West_ 2)
 
     else if LowHorizontal == elem then
-        lowHorizontalLine char m
+        lowHorizontal char m
 
-    else if IntersectionX == elem then
+    else if Intersection == elem then
         intersection char m
-
-    else if RoundCorner == elem then
-        if
-            [ m.north_east, m.south_west, m.east ]
-                == [ SlantRight, SlantRight, Horizontal ]
-        then
-            -- RoundCorner SlantedRightJunctionRight
-            Sequence
-                [ Curve 2
-                    East
-                    (Ext (South_ 0.5) (West_ 1.5))
-                , Line
-                    (Ext North East)
-                    (Ext_ 2 South West)
-                ]
-
-        else if
-            (Vertical == m.north)
-                && (Vertical == m.south)
-                && (SlantLeft == m.north_west)
-        then
-            -- RoundCorner VerticalTopDownJunctionTopLeft
-            Sequence
-                [ Curve 4
-                    (South_ 0.5)
-                    (Ext North (West_ 0.5))
-                , Line South (North_ 2)
-                , Line
-                    (Ext North West)
-                    (Ext_ 0.5 South East)
-                ]
-
-        else if
-            (SlantLeft == m.north_west)
-                && (SlantLeft == m.south_east)
-                && (Horizontal == m.west)
-        then
-            -- RoundCorner SlantedLeftJunctionLeft
-            Sequence
-                [ Curve 2
-                    (Ext_ 0.5 South East)
-                    (Ext (North_ 0.5) (West_ 1.5))
-                , Line (Ext North West) (Ext_ 2 South East)
-                ]
-
-        else if
-            (SlantRight == m.north_east)
-                && (SlantRight == m.south_west)
-                && (Horizontal == m.west)
-        then
-            -- RoundCorner SlantedRightJunctionLeft
-            Sequence
-                [ Curve 2
-                    West
-                    (Ext (North_ 0.5) (East_ 1.5))
-                , Line
-                    (Ext North East)
-                    (Ext_ 2 South West)
-                ]
-
-        else if
-            (SlantLeft == m.north_west)
-                && (SlantLeft == m.south_east)
-                && (Horizontal == m.east)
-        then
-            -- RoundCorner SlantedLeftJunctionRight
-            Sequence
-                [ Curve 2
-                    (Ext_ 0.5 North West)
-                    (Ext (South_ 0.5) (East_ 1.5))
-                , Line
-                    (Ext North West)
-                    (Ext_ 2 South East)
-                ]
-
-        else if
-            (Vertical == m.north)
-                && (Vertical == m.south)
-                && (SlantRight == m.south_west)
-        then
-            -- RoundCorner VerticalTopDownJunctionBottomLeft
-            Sequence
-                [ Curve 4
-                    (Ext_ 0.5 South West)
-                    (Ext North (East_ 0.5))
-                , Line South (North_ 2)
-                , Line
-                    (Ext South West)
-                    (Ext_ 0.5 North East)
-                ]
-
-        else if
-            (Vertical == m.north)
-                && (Vertical == m.south)
-                && (SlantLeft == m.south_east)
-        then
-            -- RoundCorner VerticalTopDownJunctionBottomRight
-            Sequence
-                [ Curve 4
-                    (North_ 0.5)
-                    (Ext South (East_ 0.5))
-                , Line South (North_ 2)
-                , Line
-                    (Ext South East)
-                    (Ext_ 0.5 North West)
-                ]
-
-        else if
-            (Vertical == m.north)
-                && (Vertical == m.south)
-                && (SlantRight == m.north_east)
-        then
-            -- RoundCorner VerticalTopDownJunctionTopRight
-            Sequence
-                [ Curve 4
-                    (Ext_ 0.5 North East)
-                    (Ext South (West_ 0.5))
-                , Line South (North_ 2)
-                , Line
-                    (Ext North East)
-                    (Ext_ 0.5 South West)
-                ]
-
-        else if (Vertical == m.south) && (Horizontal == m.east) then
-            Sequence
-                [ Curve 1
-                    East
-                    (Ext (South_ 0.5) West)
-                , Line South (North_ 0.5)
-                ]
-
-        else if (Vertical == m.south) && (Horizontal == m.west) then
-            Sequence
-                [ Curve 1
-                    (South_ 0.5)
-                    (Ext (North_ 0.5) West)
-                , Line South (North_ 0.5)
-                ]
-
-        else if (Vertical == m.south) && (SlantRight == m.north_east) then
-            -- RoundCorner TopLeftSlantedTopRight
-            Sequence
-                [ Curve 4
-                    (Ext_ 0.5 North East)
-                    (Ext South (West_ 0.5))
-                , Line South (North_ 0.5)
-                , Line
-                    (Ext North East)
-                    (Ext_ 0.5 South West)
-                ]
-
-        else if (Horizontal == m.east) && (OpenCurve == m.south_west) then
-            Curve 4
-                East
-                (Ext South (West_ 3))
-
-        else if (RoundCorner == m.east) && (OpenCurve == m.south_west) then
-            Curve 4
-                East
-                (Ext South (West_ 3))
-
-        else if (Horizontal == m.west) && (CloseCurve == m.south_east) then
-            Curve 4
-                (Ext South (East_ 2))
-                (Ext North (West_ 3))
-
-        else if (RoundCorner == m.west) && (CloseCurve == m.south_east) then
-            Curve 4
-                (Ext South (East_ 2))
-                (Ext North (West_ 3))
-
-        else if (Horizontal == m.east) && (OpenCurve == m.north_west) then
-            Curve 4
-                (Ext North (West_ 2))
-                (Ext South (East_ 3))
-
-        else if (Horizontal == m.west) && (CloseCurve == m.north_east) then
-            Curve 4
-                West
-                (Ext North (East_ 3))
-
-        else if (RoundCorner == m.east) && (OpenCurve == m.north_west) then
-            Curve 4
-                (Ext North (West_ 2))
-                (Ext South (East_ 3))
-
-        else if (RoundCorner == m.west) && (CloseCurve == m.north_east) then
-            Curve 4
-                West
-                (Ext North (East_ 3))
-
-        else if (Vertical == m.north) && (Horizontal == m.east) then
-            Sequence
-                [ Curve 1
-                    (North_ 0.5)
-                    (Ext (South_ 0.5) East)
-                , Line North (South_ 0.5)
-                ]
-
-        else if (Vertical == m.north) && (LowHorizontal == m.east) then
-            Sequence
-                [ Curve 1
-                    (South_ 0.5)
-                    (Ext (South_ 0.5) East)
-                , Line North (South_ 1.5)
-                ]
-
-        else if (Vertical == m.north) && (LowHorizontal == m.west) then
-            Sequence
-                [ Curve 1
-                    (Ext South West)
-                    (Ext (North_ 0.5) East)
-                , Line North (South_ 1.5)
-                ]
-
-        else if (Horizontal == m.east) && (SlantLeft == m.north_west) then
-            Sequence
-                [ Curve 2
-                    (Ext_ 0.5 North West)
-                    (Ext (South_ 0.5) (East_ 1.5))
-                , Line
-                    (Ext North West)
-                    (Ext_ 0.5 South East)
-                ]
-
-        else if (Horizontal == m.east) && (SlantRight == m.north_east) then
-            -- RoundCorner BottomLeftSlantedTopRight
-            Sequence
-                [ Curve 1
-                    (Ext_ 0.5 North East)
-                    (Ext_ 0.5 South East)
-                , Line
-                    (Ext North East)
-                    (Ext_ 0.5 South West)
-                ]
-
-        else if (Vertical == m.north) && (SlantLeft == m.south_east) then
-            -- RoundCorner BottomLeftSlantedBottomRight
-            Sequence
-                [ Curve 4
-                    (North_ 0.5)
-                    (Ext South (East_ 0.5))
-                , Line North (South_ 0.5)
-                , Line
-                    (Ext South East)
-                    (Ext_ 0.5 North West)
-                ]
-
-        else if (Horizontal == m.west) && (SlantRight == m.north_east) then
-            Sequence
-                [ Curve 2
-                    West
-                    (Ext (North_ 0.5) (East_ 1.5))
-                , Line
-                    (Ext_ 0.5 North East)
-                    (Ext_ 0.5 North East)
-                ]
-
-        else if (LowHorizontal == m.east) && (SlantRight == m.north_east) then
-            -- RoundCorner BottomLeftSlantedTopRightLowHorizontal
-            Sequence
-                [ Curve 1.5
-                    Center
-                    (Ext South East)
-                , Line (Ext North East) (Ext South West)
-                ]
-
-        else if (LowHorizontal == m.west) && (SlantLeft == m.north_west) then
-            -- RoundCorner BottomRightSlantedTopLeftLowHorizontal
-            Sequence
-                [ Curve 1.5
-                    (Ext South West)
-                    (Ext North East)
-                , Line
-                    (Ext North West)
-                    (Ext South East)
-                ]
-
-        else if (Horizontal == m.west) && (SlantLeft == m.north_west) then
-            Sequence
-                [ Curve 1
-                    West
-                    (Ext_ 0.5 North East)
-                , Line
-                    (Ext North West)
-                    (Ext_ 0.5 South East)
-                ]
-
-        else if (Vertical == m.north) && (SlantRight == m.south_west) then
-            --  RoundCorner BottomRightSlantedBottomLeft
-            Sequence
-                [ Curve 4
-                    (Ext_ 0.5 South West)
-                    (Ext North (East_ 0.5))
-                , Line North (South_ 0.5)
-                , Line
-                    (Ext South West)
-                    (Ext_ 0.5 North East)
-                ]
-
-        else if (Vertical == m.north) && (Horizontal == m.west) then
-            Sequence
-                [ Curve 1
-                    West
-                    (Ext (North_ 0.5) East)
-                , Line North (South_ 0.5)
-                ]
-
-        else if (Horizontal == m.east) && (RoundCorner == m.south) then
-            Sequence
-                [ Curve 1
-                    East
-                    (Ext (South_ 0.5) West)
-                , Line South (North_ 0.5)
-                ]
-
-        else if (Horizontal == m.west) && (RoundCorner == m.south) then
-            Sequence
-                [ Curve 1
-                    (South_ 0.5)
-                    (Ext (North_ 0.5) West)
-                , Line South (North_ 0.5)
-                ]
-
-        else if (Horizontal == m.west) && (RoundCorner == m.north) then
-            Sequence
-                [ Curve 1
-                    West
-                    (Ext (North_ 0.5) East)
-                , Line North (South_ 0.5)
-                ]
-
-        else if (Horizontal == m.east) && (RoundCorner == m.north) then
-            Sequence
-                [ Curve 1
-                    (North_ 0.5)
-                    (Ext (South_ 0.5) East)
-                , Line North (South_ 0.5)
-                ]
-
-        else if (Horizontal == m.east) && (SlantRight == m.south_west) then
-            Sequence
-                [ Curve 2
-                    East
-                    (Ext (South_ 0.5) (West_ 1.5))
-                , Line (Ext South West)
-                    (Ext_ 0.5 North East)
-                ]
-
-        else if (Horizontal == m.east) && (SlantLeft == m.south_east) then
-            Sequence
-                [ Curve 1
-                    East
-                    (Ext_ 0.5 South West)
-                , Line
-                    (Ext South East)
-                    (Ext_ 0.5 North West)
-                ]
-
-        else if (Horizontal == m.west) && (SlantLeft == m.south_east) then
-            Sequence
-                [ Curve 2
-                    (Ext_ 0.5 South East)
-                    (Ext (North_ 0.5) (West_ 1.5))
-                , Line
-                    (Ext South East)
-                    (Ext_ 0.5 North West)
-                ]
-
-        else if (Horizontal == m.west) && (SlantRight == m.south_west) then
-            --Todo
-            Sequence
-                [ Curve 1
-                    (Ext_ 0.5 South West)
-                    (Ext_ 0.5 North West)
-                , Line
-                    (Ext South West)
-                    (Ext_ 0.5 North East)
-                ]
-
-        else if (Vertical == m.south) && (SlantLeft == m.north_west) then
-            -- RoundCorner TopRightSlantedTopLeft
-            Sequence
-                [ Curve 4
-                    (South_ 0.5)
-                    (Ext North (West_ 0.5))
-                , Line South (North_ 0.5)
-                , Line
-                    (Ext North West)
-                    (Ext_ 0.5 South East)
-                ]
-
-        else
-            Text char
 
     else if ArrowRight == elem then
         Arrow West
@@ -676,47 +410,20 @@ getElement m ( char, elem ) model =
         else
             Text char
 
+    else if Corner == elem then
+        roundedCorner char m
+
     else if SlantRight == elem then
-        Line
-            (Ext North East)
-            (Ext_ 2 South West)
+        Line (Ext North East) (Ext_ 2 South West)
 
     else if SlantLeft == elem then
-        Line
-            (Ext South East)
-            (Ext_ 2 North West)
+        Line (Ext South East) (Ext_ 2 North West)
 
     else if OpenCurve == elem then
-        if (SlantRight == m.north_east) && (SlantLeft == m.south_east) then
-            Curve 4
-                (Ext North East)
-                (Ext South South)
+        openCurve char m
 
-        else if (RoundCorner == m.north_east) && (RoundCorner == m.south_east) then
-            Curve 4
-                North
-                (Ext South South)
-
-        else
-            Text char
-
-    else if
-        (CloseCurve == elem)
-            && (RoundCorner == m.north_west)
-            && (RoundCorner == m.south_west)
-    then
-        Curve 4
-            South
-            (Ext North North)
-
-    else if
-        (CloseCurve == elem)
-            && (SlantLeft == m.north_west)
-            && (SlantRight == m.south_west)
-    then
-        Curve 4
-            (Ext South West)
-            (Ext North North)
+    else if CloseCurve == elem then
+        closeCurve char m
 
     else
         Text char
@@ -792,11 +499,6 @@ getSvg attr model =
         )
 
 
-
---TODO: optimize here to indexedMap only the lines and chars
---TODO: modularized parts in order to easily fit and match
-
-
 drawElement : Dict ( Int, Int ) ( Char, Scan ) -> Model -> ( ( Int, Int ), ( Char, Scan ) ) -> List (Svg a)
 drawElement dict model ( ( x, y ), ( char, element ) ) =
     let
@@ -805,12 +507,9 @@ drawElement dict model ( ( x, y ), ( char, element ) ) =
                 (measureX x + textWidth / 2)
                 (measureY y + textHeight / 2)
     in
-    case getElement (getMatrix x y dict) ( char, element ) model of
-        Intersection itype ->
-            drawIntersection x y itype model
-
-        e ->
-            draw model.settings position e
+    model
+        |> getElement (getMatrix x y dict) ( char, element )
+        |> draw model.settings position
 
 
 drawPaths : Model -> List (Svg a)
@@ -837,10 +536,6 @@ scanLine y =
         >> Tuple.first
 
 
-
---scanElement : Int -> Int -> Char -> ( ( Int, Int ), ( Char, Scan ) )
-
-
 scanElement : Int -> Char -> ( List ( ( Int, Int ), ( Char, Scan ) ), Int ) -> ( List ( ( Int, Int ), ( Char, Scan ) ), Int )
 scanElement y char ( rslt, x ) =
     case getScan char of
@@ -864,22 +559,22 @@ getScan char =
             Just LowHorizontal
 
         '+' ->
-            Just IntersectionX
+            Just Intersection
 
         '.' ->
-            Just RoundCorner
+            Just Corner
 
         '\'' ->
-            Just RoundCorner
+            Just Corner
 
         ',' ->
-            Just RoundCorner
+            Just Corner
 
         '`' ->
-            Just RoundCorner
+            Just Corner
 
         '´' ->
-            Just RoundCorner
+            Just Corner
 
         '>' ->
             Just ArrowRight
@@ -981,102 +676,6 @@ opposite dir =
 
         _ ->
             dir
-
-
-drawIntersection : Int -> Int -> Type -> Model -> List (Svg a)
-drawIntersection x y itype model =
-    let
-        --vertical line
-        v1startX =
-            measureX x + textWidth / 2
-
-        v1endX =
-            v1startX
-
-        v1startY =
-            measureY y
-
-        v1endY =
-            measureY y + textHeight / 2
-
-        -- v line part 2
-        v2startX =
-            measureX x + textWidth / 2
-
-        v2endX =
-            v2startX
-
-        v2startY =
-            measureY y + textHeight / 2
-
-        v2endY =
-            measureY y + textHeight
-
-        --horizontal line
-        h1startX =
-            measureX x
-
-        h1endX =
-            measureX x + textWidth / 2
-
-        h1startY =
-            measureY y + textHeight / 2
-
-        h1endY =
-            h1startY
-
-        --h line part 2
-        h2startX =
-            measureX x + textWidth / 2
-
-        h2endX =
-            h2startX + textWidth
-
-        h2startY =
-            measureY y + textHeight / 2
-
-        h2endY =
-            h2startY
-
-        v1Line =
-            drawLine v1startX v1startY v1endX v1endY model.settings
-
-        v2Line =
-            drawLine v2startX v2startY v2endX v2endY model.settings
-
-        h1Line =
-            drawLine h1startX h1startY h1endX h1endY model.settings
-
-        h2Line =
-            drawLine h2startX h2startY h2endX h2endY model.settings
-    in
-    case itype of
-        VertJunctionLeft ->
-            [ v1Line, v2Line, h1Line ]
-
-        VertJunctionRight ->
-            [ v1Line, v2Line, h2Line ]
-
-        HorJunctionTop ->
-            [ h1Line, h2Line, v1Line ]
-
-        HorJunctionBot ->
-            [ h1Line, h2Line, v2Line ]
-
-        TopLeft ->
-            [ h2Line, v2Line ]
-
-        TopRight ->
-            [ h1Line, v2Line ]
-
-        BottomLeft ->
-            [ v1Line, h2Line ]
-
-        BottomRight ->
-            [ v1Line, h1Line ]
-
-        Cross ->
-            [ v1Line, v2Line, h1Line, h2Line ]
 
 
 colorText : Color.Color -> String
