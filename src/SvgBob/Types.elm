@@ -46,10 +46,7 @@ type Scan
     | LowHorizontal
     | Intersection
     | Corner
-    | ArrowUp
-    | ArrowDown
-    | ArrowLeft
-    | ArrowRight
+    | ArrowX Direction
     | SlantRight
     | SlantLeft
     | None

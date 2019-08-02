@@ -366,67 +366,73 @@ roundedCorner char matrix =
 
 
 getElement m ( char, elem ) model =
-    if (elem == Vertical) && (AlphaNumeric /= m.west) && (AlphaNumeric /= m.east) then
-        Line South (Ext North North)
+    case elem of
+        Vertical ->
+            if AlphaNumeric /= m.west && AlphaNumeric /= m.east then
+                Line South (Ext North North)
 
-    else if (Horizontal == elem) && (AlphaNumeric /= m.west) && (AlphaNumeric /= m.east) then
-        Line East (West_ 2)
+            else
+                Text char
 
-    else if LowHorizontal == elem then
-        lowHorizontal char m
+        Horizontal ->
+            if AlphaNumeric /= m.west && AlphaNumeric /= m.east then
+                Line East (West_ 2)
 
-    else if Intersection == elem then
-        intersection char m
+            else
+                Text char
 
-    else if ArrowRight == elem then
-        Arrow West
+        LowHorizontal ->
+            lowHorizontal char m
 
-    else if ArrowDown == elem then
-        if Vertical == m.north then
-            Arrow North
+        Intersection ->
+            intersection char m
 
-        else if SlantRight == m.north_east then
-            Arrow <| Ext North East
+        ArrowX South ->
+            if Vertical == m.north then
+                Arrow North
 
-        else if SlantLeft == m.north_west then
-            Arrow <| Ext North West
+            else if SlantRight == m.north_east then
+                Arrow <| Ext North East
 
-        else
+            else if SlantLeft == m.north_west then
+                Arrow <| Ext North West
+
+            else
+                Text char
+
+        ArrowX North ->
+            if Vertical == m.south then
+                Arrow South
+
+            else if SlantRight == m.south_west then
+                Arrow <| Ext South West
+
+            else if SlantLeft == m.south_east then
+                Arrow <| Ext South East
+
+            else
+                Text char
+
+        ArrowX dir ->
+            Arrow dir
+
+        Corner ->
+            roundedCorner char m
+
+        SlantRight ->
+            Line (Ext North East) (Ext_ 2 South West)
+
+        SlantLeft ->
+            Line (Ext South East) (Ext_ 2 North West)
+
+        OpenCurve ->
+            openCurve char m
+
+        CloseCurve ->
+            closeCurve char m
+
+        _ ->
             Text char
-
-    else if ArrowLeft == elem then
-        Arrow East
-
-    else if ArrowUp == elem then
-        if Vertical == m.south then
-            Arrow South
-
-        else if SlantRight == m.south_west then
-            Arrow <| Ext South West
-
-        else if SlantLeft == m.south_east then
-            Arrow <| Ext South East
-
-        else
-            Text char
-
-    else if Corner == elem then
-        roundedCorner char m
-
-    else if SlantRight == elem then
-        Line (Ext North East) (Ext_ 2 South West)
-
-    else if SlantLeft == elem then
-        Line (Ext South East) (Ext_ 2 North West)
-
-    else if OpenCurve == elem then
-        openCurve char m
-
-    else if CloseCurve == elem then
-        closeCurve char m
-
-    else
-        Text char
 
 
 vectorEffect : Attribute a
@@ -577,22 +583,22 @@ getScan char =
             Just Corner
 
         '>' ->
-            Just ArrowRight
+            Just <| ArrowX East
 
         '<' ->
-            Just ArrowLeft
+            Just <| ArrowX West
 
         'V' ->
-            Just ArrowDown
+            Just <| ArrowX South
 
         'v' ->
-            Just ArrowDown
+            Just <| ArrowX South
 
         '^' ->
-            Just ArrowUp
+            Just <| ArrowX North
 
         'î' ->
-            Just ArrowUp
+            Just <| ArrowX North
 
         '/' ->
             Just SlantRight
