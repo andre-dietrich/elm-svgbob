@@ -22,7 +22,7 @@ type Element
     | Curve Float Direction Direction
     | Sequence (List Element)
     | Box
-    | Circle
+    | Circle Bool
 
 
 type Direction
@@ -53,4 +53,4 @@ type Scan
     | SlantLeft
     | Square
     | None
-    | O
+    | O Bool

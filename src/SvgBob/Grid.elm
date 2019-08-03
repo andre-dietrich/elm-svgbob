@@ -448,11 +448,25 @@ getElement m ( char, elem ) =
                 _ ->
                     Text char
 
-        O ->
-            Circle
+        O filled ->
+            circle filled char m
 
         _ ->
             Text char
+
+
+circle filled char m =
+    if AlphaNumeric == m.west || AlphaNumeric == m.east then
+        Text char
+
+    else
+        case intersection char m of
+            Sequence list ->
+                List.append list [ Circle filled ]
+                    |> Sequence
+
+            _ ->
+                Text char
 
 
 vectorEffect : Attribute a
@@ -508,22 +522,6 @@ arrowMarker =
         ]
 
 
-squareMarker : Svg a
-squareMarker =
-    Svg.marker
-        [ Attr.id "square"
-        , Attr.viewBox "0 0 16 16"
-        , Attr.refX "2"
-        , Attr.refY "8"
-        , Attr.markerUnits "strokeWidth"
-        , Attr.markerWidth "10"
-        , Attr.markerHeight "10"
-        , Attr.orient "auto"
-        ]
-        [ Svg.path [ Attr.d "M 0 0 L 16 0 L 16 16 L 0 16 z", vectorEffect ] []
-        ]
-
-
 getSvg : List (Svg.Attribute msg) -> Model -> Html msg
 getSvg attr model =
     let
@@ -535,7 +533,7 @@ getSvg attr model =
     in
     Svg.svg (Attr.viewBox ("0 0 " ++ gwidth ++ " " ++ gheight) :: attr)
         (Svg.defs []
-            [ arrowMarker, squareMarker ]
+            [ arrowMarker ]
             :: drawPaths model
         )
 
@@ -653,10 +651,13 @@ getScan char =
             Just Square
 
         'O' ->
-            Just O
+            Just <| O False
 
         'o' ->
-            Just O
+            Just <| O False
+
+        '*' ->
+            Just <| O True
 
         x ->
             if Char.isAlphaNum x then
@@ -689,8 +690,23 @@ draw settings pos element =
         Box ->
             [ drawSquare settings pos ]
 
-        --  Circle ->
-        --      [ drawArc settings 4 pos (Ext_ 2 South East) ]
+        Circle filled ->
+            [ Svg.circle
+                [ Attr.cx <| String.fromFloat pos.x
+                , Attr.cy <| String.fromFloat pos.y
+                , Attr.r <| String.fromFloat settings.arcRadius
+                , Attr.fill <|
+                    if filled then
+                        "black"
+
+                    else
+                        "white"
+                , Attr.stroke "black"
+                , Attr.strokeWidth <| String.fromFloat settings.lineWidth
+                ]
+                []
+            ]
+
         _ ->
             []
 
@@ -765,18 +781,13 @@ drawArrow settings pos dir =
 
 drawSquare : Settings -> Point -> Svg a
 drawSquare settings pos =
-    toLine
-        [ Attr.style
-            ("stroke: "
-                ++ colorText settings.color
-                ++ ";stroke-width:"
-                ++ String.fromFloat settings.lineWidth
-            )
-        , Attr.markerEnd "url(#square)"
-        , vectorEffect
+    Svg.rect
+        [ Attr.x <| String.fromFloat (pos.x - 4)
+        , Attr.y <| String.fromFloat (pos.y - 4)
+        , Attr.width "8"
+        , Attr.height "8"
         ]
-        (move West pos)
-        Center
+        []
 
 
 drawLine : Float -> Float -> Float -> Float -> Settings -> Svg a
