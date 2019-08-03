@@ -171,6 +171,18 @@ lowHorizontal char matrix =
     , ( \m -> (AlphaNumeric /= m.west) && (AlphaNumeric /= m.east)
       , Line (Ext South East) (West_ 2)
       )
+    , ( \m -> OpenCurve == m.south_west
+      , Curve 1 (Ext South West) (Ext_ 0.15 South (West_ 4))
+      )
+    , ( \m -> OpenCurve == m.west
+      , Curve 1 (Ext (South_ 0.75) (West_ 1.6)) (Ext_ 0.2 South (East_ 4))
+      )
+    , ( \m -> CloseCurve == m.south_east
+      , Curve 1 (Ext (South_ 1.15) (East_ 1.7)) (Ext_ 0.15 North (West_ 4))
+      )
+    , ( \m -> CloseCurve == m.east
+      , Curve 1 (Ext South (East_ 1)) (Ext_ 0.2 (North_ 2) (East_ 4))
+      )
     ]
         |> apply matrix
         |> sequenceWithDefault char
@@ -237,6 +249,9 @@ corner char matrix =
       )
     , ( \m -> (Vertical == m.north) && (Vertical == m.south)
       , Line North (South_ 2)
+      )
+    , ( \m -> Corner == m.north_east && Corner == m.south_west
+      , Line Center (Ext North (East_ 2))
       )
     , ( \m -> (SlantRight == m.north_east) && (SlantRight == m.south_west)
       , Line (Ext North East) (Ext_ 2 South West)
@@ -360,22 +375,27 @@ corner char matrix =
         |> sequenceWithDefault char
 
 
+horizontal char matrix =
+    [ ( \m -> AlphaNumeric /= m.west || AlphaNumeric /= m.east
+      , Line East (West_ 2)
+      )
+    ]
+        |> apply matrix
+        |> sequenceWithDefault char
+
+
 getElement : Matrix -> ( String, Scan ) -> Element
 getElement m ( char, elem ) =
     case elem of
         Vertical ->
-            if AlphaNumeric /= m.west && AlphaNumeric /= m.east then
+            if AlphaNumeric /= m.west || AlphaNumeric /= m.east then
                 Line South (Ext North North)
 
             else
                 Text char
 
         Horizontal ->
-            if AlphaNumeric /= m.west && AlphaNumeric /= m.east then
-                Line East (West_ 2)
-
-            else
-                Text char
+            horizontal char m
 
         LowHorizontal ->
             lowHorizontal char m
