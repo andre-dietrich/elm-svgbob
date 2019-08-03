@@ -2,8 +2,10 @@ module SvgBob.Types exposing
     ( Direction(..)
     , Element(..)
     , Point
-    , Type(..)
+    , Scan(..)
     )
+
+import Array exposing (Array)
 
 
 type alias Point =
@@ -14,16 +16,18 @@ type alias Point =
 
 type Element
     = Empty
-    | Text Char
-    | Intersection Type -- also corner
+    | Text String
     | Line Direction Direction
-    | Arrow Direction
+    | Triangle Direction
     | Curve Float Direction Direction
     | Sequence (List Element)
+    | Box
+    | Circle Bool
 
 
 type Direction
-    = East
+    = Center
+    | East
     | East_ Float
     | South
     | South_ Float
@@ -35,18 +39,18 @@ type Direction
     | Ext_ Float Direction Direction
 
 
-
-{--intersection types
---}
-
-
-type Type
-    = Cross
-    | HorJunctionTop
-    | HorJunctionBot
-    | VertJunctionLeft
-    | VertJunctionRight
-    | TopLeft
-    | TopRight
-    | BottomLeft
-    | BottomRight
+type Scan
+    = OpenCurve
+    | CloseCurve
+    | Vertical
+    | AlphaNumeric
+    | Horizontal
+    | LowHorizontal
+    | Intersection
+    | Corner
+    | Arrow Direction
+    | SlantRight
+    | SlantLeft
+    | Square
+    | None
+    | O Bool
