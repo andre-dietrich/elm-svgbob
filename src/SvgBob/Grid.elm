@@ -1,7 +1,6 @@
 module SvgBob.Grid exposing (getSvg)
 
 import Array exposing (Array)
-import Char
 import Color
 import Dict exposing (Dict)
 import Html exposing (Attribute, Html)
@@ -109,7 +108,7 @@ type alias Matrix =
     }
 
 
-getMatrix : Int -> Int -> Dict ( Int, Int ) ( Char, Scan ) -> Matrix
+getMatrix : Int -> Int -> Dict ( Int, Int ) ( String, Scan ) -> Matrix
 getMatrix x y dict =
     { north_west = get ( x - 1, y - 1 ) dict
     , north = get ( x, y - 1 ) dict
@@ -132,16 +131,6 @@ textHeight =
     16.0
 
 
-verticalDashed : List Char
-verticalDashed =
-    [ ':' ]
-
-
-horizontalDouble : List Char
-horizontalDouble =
-    [ '=' ]
-
-
 apply : Matrix -> List ( Matrix -> Bool, Element ) -> List Element
 apply matrix list =
     case list of
@@ -156,7 +145,7 @@ apply matrix list =
                 apply matrix fns
 
 
-lowHorizontal : Char -> Matrix -> Element
+lowHorizontal : String -> Matrix -> Element
 lowHorizontal char matrix =
     [ ( .west >> (==) SlantRight
       , Line (Ext South East) (West_ 4)
@@ -187,7 +176,7 @@ lowHorizontal char matrix =
         |> sequenceWithDefault char
 
 
-sequenceWithDefault : Char -> List Element -> Element
+sequenceWithDefault : String -> List Element -> Element
 sequenceWithDefault char list =
     if list == [] then
         Text char
@@ -196,7 +185,7 @@ sequenceWithDefault char list =
         Sequence list
 
 
-intersection : Char -> Matrix -> Element
+intersection : String -> Matrix -> Element
 intersection char matrix =
     [ ( \{ north } -> north == Vertical || north == Intersection || north == Corner
       , Line Center North
@@ -215,7 +204,7 @@ intersection char matrix =
         |> sequenceWithDefault char
 
 
-closeCurve : Char -> Matrix -> Element
+closeCurve : String -> Matrix -> Element
 closeCurve char matrix =
     [ ( \m -> Corner == m.north_west && Corner == m.south_west
       , Curve 4 South (Ext North North)
@@ -228,7 +217,7 @@ closeCurve char matrix =
         |> sequenceWithDefault char
 
 
-openCurve : Char -> Matrix -> Element
+openCurve : String -> Matrix -> Element
 openCurve char matrix =
     [ ( \m -> Corner == m.north_east && Corner == m.south_east
       , Curve 4 North (Ext South South)
@@ -241,8 +230,8 @@ openCurve char matrix =
         |> sequenceWithDefault char
 
 
-roundedCorner : Char -> Matrix -> Element
-roundedCorner char matrix =
+corner : String -> Matrix -> Element
+corner char matrix =
     [ ( \m -> (Horizontal == m.west) && (Horizontal == m.east)
       , Line West (East_ 2)
       )
@@ -371,7 +360,7 @@ roundedCorner char matrix =
         |> sequenceWithDefault char
 
 
-getElement : Matrix -> ( Char, Scan ) -> Element
+getElement : Matrix -> ( String, Scan ) -> Element
 getElement m ( char, elem ) =
     case elem of
         Vertical ->
@@ -424,7 +413,7 @@ getElement m ( char, elem ) =
             Triangle dir
 
         Corner ->
-            roundedCorner char m
+            corner char m
 
         SlantRight ->
             Line (Ext North East) (Ext_ 2 South West)
@@ -538,7 +527,7 @@ getSvg attr model =
         )
 
 
-drawElement : Dict ( Int, Int ) ( Char, Scan ) -> Settings -> ( ( Int, Int ), ( Char, Scan ) ) -> List (Svg a)
+drawElement : Dict ( Int, Int ) ( String, Scan ) -> Settings -> ( ( Int, Int ), ( String, Scan ) ) -> List (Svg a)
 drawElement dict settings ( ( x, y ), ( char, element ) ) =
     let
         position =
@@ -568,13 +557,15 @@ drawPaths model =
         |> List.concat
 
 
-scanLine : Int -> List Char -> List ( ( Int, Int ), ( Char, Scan ) )
+scanLine : Int -> String -> List ( ( Int, Int ), ( String, Scan ) )
 scanLine y =
-    List.foldl (scanElement y) ( [], 0 )
+    String.trimRight
+        >> String.split ""
+        >> List.foldl (scanElement y) ( [], 0 )
         >> Tuple.first
 
 
-scanElement : Int -> Char -> ( List ( ( Int, Int ), ( Char, Scan ) ), Int ) -> ( List ( ( Int, Int ), ( Char, Scan ) ), Int )
+scanElement : Int -> String -> ( List ( ( Int, Int ), ( String, Scan ) ), Int ) -> ( List ( ( Int, Int ), ( String, Scan ) ), Int )
 scanElement y char ( rslt, x ) =
     case getScan char of
         Nothing ->
@@ -584,87 +575,83 @@ scanElement y char ( rslt, x ) =
             ( ( ( x, y ), ( char, elem ) ) :: rslt, x + 1 )
 
 
-getScan : Char -> Maybe Scan
+getScan : String -> Maybe Scan
 getScan char =
     case char of
-        ' ' ->
+        " " ->
             Nothing
 
-        '-' ->
+        "-" ->
             Just Horizontal
 
-        '_' ->
+        "_" ->
             Just LowHorizontal
 
-        '+' ->
+        "+" ->
             Just Intersection
 
-        '.' ->
+        "." ->
             Just Corner
 
-        '\'' ->
+        "'" ->
             Just Corner
 
-        ',' ->
+        "," ->
             Just Corner
 
-        '`' ->
+        "`" ->
             Just Corner
 
-        '´' ->
+        "´" ->
             Just Corner
 
-        '>' ->
+        ">" ->
             Just <| Arrow West
 
-        '<' ->
+        "<" ->
             Just <| Arrow East
 
-        'V' ->
+        "V" ->
             Just <| Arrow South
 
-        'v' ->
+        "v" ->
             Just <| Arrow South
 
-        '^' ->
+        "^" ->
             Just <| Arrow North
 
-        'î' ->
+        "î" ->
             Just <| Arrow North
 
-        '/' ->
+        "/" ->
             Just SlantRight
 
-        '\\' ->
+        "\\" ->
             Just SlantLeft
 
-        '(' ->
+        "(" ->
             Just OpenCurve
 
-        ')' ->
+        ")" ->
             Just CloseCurve
 
-        '|' ->
+        "|" ->
             Just Vertical
 
-        '#' ->
+        "#" ->
             Just Square
 
-        'O' ->
+        "O" ->
             Just <| O False
 
-        'o' ->
+        "o" ->
             Just <| O False
 
-        '*' ->
+        "*" ->
             Just <| O True
 
         x ->
-            if Char.isAlphaNum x then
-                Just AlphaNumeric
-
-            else
-                Just None
+            Just AlphaNumeric
 
 
 draw : Settings -> Point -> Element -> List (Svg a)
@@ -835,7 +822,7 @@ drawLineX s =
         ]
 
 
-drawText : Settings -> Point -> Char -> Svg a
+drawText : Settings -> Point -> String -> Svg a
 drawText s pos char =
     let
         pos2 =
@@ -850,7 +837,7 @@ drawText s pos char =
                 ++ "px;font-family:monospace"
             )
         ]
-        [ Svg.text <| String.fromChar char ]
+        [ Svg.text char ]
 
 
 measureX : Int -> Float
@@ -863,7 +850,7 @@ measureY y =
     toFloat y * textHeight
 
 
-get : ( Int, Int ) -> Dict ( Int, Int ) ( Char, Scan ) -> Scan
+get : ( Int, Int ) -> Dict ( Int, Int ) ( String, Scan ) -> Scan
 get pos dict =
     dict
         |> Dict.get pos
