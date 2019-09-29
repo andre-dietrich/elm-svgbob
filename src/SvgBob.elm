@@ -1,6 +1,6 @@
 module SvgBob exposing
-    ( init, getSvg
-    , Model
+    ( init, getSvg, default
+    , Model, Settings
     )
 
 {-| Convert ASCII to SVG
@@ -9,12 +9,13 @@ It is a fork of Ivan Ceras example that is hosted at:
 
 <https://github.com/ivanceras/elm-examples>
 
-@docs init, getSvg
+@docs init, getSvg, default
 
-@docs Model
+@docs Model, Settings
 
 -}
 
+import Color
 import Html exposing (Html)
 import Svg
 import SvgBob.Grid
@@ -28,9 +29,38 @@ type alias Model =
     SvgBob.Model.Model
 
 
+{-| general settings ...
+
+type alias Settings =
+{ fontSize : Float
+, lineWidth : Float
+, textWidth : Float
+, textHeight : Float
+, arcRadius : Float
+, color : Color.Color
+}
+
+-}
+type alias Settings =
+    SvgBob.Model.Settings
+
+
+{-| Default parameters to work with ...
+-}
+default : Settings
+default =
+    { fontSize = 14.0
+    , lineWidth = 1.0
+    , textWidth = 8.0
+    , textHeight = 16.0
+    , arcRadius = 4.0
+    , color = Color.rgb 0 0 0
+    }
+
+
 {-| Pass a String and generate a Model with default settings
 -}
-init : String -> Model
+init : Settings -> String -> Model
 init =
     SvgBob.Model.init
 

@@ -26,7 +26,7 @@ type Msg
 
 init : Model
 init =
-    { grid = SvgBob.init arg }
+    { grid = SvgBob.init SvgBob.default arg }
 
 
 view : Model -> Html Msg
@@ -49,7 +49,7 @@ update msg model =
             model
 
         Input asciiText ->
-            { model | grid = SvgBob.init asciiText }
+            { model | grid = SvgBob.init SvgBob.default asciiText }
 
 
 main : Program () Model Msg
