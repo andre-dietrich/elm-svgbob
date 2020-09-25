@@ -108,7 +108,7 @@ type alias Matrix =
     }
 
 
-getMatrix : Int -> Int -> Dict ( Int, Int ) ( String, Scan ) -> Matrix
+getMatrix : Int -> Int -> Dict ( Int, Int ) ( Char, Scan ) -> Matrix
 getMatrix x y dict =
     { north_west = get ( x - 1, y - 1 ) dict
     , north = get ( x, y - 1 ) dict
@@ -145,7 +145,7 @@ apply matrix list =
                 apply matrix fns
 
 
-lowHorizontal : String -> Matrix -> Element
+lowHorizontal : Char -> Matrix -> Element
 lowHorizontal char matrix =
     [ ( .west >> (==) SlantRight
       , Line (Ext South East) (West_ 4)
@@ -188,7 +188,7 @@ lowHorizontal char matrix =
         |> sequenceWithDefault char
 
 
-sequenceWithDefault : String -> List Element -> Element
+sequenceWithDefault : Char -> List Element -> Element
 sequenceWithDefault char list =
     if list == [] then
         Text char
@@ -197,7 +197,7 @@ sequenceWithDefault char list =
         Sequence list
 
 
-intersection : String -> Matrix -> Element
+intersection : Char -> Matrix -> Element
 intersection char matrix =
     [ ( \{ north } -> north == Vertical || north == Intersection || north == Corner
       , Line Center North
@@ -216,7 +216,7 @@ intersection char matrix =
         |> sequenceWithDefault char
 
 
-closeCurve : String -> Matrix -> Element
+closeCurve : Char -> Matrix -> Element
 closeCurve char matrix =
     [ ( \m -> Corner == m.north_west && Corner == m.south_west
       , Curve 4 South (Ext North North)
@@ -229,7 +229,7 @@ closeCurve char matrix =
         |> sequenceWithDefault char
 
 
-openCurve : String -> Matrix -> Element
+openCurve : Char -> Matrix -> Element
 openCurve char matrix =
     [ ( \m -> Corner == m.north_east && Corner == m.south_east
       , Curve 4 North (Ext South South)
@@ -242,7 +242,7 @@ openCurve char matrix =
         |> sequenceWithDefault char
 
 
-corner : String -> Matrix -> Element
+corner : Char -> Matrix -> Element
 corner char matrix =
     [ ( \m -> (Horizontal == m.west) && (Horizontal == m.east)
       , Line West (East_ 2)
@@ -384,7 +384,7 @@ horizontal char matrix =
         |> sequenceWithDefault char
 
 
-getElement : Matrix -> ( String, Scan ) -> Element
+getElement : Matrix -> ( Char, Scan ) -> Element
 getElement m ( char, elem ) =
     case elem of
         Vertical ->
@@ -547,7 +547,7 @@ getSvg attr model =
         )
 
 
-drawElement : Dict ( Int, Int ) ( String, Scan ) -> Settings -> ( ( Int, Int ), ( String, Scan ) ) -> List (Svg a)
+drawElement : Dict ( Int, Int ) ( Char, Scan ) -> Settings -> ( ( Int, Int ), ( Char, Scan ) ) -> List (Svg a)
 drawElement dict settings ( ( x, y ), ( char, element ) ) =
     let
         position =
@@ -567,6 +567,7 @@ drawPaths model =
                 |> List.indexedMap scanLine
                 |> List.concat
 
+        --|> List.map ()
         dict =
             Dict.fromList elements
 
@@ -577,15 +578,15 @@ drawPaths model =
         |> List.concat
 
 
-scanLine : Int -> String -> List ( ( Int, Int ), ( String, Scan ) )
+scanLine : Int -> String -> List ( ( Int, Int ), ( Char, Scan ) )
 scanLine y =
     String.trimRight
-        >> String.split ""
+        >> String.toList
         >> List.foldl (scanElement y) ( [], 0 )
         >> Tuple.first
 
 
-scanElement : Int -> String -> ( List ( ( Int, Int ), ( String, Scan ) ), Int ) -> ( List ( ( Int, Int ), ( String, Scan ) ), Int )
+scanElement : Int -> Char -> ( List ( ( Int, Int ), ( Char, Scan ) ), Int ) -> ( List ( ( Int, Int ), ( Char, Scan ) ), Int )
 scanElement y char ( rslt, x ) =
     case getScan char of
         Nothing ->
@@ -595,82 +596,82 @@ scanElement y char ( rslt, x ) =
             ( ( ( x, y ), ( char, elem ) ) :: rslt, x + 1 )
 
 
-getScan : String -> Maybe Scan
+getScan : Char -> Maybe Scan
 getScan char =
     case char of
-        " " ->
+        ' ' ->
             Nothing
 
-        "-" ->
+        '-' ->
             Just Horizontal
 
-        "_" ->
+        '_' ->
             Just LowHorizontal
 
-        "+" ->
+        '+' ->
             Just Intersection
 
-        "." ->
+        '.' ->
             Just Corner
 
-        "'" ->
+        '\'' ->
             Just Corner
 
-        "," ->
+        ',' ->
             Just Corner
 
-        "`" ->
+        '`' ->
             Just Corner
 
-        "´" ->
+        '´' ->
             Just Corner
 
-        ">" ->
+        '>' ->
             Just <| Arrow West
 
-        "<" ->
+        '<' ->
             Just <| Arrow East
 
-        "V" ->
+        'V' ->
             Just <| Arrow South
 
-        "v" ->
+        'v' ->
             Just <| Arrow South
 
-        "^" ->
+        '^' ->
             Just <| Arrow North
 
-        "î" ->
+        'î' ->
             Just <| Arrow North
 
-        "/" ->
+        '/' ->
             Just SlantRight
 
-        "\\" ->
+        '\\' ->
             Just SlantLeft
 
-        "(" ->
+        '(' ->
             Just OpenCurve
 
-        ")" ->
+        ')' ->
             Just CloseCurve
 
-        "|" ->
+        '|' ->
             Just Vertical
 
-        "#" ->
+        '#' ->
             Just Square
 
-        "O" ->
+        'O' ->
             Just <| O False
 
-        "o" ->
+        'o' ->
             Just <| O False
 
-        "*" ->
+        '*' ->
             Just <| O True
 
-        x ->
+        _ ->
             Just AlphaNumeric
 
 
@@ -842,7 +843,7 @@ drawLineX s =
         ]
 
 
-drawText : Settings -> Point -> String -> Svg a
+drawText : Settings -> Point -> Char -> Svg a
 drawText s pos char =
     let
         pos2 =
@@ -857,7 +858,7 @@ drawText s pos char =
                 ++ "px;font-family:monospace"
             )
         ]
-        [ Svg.text char ]
+        [ Svg.text (String.fromChar char) ]
 
 
 measureX : Int -> Float
@@ -870,7 +871,7 @@ measureY y =
     toFloat y * textHeight
 
 
-get : ( Int, Int ) -> Dict ( Int, Int ) ( String, Scan ) -> Scan
+get : ( Int, Int ) -> Dict ( Int, Int ) ( Char, Scan ) -> Scan
 get pos dict =
     dict
         |> Dict.get pos
