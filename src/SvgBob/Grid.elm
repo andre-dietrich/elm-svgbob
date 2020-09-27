@@ -641,7 +641,7 @@ getScan char =
         '^' ->
             Just <| Arrow North
 
-        'î' ->
+        'A' ->
             Just <| Arrow North
 
         '/' ->

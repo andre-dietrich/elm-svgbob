@@ -1,9 +1,9 @@
-module Main exposing (Model, Msg(..), arg, init, main, update, view)
+module Main exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
 import Html exposing (Html, button, div, pre, text, textarea)
-import Html.Attributes exposing (attribute, class, contenteditable, id, style)
-import Html.Events exposing (on, onClick)
+import Html.Attributes exposing (attribute, class, contenteditable, id, style, value)
+import Html.Events exposing (onInput)
 import Json.Decode exposing (string)
 import SvgBob
 
@@ -15,41 +15,28 @@ also algorithmn to connect these lines
 
 
 type alias Model =
-    { grid : SvgBob.Model
-    }
+    String
 
 
 type Msg
     = Input String
-    | Convert
-
-
-init : Model
-init =
-    { grid = SvgBob.init SvgBob.default arg }
 
 
 view : Model -> Html Msg
 view model =
     div [ style "display" "flex" ]
-        [ div []
-            [ button
-                [ onClick Convert
-                ]
-                [ text "Convert >>" ]
-            ]
-        , SvgBob.getSvg [ style "width" "100%", attribute "vector-effect" "non-scaling-stroke" ] model.grid
+        [ Html.textarea [ onInput Input, value model, style "width" "50%" ] []
+        , model
+            |> SvgBob.init SvgBob.default
+            |> SvgBob.getSvg [ style "width" "50%", attribute "vector-effect" "non-scaling-stroke" ]
         ]
 
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        Convert ->
-            model
-
         Input asciiText ->
-            { model | grid = SvgBob.init SvgBob.default asciiText }
+            asciiText
 
 
 main : Program () Model Msg
@@ -61,8 +48,8 @@ main =
         }
 
 
-arg : String
-arg =
+init : String
+init =
     """
 
 Resistor
@@ -73,10 +60,10 @@ Resistor
 
 +------+   +-----+   +-----+   +-----+
 |      |   |     |   |     |   |     |
-| Foo  +-->| Bar +---+ Baz |<--+ Moo |
+| Foo  +-->| BAr +---+ Baz |<--+ Moo |
 |      |   |     |   |     |   |     |
 +------+   +-----+   +--+--+   +-----+
-              ^         |
+              A         |
               |         V
 .-------------+-----------------------.
 | Hello here and there and everywhere |
@@ -322,9 +309,9 @@ Resistor
 
    .----------------.
    | FFFFFFFFFFFFF  |
-   |             .--+
-   |             | /
-   .-------------+/
+   |            .---+
+   |            |  /
+   .____________|_/
 
         +---------+
         |         |                        +--------------+
