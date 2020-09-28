@@ -1,0 +1,26 @@
+{
+  "name": "elm-svgbob",
+  "version": "1.0.0",
+  "description": "Fork of the great ASCII to SVG converter SvgBob by Ivan Ceras.It converts an ASCII-Art string into a \"nicely rendered\" svg image.",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "build": "cd examples && npx elm make --optimize --output ../docs/index.html Main.elm",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andre-dietrich/elm-svgbob.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/andre-dietrich/elm-svgbob/issues"
+  },
+  "homepage": "https://github.com/andre-dietrich/elm-svgbob#readme",
+  "devDependencies": {
+    "elm": "^0.19.1-3"
+  }
+}
