@@ -48,7 +48,7 @@ boxes. Supported characters for
 
   * special: filled dot `*`, filled square `#`, empty dot (`o`, `O`)
 
-```````````
+```
  +-----+      _____      +-----+      _____       _____
  |  0  |     |  1  |     |  2  |     |  3  |     |_ 4 _|
  +-----+     |_____|     |_____|     +-----+
@@ -64,7 +64,9 @@ boxes. Supported characters for
   .----+     +----.      .-----.     /\       .------.
  (  15 |     | 16  )    (  17   )   /18\     /  19  /
   `----+     +----´      `-----´   /____\   /______/
-```````````
+```
+
+![](img/box.svg)
 
 ### Arrows & Connectors
 
@@ -72,7 +74,7 @@ Depending on the direction of your arrow you have to use on either `<`, `>`,
 `v`, `V`, `^`, `A`. The other endings (`*`, `#`, `o`, `O`) are direction
 independent.
 
-```````````
+```
  ---->   ---->>   ----o   ----O   ----*   ----#
 
  <--->   <<-->>   o---o   O---O   *---*   #---#
@@ -88,14 +90,16 @@ independent.
   \     \     \     \     \     \
    \     \     \     \     \     \
     v     V     #     o     O     *
-```````````
+```
+
+![](img/arrows.svg)
 
 You can also use the arrows to connect, your other drawings, but keep in mind
 that in some cases you will have to use the `+` sign to fully attach your lines
 to another edge.
 
 
-```````````
+```
  +-----+     +-----+     +-----+     +-----+
  |  0  |---->|  1  |     |  2  +---->|  3  |
  +-----+     +-----+     +-----+     +-----+
@@ -112,7 +116,9 @@ to another edge.
        |/      (      V       o      #
        *        \    /         \    /
                  `--+           `--O
-```````````
+```
+
+![](img/arrows2.svg)
 
 ### More Shapes
 
@@ -130,7 +136,7 @@ used as online ASCII-Art drawing tools:
   https://ivanceras.github.io/svgbob-editor/
 
 
-```````````
+```
  +------+   .------.    .------.      /\
  |      |   |      |   (        )    /  \
  +------+   '------'    '------'    '----'
@@ -160,7 +166,9 @@ used as online ASCII-Art drawing tools:
   \   /    \    \   \    \  \    \
    \ /      \    \   \    \  \    \
     '        '----'   +----+  O----O
-```````````
+```
+
+![](img/shapes.svg)
 
 ## Box Drawing
 
@@ -168,7 +176,7 @@ The Unicode standard defines a set of characters/symbols, that were used in the
 past for drawing user interfaces and menues within the console. You can use
 these symbols too, or in combination with the upper symbols an shapes.
 
-``````````
+```
 ╔════════════════════════════════════[×]═╗       ╭─────╮
 ║ Fenstertitel                           ║       │     │     ╳
 ╟──────────────────────────────────────┬─╢       ╵     ╷    ╱ ╲
@@ -187,7 +195,9 @@ these symbols too, or in combination with the upper symbols an shapes.
 ║                                      │░║       │ └──┴──┘           │▒
 ║                                      │▼║       └───────────────────┘▒
 ╚══════════════════════════════════════╧═╝        ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-``````````
+```
+
+![alt-text](img/boxdrawing.svg)
 
 **Box Drawing**
 
@@ -249,7 +259,7 @@ following elements.
 Since nowadays also Emojis are part of the unicode standard, you can directly
 integrate any of your unicode emojis to your picture.
 
-````````````
+```
    😎             👩
 
   Bob            Alice
@@ -261,9 +271,10 @@ integrate any of your unicode emojis to your picture.
   Bob            Alice
 
    😎             👩
-````````````
+```
 
-### Basic
+![alt-text](img/alicebob.svg)
+
 
 The table below, contain some of the most widely used emojis:
 
@@ -558,8 +569,7 @@ Just some inspiration for other kinds of shapes you can draw...
 
 ### Graphics
 
-
-````````````
+```
    0       3                          P *              Eye /         ^     /
    *-------*      +y                     \                +)          \   /  Reflection
 1 /|    2 /|       ^                      \                \           \ v
@@ -570,23 +580,39 @@ Just some inspiration for other kinds of shapes you can draw...
  *-------*       v                  /               \        '-'               /   \
  5       6      +z              v1 *-----------------* v2    |                o-----o
                                                              v
-````````````
+```
+
+![alt-text](img/graphics.svg)
 
 
 ### Sequence Diagramms
 
-````````````
+```
                           .--->  F
  A       B      C  D     /
  *-------*-----*---*----*----->  E
           \            ^ \
            v          /   '--->  G
             B --> C -'
-````````````
+```
+
+![alt-text](img/sequence.svg)
+
+
+### Git branches
+
+```
+ newbranch    .-*---*---*
+              |
+ master o---o-+-o---o---o
+```
+
+![alt-text](img/git.svg)
+
 
 ### Statistics
 
-````````````
+```
     E +-------------------------*--+     E |                         o
     D |-------------------*--*--|--*     D |                   o  o  |  o
     C |-------------*--*  |  |  |  |     C |             o  o  |  |  |  |
@@ -608,12 +634,13 @@ Just some inspiration for other kinds of shapes you can draw...
   11.00 ┤ ╰╯
         └───────────┴───────────┴───────────┴───────────┴───────────┴────
       2011        2012        2013        2014        2015        2016
-````````````
+```
 
+![alt-text](img/statistics.svg)
 
 ### Flow Charts
 
-```````````
+```
              .--.            .---.  .---. .---.  .---.    .---.  .---.
              |  |   OS API   '---'  '---' '---'  '---'    '---'  '---'
              v  |              |      |     |      |        |      |
@@ -631,21 +658,14 @@ Just some inspiration for other kinds of shapes you can draw...
                              .---------------------------------------.
                              |                  HAL                  |
                              '---------------------------------------'
-```````````
+```
 
-
-### Git branches
-
-``````````
- newbranch    .-*---*---*
-              |
- master o---o-+-o---o---o
-``````````
+![alt-text](img/flow.svg)
 
 ### Some RFC
 
 
-``````````
+```
                                        Peer A
                                        Server-Reflexive    +---------+
                                        Transport Address   |         |
@@ -678,4 +698,6 @@ Just some inspiration for other kinds of shapes you can draw...
             192.0.2.1:7000      192.0.2.15:50000     192.0.2.210:49191
 
                                 Figure 1
-``````````
+```
+
+![alt-text](img/rfc.svg)
