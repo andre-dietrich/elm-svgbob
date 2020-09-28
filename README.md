@@ -139,7 +139,7 @@ to another edge.
 
 ![](img/arrows2.svg)
 
-### More Shapes
+### More Shapes & Tools
 
 You can draw even more complex shapes as depicted below. If you want use this
 system for more complex drawings, try out the following websites, that can be
@@ -153,6 +153,15 @@ used as online ASCII-Art drawing tools:
   but svgbob offers more sophisticated circles, lines, and color:
 
   https://ivanceras.github.io/svgbob-editor/
+
+* The demo for this library:
+
+  https://andre-dietrich.github.io/elm-svgbob/
+
+* more resources and examples:
+
+  - https://www.asciiart.eu
+  - https://metacpan.org/pod/App::Asciio
 
 
 ```
