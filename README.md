@@ -85,7 +85,7 @@ boxes. Supported characters for
   `----+     +----´      `-----´   /____\   /______/
 ```
 
-![](img/box.svg)
+![different box shapes](https://raw.githubusercontent.com/andre-dietrich/elm-svgbob/master/img/box.svg)
 
 ### Arrows & Connectors
 
@@ -111,7 +111,7 @@ independent.
     v     V     #     o     O     *
 ```
 
-![](img/arrows.svg)
+![](https://raw.githubusercontent.com/andre-dietrich/elm-svgbob/master/img/arrows.svg)
 
 You can also use the arrows to connect, your other drawings, but keep in mind
 that in some cases you will have to use the `+` sign to fully attach your lines
@@ -137,7 +137,7 @@ to another edge.
                  `--+           `--O
 ```
 
-![](img/arrows2.svg)
+![](https://raw.githubusercontent.com/andre-dietrich/elm-svgbob/master/img/arrows2.svg)
 
 ### More Shapes & Tools
 
@@ -196,7 +196,7 @@ used as online ASCII-Art drawing tools:
     '        '----'   +----+  O----O
 ```
 
-![](img/shapes.svg)
+![](https://raw.githubusercontent.com/andre-dietrich/elm-svgbob/master/img/shapes.svg)
 
 ## Box Drawing
 
@@ -225,7 +225,7 @@ these symbols too, or in combination with the upper symbols an shapes.
 ╚══════════════════════════════════════╧═╝        ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
 ```
 
-![alt-text](img/boxdrawing.svg)
+![alt-text](https://raw.githubusercontent.com/andre-dietrich/elm-svgbob/master/img/boxdrawing.svg)
 
 **Box Drawing**
 
@@ -301,7 +301,7 @@ integrate any of your unicode emojis to your picture.
    😎             👩
 ```
 
-![alt-text](img/alicebob.svg)
+![alt-text](https://raw.githubusercontent.com/andre-dietrich/elm-svgbob/master/img/alicebob.svg)
 
 
 The table below, contain some of the most widely used emojis:
@@ -610,7 +610,7 @@ Just some inspiration for other kinds of shapes you can draw...
                                                              v
 ```
 
-![alt-text](img/graphics.svg)
+![alt-text](https://raw.githubusercontent.com/andre-dietrich/elm-svgbob/master/img/graphics.svg)
 
 
 ### Sequence Diagramms
@@ -624,7 +624,7 @@ Just some inspiration for other kinds of shapes you can draw...
             B --> C -'
 ```
 
-![alt-text](img/sequence.svg)
+![alt-text](https://raw.githubusercontent.com/andre-dietrich/elm-svgbob/master/img/sequence.svg)
 
 
 ### Git branches
@@ -635,7 +635,7 @@ Just some inspiration for other kinds of shapes you can draw...
  master o---o-+-o---o---o
 ```
 
-![alt-text](img/git.svg)
+![alt-text](https://raw.githubusercontent.com/andre-dietrich/elm-svgbob/master/img/git.svg)
 
 
 ### Statistics
@@ -664,7 +664,7 @@ Just some inspiration for other kinds of shapes you can draw...
       2011        2012        2013        2014        2015        2016
 ```
 
-![alt-text](img/statistics.svg)
+![alt-text](https://raw.githubusercontent.com/andre-dietrich/elm-svgbob/master/img/statistics.svg)
 
 ### Flow Charts
 
@@ -688,7 +688,7 @@ Just some inspiration for other kinds of shapes you can draw...
                              '---------------------------------------'
 ```
 
-![alt-text](img/flow.svg)
+![alt-text](https://raw.githubusercontent.com/andre-dietrich/elm-svgbob/master/img/flow.svg)
 
 ### Some RFC
 
@@ -728,4 +728,4 @@ Just some inspiration for other kinds of shapes you can draw...
                                 Figure 1
 ```
 
-![alt-text](img/rfc.svg)
+![alt-text](https://raw.githubusercontent.com/andre-dietrich/elm-svgbob/master/img/rfc.svg)
