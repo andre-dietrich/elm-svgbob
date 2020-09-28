@@ -1,30 +1,49 @@
 # elm-svgbob
 
 Fork of the great ASCII to SVG converter SvgBob by Ivan Ceras.It converts an
-ASCII-Art string into a "nicely rendered" svg image.
+ASCII-Art string into a "nicely rendered" svg image. The code below depicts
+everything that is required. You can do a littlebit of customization by changing
+the default settings. That is it ...
 
- See the example
-in [`examples/Main.elm`](examples/Main.elm) it covers some more detailed
-information.
+Try out the demo at: https://andre-dietrich.github.io/elm-svgbob/
+
+And see the implementation at [`examples/Main.elm`](examples/Main.elm).
 
 ```elm
-"""
-+------+   +-----+   +-----+   +-----+
-|      |   |     |   |     |   |     |
-| Foo  +-->| Bar +---+ Baz |<--+ Moo |
-|      |   |     |   |     |   |     |
-+------+   +-----+   +--+--+   +-----+
-              ^         |
-              |         V
-.-------------+-----------------------.
-| Hello here and there and everywhere |
-'-------------------------------------'
-"""
+import SvgBob
+
+view : Html msg
+view =
+    """
+    +------+   +-----+   +-----+   +-----+
+    |      |   |     |   |     |   |     |
+    | Foo  +-->| Bar +---+ Baz |<--+ Moo |
+    |      |   |     |   |     |   |     |
+    +------+   +-----+   +--+--+   +-----+
+                  A         |
+                  |         V
+    .-------------+-----------------------.
+    | Hello here and there and everywhere |
+    '-------------------------------------'
+    """
+    |> SvgBob.init SvgBob.default -- or use your own settings
+    |> SvgBob.getSvg [ attribute "vector-effect" "non-scaling-stroke" ]
+
+-- you cann pass your own settings
+settings =
+    { fontSize = 14.0
+    , lineWidth = 1.0
+    , textWidth = 8.0
+    , textHeight = 16.0
+    , arcRadius = 4.0
+    , color = Color.rgb 0 0 0
+    }
 ```
 
+## How to Draw things ...
 
-
-## Shapes
+Since the usage of the API is pretty straight forward, the following section
+give a brief overview, how things can be drawn with this library.
 
 ### Boxes
 
