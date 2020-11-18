@@ -9,13 +9,7 @@ import String
 import Svg exposing (Svg)
 import Svg.Attributes as Attr
 import SvgBob.Model exposing (Model, Settings)
-import SvgBob.Types
-    exposing
-        ( Direction(..)
-        , Element(..)
-        , Point
-        , Scan(..)
-        )
+import SvgBob.Types exposing (Direction(..), Element(..), Point, Scan(..))
 
 
 move : Direction -> Point -> Point
@@ -375,6 +369,7 @@ corner char matrix =
         |> sequenceWithDefault char
 
 
+horizontal : Char -> Matrix -> Element
 horizontal char matrix =
     [ ( \m -> AlphaNumeric /= m.west || AlphaNumeric /= m.east
       , Line East (West_ 2)
@@ -464,6 +459,7 @@ getElement m ( char, elem ) =
             Text char
 
 
+circle : Bool -> Char -> Matrix -> Element
 circle filled char m =
     if AlphaNumeric == m.west || AlphaNumeric == m.east then
         Text char
@@ -567,7 +563,6 @@ drawPaths model =
                 |> List.indexedMap scanLine
                 |> List.concat
 
-        --|> List.map ()
         dict =
             Dict.fromList elements
 
@@ -582,18 +577,29 @@ scanLine : Int -> String -> List ( ( Int, Int ), ( Char, Scan ) )
 scanLine y =
     String.trimRight
         >> String.toList
-        >> List.foldl (scanElement y) ( [], 0 )
-        >> Tuple.first
+        >> List.foldl (scanElement y) ( [], 0, False )
+        >> (\( a, _, _ ) -> a)
 
 
-scanElement : Int -> Char -> ( List ( ( Int, Int ), ( Char, Scan ) ), Int ) -> ( List ( ( Int, Int ), ( Char, Scan ) ), Int )
-scanElement y char ( rslt, x ) =
-    case getScan char of
-        Nothing ->
-            ( rslt, x + 1 )
+scanElement :
+    Int
+    -> Char
+    -> ( List ( ( Int, Int ), ( Char, Scan ) ), Int, Bool )
+    -> ( List ( ( Int, Int ), ( Char, Scan ) ), Int, Bool )
+scanElement y char ( rslt, x, verbatim ) =
+    if char == '"' then
+        ( rslt, x + 1, not verbatim )
 
-        Just elem ->
-            ( ( ( x, y ), ( char, elem ) ) :: rslt, x + 1 )
+    else if verbatim then
+        ( ( ( x, y ), ( char, AlphaNumeric ) ) :: rslt, x + 1, verbatim )
+
+    else
+        case getScan char of
+            Nothing ->
+                ( rslt, x + 1, verbatim )
+
+            Just elem ->
+                ( ( ( x, y ), ( char, elem ) ) :: rslt, x + 1, verbatim )
 
 
 getScan : Char -> Maybe Scan

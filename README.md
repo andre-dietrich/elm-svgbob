@@ -63,7 +63,7 @@ boxes. Supported characters for
   * rounded: all of them are actually treated equally, when creating the svg
     corner. Different representations do only affect the ASCII drawing.
 
-    `.`, `,`, \`, `´`, `'`
+    `.`, `,`, `´`, `'`
 
   * special: filled dot `*`, filled square `#`, empty dot (`o`, `O`)
 
@@ -72,9 +72,9 @@ boxes. Supported characters for
  |  0  |     |  1  |     |  2  |     |  3  |     |_ 4 _|
  +-----+     |_____|     |_____|     +-----+
 
- .-----.     ._____.     ,-----,     -------     `-----`
+ .-----.     ._____.     ,-----,     -------     '-----'
  |  5  |     |  6  |     |  7  |     |  8  |     |  9  |
- '-----'     ,_____,     |_____|     -------     `_____`
+ '-----'     ,_____,     |_____|     -------     '_____'
 
  o------o    *------*    #------#    O------O    .-----+
  |  10  |    |  11  |    |  12  |    |  13  |    |  14 |
@@ -138,6 +138,17 @@ to another edge.
 ```
 
 ![](https://raw.githubusercontent.com/andre-dietrich/elm-svgbob/master/img/arrows2.svg)
+
+
+### Escaping
+
+As in the orignal version, we also use `"` to indicate if something should be
+printed without changes. The `"` are used like triggers, the first appearance
+will switch to verbatim mode, while another will change it back to normal mode.
+
+This kind of escaping works only linewise, thus, if you want to escape elements
+in different lines, you will have to insert `"` multiple times...
+
 
 ### More Shapes & Tools
 
@@ -316,6 +327,7 @@ The table below, contain some of the most widely used emojis:
 
 
 ### List 1
+
 
 |         |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |  A  |  B  |  C  |  D  |  E  |  F  |
 | ------- |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
