@@ -5,8 +5,6 @@ module SvgBob.Types exposing
     , Scan(..)
     )
 
-import Array exposing (Array)
-
 
 type alias Point =
     { x : Float

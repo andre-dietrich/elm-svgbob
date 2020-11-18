@@ -1,6 +1,5 @@
 module SvgBob.Model exposing (Model, Settings, init)
 
-import Array exposing (Array)
 import Color
 
 

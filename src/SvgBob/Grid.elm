@@ -1,6 +1,5 @@
 module SvgBob.Grid exposing (getSvg)
 
-import Array exposing (Array)
 import Color
 import Dict exposing (Dict)
 import Html exposing (Attribute, Html)
@@ -691,7 +690,7 @@ draw settings pos element =
             [ drawText settings pos char ]
 
         Line start stop ->
-            [ drawLineX settings (move start pos) stop ]
+            [ drawLine settings (move start pos) stop ]
 
         Curve faktor start stop ->
             [ drawArc settings faktor (move start pos) stop ]
@@ -798,24 +797,9 @@ drawSquare settings pos =
     Svg.rect
         [ Attr.x <| String.fromFloat (pos.x - 4)
         , Attr.y <| String.fromFloat (pos.y - 4)
+        , Attr.style (colorText settings.color)
         , Attr.width "8"
         , Attr.height "8"
-        ]
-        []
-
-
-drawLine : Float -> Float -> Float -> Float -> Settings -> Svg a
-drawLine startX startY endX endY s =
-    Svg.line
-        [ Attr.x1 <| String.fromFloat startX
-        , Attr.x2 <| String.fromFloat endX
-        , Attr.y1 <| String.fromFloat startY
-        , Attr.y2 <| String.fromFloat endY
-        , Attr.stroke <| colorText s.color
-        , Attr.strokeWidth <| String.fromFloat s.lineWidth
-        , Attr.strokeLinecap "round"
-        , Attr.strokeLinejoin "mitter"
-        , vectorEffect
         ]
         []
 
@@ -838,8 +822,8 @@ toLine misc pos dir =
         []
 
 
-drawLineX : Settings -> Point -> Direction -> Svg a
-drawLineX s =
+drawLine : Settings -> Point -> Direction -> Svg a
+drawLine s =
     toLine
         [ Attr.stroke <| colorText s.color
         , Attr.strokeWidth <| String.fromFloat s.lineWidth
