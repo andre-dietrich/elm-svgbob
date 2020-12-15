@@ -37,7 +37,8 @@ type alias Settings =
 , textWidth : Float
 , textHeight : Float
 , arcRadius : Float
-, color : Color.Color
+, color : String
+, textColor : String
 }
 
 -}
@@ -54,7 +55,8 @@ default =
     , textWidth = 8.0
     , textHeight = 16.0
     , arcRadius = 4.0
-    , color = Color.rgb 0 0 0
+    , color = "black"
+    , textColor = "black"
     }
 
 

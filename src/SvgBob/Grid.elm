@@ -1,6 +1,5 @@
 module SvgBob.Grid exposing (getSvg)
 
-import Color
 import Dict exposing (Dict)
 import Html exposing (Attribute, Html)
 import Html.Attributes exposing (attribute)
@@ -505,7 +504,7 @@ drawArc s faktor pos dir =
           ]
             |> String.join " "
             |> Attr.d
-        , Attr.stroke "black"
+        , Attr.stroke s.color
         , Attr.strokeWidth <| String.fromFloat s.lineWidth
         , Attr.fill "transparent"
         , vectorEffect
@@ -513,8 +512,8 @@ drawArc s faktor pos dir =
         []
 
 
-arrowMarker : Svg msg
-arrowMarker =
+arrowMarker : String -> Svg msg
+arrowMarker c =
     Svg.marker
         [ Attr.id "triangle"
         , Attr.viewBox "0 0 14 14"
@@ -524,6 +523,8 @@ arrowMarker =
         , Attr.markerWidth "10"
         , Attr.markerHeight "10"
         , Attr.orient "auto"
+        , Attr.stroke c
+        , Attr.fill c
         ]
         [ Svg.path [ Attr.d "M 0 0 L 10 5 L 0 10 z", vectorEffect ] []
         ]
@@ -540,7 +541,7 @@ getSvg verbatim attr model =
     in
     Svg.svg (Attr.viewBox ("0 0 " ++ gwidth ++ " " ++ gheight) :: attr)
         (Svg.defs []
-            [ arrowMarker ]
+            [ arrowMarker model.settings.color ]
             :: drawPaths verbatim model
         )
 
@@ -749,11 +750,11 @@ draw withVerbatim settings pos element =
                 , Attr.r <| String.fromFloat settings.arcRadius
                 , Attr.fill <|
                     if filled then
-                        "black"
+                        settings.color
 
                     else
-                        "white"
-                , Attr.stroke "black"
+                        "rgba(0,0,0,0)"
+                , Attr.stroke settings.color
                 , Attr.strokeWidth <| String.fromFloat settings.lineWidth
                 ]
                 []
@@ -803,27 +804,12 @@ opposite dir =
             dir
 
 
-colorText : Color.Color -> String
-colorText color =
-    let
-        { red, green, blue, alpha } =
-            Color.toRgba color
-    in
-    "rgb("
-        ++ String.fromFloat red
-        ++ ","
-        ++ String.fromFloat green
-        ++ ","
-        ++ String.fromFloat blue
-        ++ ")"
-
-
 drawArrow : Settings -> Point -> Direction -> Svg msg
 drawArrow settings pos dir =
     toLine
         [ Attr.style
             ("stroke: "
-                ++ colorText settings.color
+                ++ settings.color
                 ++ ";stroke-width:"
                 ++ String.fromFloat settings.lineWidth
             )
@@ -839,7 +825,8 @@ drawSquare settings pos =
     Svg.rect
         [ Attr.x <| String.fromFloat (pos.x - 4)
         , Attr.y <| String.fromFloat (pos.y - 4)
-        , Attr.style (colorText settings.color)
+        , Attr.stroke settings.color
+        , Attr.fill settings.color
         , Attr.width "8"
         , Attr.height "8"
         ]
@@ -867,7 +854,7 @@ toLine misc pos dir =
 drawLine : Settings -> Point -> Direction -> Svg msg
 drawLine s =
     toLine
-        [ Attr.stroke <| colorText s.color
+        [ Attr.stroke s.color
         , Attr.strokeWidth <| String.fromFloat s.lineWidth
         , Attr.strokeLinecap "round"
         , Attr.strokeLinejoin "mitter"
@@ -887,8 +874,9 @@ drawText s pos char =
         , Attr.style
             ("font-size:"
                 ++ String.fromFloat s.fontSize
-                ++ "px;font-family:monospace"
+                ++ "px;font-family:monospace;"
             )
+        , Attr.fill s.textColor
         ]
         [ Svg.text (String.fromChar char) ]
 
@@ -909,6 +897,7 @@ drawForeignObject withVerbatim s pos str =
                         ++ String.fromFloat s.fontSize
                         ++ "px;font-family:monospace"
                     )
+                , Attr.fill s.textColor
                 ]
                 [ Svg.text str ]
 
@@ -932,6 +921,7 @@ drawForeignObject withVerbatim s pos str =
                         ++ String.fromFloat s.fontSize
                         ++ "px;font-family:monospace"
                     )
+                , Attr.fill s.textColor
                 ]
                 [ verbatim str ]
 

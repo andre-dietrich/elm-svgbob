@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Browser
-import Example1
+import Example1 as Example
 import Html exposing (Html, button, div, pre, text, textarea)
 import Html.Attributes exposing (attribute, class, contenteditable, id, style, value)
 import Html.Events exposing (onInput)
@@ -46,7 +46,7 @@ update msg model =
 main : Program () Model Msg
 main =
     Browser.sandbox
-        { init = Example1.string
+        { init = Example.string
         , update = update
         , view = view
         }

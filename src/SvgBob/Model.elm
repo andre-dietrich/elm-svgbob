@@ -10,7 +10,8 @@ type alias Settings =
     , textWidth : Float
     , textHeight : Float
     , arcRadius : Float
-    , color : Color.Color
+    , color : String
+    , textColor : String
     }
 
 
