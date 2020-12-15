@@ -1,7 +1,6 @@
 module SvgBob exposing
-    ( init, getSvg, default
+    ( init, getSvg, default, getSvgWith
     , Model, Settings
-    , getSvgWith
     )
 
 {-| Convert ASCII to SVG
@@ -10,7 +9,7 @@ It is a fork of Ivan Ceras example that is hosted at:
 
 <https://github.com/ivanceras/elm-examples>
 
-@docs init, getSvg, default
+@docs init, getSvg, default, getSvgWith
 
 @docs Model, Settings
 
