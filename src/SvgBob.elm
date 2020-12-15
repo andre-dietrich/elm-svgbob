@@ -73,7 +73,7 @@ getSvg =
     SvgBob.Grid.getSvg Nothing
 
 
-{-| Get the resulting svg and pass it into a div or parse it further or do whatever
+{-| Get the resulting svg and pass it into a div or parse it further or do whatever ...
 -}
 getSvgWith : (String -> Svg msg) -> List (Svg.Attribute msg) -> Model -> Html msg
 getSvgWith verbatim =
