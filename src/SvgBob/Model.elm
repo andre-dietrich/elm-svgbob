@@ -1,6 +1,5 @@
 module SvgBob.Model exposing (Model, Settings, dim, init)
 
-import Color
 import Svg exposing (Svg)
 
 
