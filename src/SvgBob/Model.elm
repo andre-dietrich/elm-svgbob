@@ -9,8 +9,9 @@ type alias Settings =
     , textWidth : Float
     , textHeight : Float
     , arcRadius : Float
-    , color : String
+    , strokeColor : String
     , textColor : String
+    , backgroundColor : String
     }
 
 

@@ -54,8 +54,9 @@ default =
     , textWidth = 8.0
     , textHeight = 16.0
     , arcRadius = 4.0
-    , color = "black"
+    , strokeColor = "black"
     , textColor = "black"
+    , backgroundColor = "white"
     }
 
 

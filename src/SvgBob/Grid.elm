@@ -504,7 +504,7 @@ drawArc s faktor pos dir =
           ]
             |> String.join " "
             |> Attr.d
-        , Attr.stroke s.color
+        , Attr.stroke s.strokeColor
         , Attr.strokeWidth <| String.fromFloat s.lineWidth
         , Attr.fill "transparent"
         , vectorEffect
@@ -539,11 +539,20 @@ getSvg verbatim attr model =
         gheight =
             String.fromFloat <| measureY model.rows + 10
     in
-    Svg.svg (Attr.viewBox ("0 0 " ++ gwidth ++ " " ++ gheight) :: attr)
+    Svg.svg
+        (Attr.viewBox ("0 0 " ++ gwidth ++ " " ++ gheight)
+            :: bgColor model.settings.backgroundColor
+            :: attr
+        )
         (Svg.defs []
-            [ arrowMarker model.settings.color ]
+            [ arrowMarker model.settings.strokeColor ]
             :: drawPaths verbatim model
         )
+
+
+bgColor : String -> Svg.Attribute msg
+bgColor bg =
+    Attr.style ("background-color:" ++ bg ++ ";")
 
 
 drawElement : Maybe (String -> Svg msg) -> Dict ( Int, Int ) ( Char, Scan ) -> Settings -> ( ( Int, Int ), ( Char, Scan ) ) -> List (Svg msg)
@@ -750,11 +759,11 @@ draw withVerbatim settings pos element =
                 , Attr.r <| String.fromFloat settings.arcRadius
                 , Attr.fill <|
                     if filled then
-                        settings.color
+                        settings.strokeColor
 
                     else
-                        "rgba(0,0,0,0)"
-                , Attr.stroke settings.color
+                        settings.backgroundColor
+                , Attr.stroke settings.strokeColor
                 , Attr.strokeWidth <| String.fromFloat settings.lineWidth
                 ]
                 []
@@ -809,7 +818,7 @@ drawArrow settings pos dir =
     toLine
         [ Attr.style
             ("stroke: "
-                ++ settings.color
+                ++ settings.strokeColor
                 ++ ";stroke-width:"
                 ++ String.fromFloat settings.lineWidth
             )
@@ -825,8 +834,8 @@ drawSquare settings pos =
     Svg.rect
         [ Attr.x <| String.fromFloat (pos.x - 4)
         , Attr.y <| String.fromFloat (pos.y - 4)
-        , Attr.stroke settings.color
-        , Attr.fill settings.color
+        , Attr.stroke settings.strokeColor
+        , Attr.fill settings.strokeColor
         , Attr.width "8"
         , Attr.height "8"
         ]
@@ -854,7 +863,7 @@ toLine misc pos dir =
 drawLine : Settings -> Point -> Direction -> Svg msg
 drawLine s =
     toLine
-        [ Attr.stroke s.color
+        [ Attr.stroke s.strokeColor
         , Attr.strokeWidth <| String.fromFloat s.lineWidth
         , Attr.strokeLinecap "round"
         , Attr.strokeLinejoin "mitter"
