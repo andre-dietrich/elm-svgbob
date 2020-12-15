@@ -15,7 +15,6 @@ It is a fork of Ivan Ceras example that is hosted at:
 
 -}
 
-import Color
 import Html exposing (Html)
 import Svg exposing (Svg)
 import SvgBob.Grid
