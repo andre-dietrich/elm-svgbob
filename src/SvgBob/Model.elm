@@ -1,6 +1,7 @@
-module SvgBob.Model exposing (Model, Settings, init)
+module SvgBob.Model exposing (Model, Settings, dim, init)
 
 import Color
+import Svg exposing (Svg)
 
 
 type alias Settings =
@@ -21,19 +22,27 @@ type alias Model =
     }
 
 
+dim : List String -> ( Int, Int )
+dim lines =
+    ( List.length lines
+    , lines
+        |> List.map String.length
+        |> List.maximum
+        |> Maybe.withDefault 0
+    )
+
+
 init : Settings -> String -> Model
 init settings str =
     let
         lines =
             String.lines str
 
-        max =
-            lines
-                |> List.map String.length
-                |> List.maximum
+        ( rows, columns ) =
+            dim lines
     in
-    { rows = List.length lines
-    , columns = Maybe.withDefault 0 max
+    { rows = rows
+    , columns = columns
     , lines = lines
     , settings = settings
     }

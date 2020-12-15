@@ -8,7 +8,7 @@ import String
 import Svg exposing (Svg)
 import Svg.Attributes as Attr
 import SvgBob.Model exposing (Model, Settings)
-import SvgBob.Types exposing (Direction(..), Element(..), Point, Scan(..))
+import SvgBob.Types exposing (Direction(..), Element(..), Point, Scan(..), isVerbatim)
 
 
 move : Direction -> Point -> Point
@@ -454,6 +454,9 @@ getElement m ( char, elem ) =
         O filled ->
             circle filled char m
 
+        Verbatim str ->
+            ForeignObject str
+
         _ ->
             Text char
 
@@ -478,7 +481,7 @@ vectorEffect =
     attribute "vector-effect" "none"
 
 
-drawArc : Settings -> Float -> Point -> Direction -> Svg a
+drawArc : Settings -> Float -> Point -> Direction -> Svg msg
 drawArc s faktor pos dir =
     let
         pos2 =
@@ -510,7 +513,7 @@ drawArc s faktor pos dir =
         []
 
 
-arrowMarker : Svg a
+arrowMarker : Svg msg
 arrowMarker =
     Svg.marker
         [ Attr.id "triangle"
@@ -526,8 +529,8 @@ arrowMarker =
         ]
 
 
-getSvg : List (Svg.Attribute msg) -> Model -> Html msg
-getSvg attr model =
+getSvg : Maybe (String -> Svg msg) -> List (Svg.Attribute msg) -> Model -> Html msg
+getSvg verbatim attr model =
     let
         gwidth =
             String.fromFloat <| measureX model.columns + 10
@@ -538,12 +541,12 @@ getSvg attr model =
     Svg.svg (Attr.viewBox ("0 0 " ++ gwidth ++ " " ++ gheight) :: attr)
         (Svg.defs []
             [ arrowMarker ]
-            :: drawPaths model
+            :: drawPaths verbatim model
         )
 
 
-drawElement : Dict ( Int, Int ) ( Char, Scan ) -> Settings -> ( ( Int, Int ), ( Char, Scan ) ) -> List (Svg a)
-drawElement dict settings ( ( x, y ), ( char, element ) ) =
+drawElement : Maybe (String -> Svg msg) -> Dict ( Int, Int ) ( Char, Scan ) -> Settings -> ( ( Int, Int ), ( Char, Scan ) ) -> List (Svg msg)
+drawElement withVerbatim dict settings ( ( x, y ), ( char, element ) ) =
     let
         position =
             Point
@@ -551,46 +554,82 @@ drawElement dict settings ( ( x, y ), ( char, element ) ) =
                 (measureY y + textHeight / 2)
     in
     getElement (getMatrix x y dict) ( char, element )
-        |> draw settings position
+        |> draw withVerbatim settings position
 
 
-drawPaths : Model -> List (Svg a)
-drawPaths model =
+drawPaths : Maybe (String -> Svg msg) -> Model -> List (Svg msg)
+drawPaths withVerbatim model =
     let
+        scanFn =
+            scanLine (withVerbatim /= Nothing)
+
         elements =
             model.lines
-                |> List.indexedMap scanLine
+                |> List.indexedMap scanFn
                 |> List.concat
 
+        -- elements2 =
+        --     case withVerbatim of
+        --         Nothing ->
+        --             elements
+        --
+        --         Just verbatim ->
+        --             let
+        --                 ( verbs, scans ) =
+        --                     List.foldl
+        --                         (\( pos, ( char, scan ) ) ( v, s ) ->
+        --                             case scan of
+        --                                 Verbatim _ ->
+        --                                     ( ( pos, ( char, scan ) ) :: v, s )
+        --
+        --                                 _ ->
+        --                                     ( v, ( pos, ( char, scan ) ) :: s )
+        --                         )
+        --                         ( [], [] )
+        --                         elements
+        --             in
+        --             scans ++ verbs
         dict =
             Dict.fromList elements
 
         fn =
-            drawElement dict model.settings
+            drawElement withVerbatim dict model.settings
     in
     List.map fn elements
         |> List.concat
 
 
-scanLine : Int -> String -> List ( ( Int, Int ), ( Char, Scan ) )
-scanLine y =
+scanLine : Bool -> Int -> String -> List ( ( Int, Int ), ( Char, Scan ) )
+scanLine withVerbatim y =
     String.trimRight
         >> String.toList
-        >> List.foldl (scanElement y) ( [], 0, False )
+        >> List.foldl (scanElement withVerbatim y) ( [], 0, False )
         >> (\( a, _, _ ) -> a)
 
 
 scanElement :
-    Int
+    Bool
+    -> Int
     -> Char
     -> ( List ( ( Int, Int ), ( Char, Scan ) ), Int, Bool )
     -> ( List ( ( Int, Int ), ( Char, Scan ) ), Int, Bool )
-scanElement y char ( rslt, x, verbatim ) =
+scanElement withVerbatim y char ( rslt, x, verbatim ) =
     if char == '"' then
         ( rslt, x + 1, not verbatim )
 
     else if verbatim then
-        ( ( ( x, y ), ( char, AlphaNumeric ) ) :: rslt, x + 1, verbatim )
+        ( case ( withVerbatim, rslt ) of
+            ( False, _ ) ->
+                ( ( x, y ), ( char, AlphaNumeric ) ) :: rslt
+
+            ( True, ( pos, ( _, Verbatim str ) ) :: xs ) ->
+                ( pos, ( ' ', Verbatim (String.append str (String.fromChar char)) ) ) :: xs
+
+            ( True, _ ) ->
+                ( ( x, y ), ( ' ', Verbatim (String.fromChar char) ) ) :: rslt
+        , x + 1
+        , verbatim
+        )
 
     else
         case getScan char of
@@ -680,8 +719,8 @@ getScan char =
             Just AlphaNumeric
 
 
-draw : Settings -> Point -> Element -> List (Svg a)
-draw settings pos element =
+draw : Maybe (String -> Svg msg) -> Settings -> Point -> Element -> List (Svg msg)
+draw withVerbatim settings pos element =
     case element of
         Triangle dir ->
             [ drawArrow settings pos dir ]
@@ -697,7 +736,7 @@ draw settings pos element =
 
         Sequence elements ->
             elements
-                |> List.map (draw settings pos)
+                |> List.map (draw withVerbatim settings pos)
                 |> List.concat
 
         Box ->
@@ -719,6 +758,9 @@ draw settings pos element =
                 ]
                 []
             ]
+
+        ForeignObject str ->
+            [ drawForeignObject withVerbatim settings pos str ]
 
         _ ->
             []
@@ -776,7 +818,7 @@ colorText color =
         ++ ")"
 
 
-drawArrow : Settings -> Point -> Direction -> Svg a
+drawArrow : Settings -> Point -> Direction -> Svg msg
 drawArrow settings pos dir =
     toLine
         [ Attr.style
@@ -792,7 +834,7 @@ drawArrow settings pos dir =
         (opposite dir)
 
 
-drawSquare : Settings -> Point -> Svg a
+drawSquare : Settings -> Point -> Svg msg
 drawSquare settings pos =
     Svg.rect
         [ Attr.x <| String.fromFloat (pos.x - 4)
@@ -822,7 +864,7 @@ toLine misc pos dir =
         []
 
 
-drawLine : Settings -> Point -> Direction -> Svg a
+drawLine : Settings -> Point -> Direction -> Svg msg
 drawLine s =
     toLine
         [ Attr.stroke <| colorText s.color
@@ -833,7 +875,7 @@ drawLine s =
         ]
 
 
-drawText : Settings -> Point -> Char -> Svg a
+drawText : Settings -> Point -> Char -> Svg msg
 drawText s pos char =
     let
         pos2 =
@@ -849,6 +891,49 @@ drawText s pos char =
             )
         ]
         [ Svg.text (String.fromChar char) ]
+
+
+drawForeignObject : Maybe (String -> Svg msg) -> Settings -> Point -> String -> Svg msg
+drawForeignObject withVerbatim s pos str =
+    case withVerbatim of
+        Nothing ->
+            let
+                pos2 =
+                    move (Ext (South_ 0.5) West) pos
+            in
+            Svg.node "text"
+                [ Attr.x <| String.fromFloat pos2.x
+                , Attr.y <| String.fromFloat pos2.y
+                , Attr.style
+                    ("font-size:"
+                        ++ String.fromFloat s.fontSize
+                        ++ "px;font-family:monospace"
+                    )
+                ]
+                [ Svg.text str ]
+
+        Just verbatim ->
+            let
+                pos2 =
+                    move (Ext (North_ 1.1) West) pos
+
+                ( rows, columns ) =
+                    str
+                        |> String.lines
+                        |> SvgBob.Model.dim
+            in
+            Svg.foreignObject
+                [ Attr.x <| String.fromFloat pos2.x
+                , Attr.y <| String.fromFloat pos2.y
+                , Attr.width <| String.fromFloat (1 + measureX columns)
+                , Attr.height <| String.fromFloat (measureY rows)
+                , Attr.style
+                    ("font-size:"
+                        ++ String.fromFloat s.fontSize
+                        ++ "px;font-family:monospace"
+                    )
+                ]
+                [ verbatim str ]
 
 
 measureX : Int -> Float

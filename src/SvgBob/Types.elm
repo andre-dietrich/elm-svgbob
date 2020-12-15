@@ -3,6 +3,7 @@ module SvgBob.Types exposing
     , Element(..)
     , Point
     , Scan(..)
+    , isVerbatim
     )
 
 
@@ -21,6 +22,7 @@ type Element
     | Sequence (List Element)
     | Box
     | Circle Bool
+    | ForeignObject String
 
 
 type Direction
@@ -42,6 +44,7 @@ type Scan
     | CloseCurve
     | Vertical
     | AlphaNumeric
+    | Verbatim String
     | Horizontal
     | LowHorizontal
     | Intersection
@@ -52,3 +55,13 @@ type Scan
     | Square
     | None
     | O Bool
+
+
+isVerbatim : Scan -> Bool
+isVerbatim v =
+    case v of
+        Verbatim _ ->
+            True
+
+        _ ->
+            False

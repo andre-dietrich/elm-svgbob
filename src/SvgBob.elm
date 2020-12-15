@@ -1,6 +1,7 @@
 module SvgBob exposing
     ( init, getSvg, default
     , Model, Settings
+    , getSvgWith
     )
 
 {-| Convert ASCII to SVG
@@ -17,7 +18,7 @@ It is a fork of Ivan Ceras example that is hosted at:
 
 import Color
 import Html exposing (Html)
-import Svg
+import Svg exposing (Svg)
 import SvgBob.Grid
 import SvgBob.Model
 
@@ -69,4 +70,11 @@ init =
 -}
 getSvg : List (Svg.Attribute msg) -> Model -> Html msg
 getSvg =
-    SvgBob.Grid.getSvg
+    SvgBob.Grid.getSvg Nothing
+
+
+{-| Get the resulting svg and pass it into a div or whatever
+-}
+getSvgWith : (String -> Svg msg) -> List (Svg.Attribute msg) -> Model -> Html msg
+getSvgWith verbatim =
+    SvgBob.Grid.getSvg (Just verbatim)
