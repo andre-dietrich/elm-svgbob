@@ -7,7 +7,15 @@ import String
 import Svg exposing (Svg)
 import Svg.Attributes as Attr
 import SvgBob.Model exposing (Model, Settings)
-import SvgBob.Types exposing (Direction(..), Element(..), Point, Scan(..), isVerbatim)
+import SvgBob.Types
+    exposing
+        ( Direction(..)
+        , Element(..)
+        , Point
+        , Scan(..)
+        , isVerbatim
+        , mergeVerbatim
+        )
 
 
 move : Direction -> Point -> Point
@@ -571,63 +579,107 @@ drawPaths : Maybe (String -> Svg msg) -> Model -> List (Svg msg)
 drawPaths withVerbatim model =
     let
         scanFn =
-            scanLine (withVerbatim /= Nothing)
+            scanLine model.settings.verbatim (withVerbatim /= Nothing)
 
         elements =
             model.lines
                 |> List.indexedMap scanFn
                 |> List.concat
 
-        -- elements2 =
-        --     case withVerbatim of
-        --         Nothing ->
-        --             elements
-        --
-        --         Just verbatim ->
-        --             let
-        --                 ( verbs, scans ) =
-        --                     List.foldl
-        --                         (\( pos, ( char, scan ) ) ( v, s ) ->
-        --                             case scan of
-        --                                 Verbatim _ ->
-        --                                     ( ( pos, ( char, scan ) ) :: v, s )
-        --
-        --                                 _ ->
-        --                                     ( v, ( pos, ( char, scan ) ) :: s )
-        --                         )
-        --                         ( [], [] )
-        --                         elements
-        --             in
-        --             scans ++ verbs
+        elements2 =
+            if model.settings.multilineVerbatim then
+                let
+                    ( verbs, scans ) =
+                        List.foldl
+                            (\( pos, ( char, scan ) ) ( v, s ) ->
+                                case scan of
+                                    Verbatim _ ->
+                                        ( ( pos, ( char, scan ) ) :: v, s )
+
+                                    _ ->
+                                        ( v, ( pos, ( char, scan ) ) :: s )
+                            )
+                            ( [], [] )
+                            elements
+                in
+                verbs
+                    |> List.sortBy (Tuple.first >> Tuple.second)
+                    |> merge []
+                    |> List.append scans
+
+            else
+                elements
+
         dict =
-            Dict.fromList elements
+            Dict.fromList elements2
 
         fn =
             drawElement withVerbatim dict model.settings
     in
-    List.map fn elements
+    List.map fn elements2
         |> List.concat
 
 
-scanLine : Bool -> Int -> String -> List ( ( Int, Int ), ( Char, Scan ) )
-scanLine withVerbatim y =
+merge :
+    List ( ( Int, Int ), ( Char, Scan ) )
+    -> List ( ( Int, Int ), ( Char, Scan ) )
+    -> List ( ( Int, Int ), ( Char, Scan ) )
+merge combined verbs =
+    case ( List.head verbs, List.tail verbs ) of
+        ( Nothing, _ ) ->
+            combined
+
+        ( _, Nothing ) ->
+            combined
+
+        ( Just head, Just tail ) ->
+            let
+                ( _, verb, newTail ) =
+                    tail
+                        |> List.foldl
+                            (\( ( x, y ) as pos, ( c, s ) as scan ) ( currentY, ( ( v_x, v_y ), ( _, v_s ) ) as v, rest ) ->
+                                if x == v_x && currentY + 1 == y then
+                                    ( currentY + 1
+                                    , ( ( v_x, v_y ), ( c, mergeVerbatim v_s s ) )
+                                    , rest
+                                    )
+
+                                else
+                                    ( currentY
+                                    , v
+                                    , ( pos, scan ) :: rest
+                                    )
+                            )
+                            ( head
+                                |> Tuple.first
+                                |> Tuple.second
+                            , head
+                            , []
+                            )
+            in
+            merge (verb :: combined) (List.reverse newTail)
+
+
+scanLine : Char -> Bool -> Int -> String -> List ( ( Int, Int ), ( Char, Scan ) )
+scanLine verbatim withVerbatim y =
     String.trimRight
         >> String.toList
-        >> List.foldl (scanElement withVerbatim y) ( [], 0, False )
+        >> List.foldl (scanElement verbatim withVerbatim y) ( [], 0, False )
         >> (\( a, _, _ ) -> a)
 
 
 scanElement :
-    Bool
+    Char
+    -> Bool
     -> Int
     -> Char
     -> ( List ( ( Int, Int ), ( Char, Scan ) ), Int, Bool )
     -> ( List ( ( Int, Int ), ( Char, Scan ) ), Int, Bool )
-scanElement withVerbatim y char ( rslt, x, verbatim ) =
-    if char == '"' then
-        ( rslt, x + 1, not verbatim )
+scanElement verbatim withVerbatim y char ( rslt, x, isVerbatim ) =
+    if char == verbatim then
+        ( rslt, x + 1, not isVerbatim )
 
-    else if verbatim then
+    else if isVerbatim then
         ( case ( withVerbatim, rslt ) of
             ( False, _ ) ->
                 ( ( x, y ), ( char, AlphaNumeric ) ) :: rslt
@@ -638,16 +690,16 @@ scanElement withVerbatim y char ( rslt, x, verbatim ) =
             ( True, _ ) ->
                 ( ( x, y ), ( ' ', Verbatim (String.fromChar char) ) ) :: rslt
         , x + 1
-        , verbatim
+        , isVerbatim
         )
 
     else
         case getScan char of
             Nothing ->
-                ( rslt, x + 1, verbatim )
+                ( rslt, x + 1, isVerbatim )
 
             Just elem ->
-                ( ( ( x, y ), ( char, elem ) ) :: rslt, x + 1, verbatim )
+                ( ( ( x, y ), ( char, elem ) ) :: rslt, x + 1, isVerbatim )
 
 
 getScan : Char -> Maybe Scan

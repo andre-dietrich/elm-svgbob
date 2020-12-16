@@ -4,6 +4,7 @@ module SvgBob.Types exposing
     , Point
     , Scan(..)
     , isVerbatim
+    , mergeVerbatim
     )
 
 
@@ -65,3 +66,13 @@ isVerbatim v =
 
         _ ->
             False
+
+
+mergeVerbatim : Scan -> Scan -> Scan
+mergeVerbatim scan scan2 =
+    case ( scan, scan2 ) of
+        ( Verbatim str, Verbatim str2 ) ->
+            Verbatim (str ++ "\n" ++ str2)
+
+        _ ->
+            scan

@@ -36,8 +36,83 @@ settings =
     , textWidth = 8.0
     , textHeight = 16.0
     , arcRadius = 4.0
-    , color = Color.rgb 0 0 0
+    , strokeColor = "black"  -- color for lines and arrows and stuff
+    , textColor = "black"    -- basic text-color for all symbols that are not strokes
+    , backgroundColor = "white" -- backgroundColor
+    , verbatim = '"'         -- you can define your own char, everything within will be identified as AlphaNumeric or Verbatim
+    , multilineVerbatim = False -- set this to True, if you want to combine multiple verbatims
     }
+```
+
+## Extended settings
+
+You can combine verbatims with the special function `SvgBob.getSvgWith`, to
+which you can add your own function, that receives the verbatim string as input.
+The result of this function is shown within a SVG `foreignObject` within the
+spaces that your verbatim-string uses within the image. So you have to take care
+of your required spaces, etc. Unfortunately I did not find a way so far to draw
+the foreignObject above all other content, also `z-index` does not work for svg.
+
+```elm
+import SvgBob
+
+view : Html msg
+view =
+    """
+    .----------------------------.
+    | "link:liascript.github.io" |
+    '----------------------------'
+    """
+    |> SvgBob.init SvgBob.default -- or use your own settings
+    |> SvgBob.getSvgWith
+          (\str ->
+              case String.split ":" str of
+                "link":url ->
+                  Html.a [ Html.Attributes.href url ] [Html.text "link"]
+                _ ->
+                  Html.text str
+      )
+    [ attribute "vector-effect" "non-scaling-stroke" ]
+```
+
+So you can adjust your internal figures by simply defining enough spaces through
+multilineVerbatim ... centering and everything else has to be defined by your
+function. But, at least it gives you some more control over your image and let
+you define your own "extensions" ...
+
+```elm
+import SvgBob
+
+view : Html msg
+view =
+
+    """
+    .------------------------------.
+    | $                          $ |
+    | $ link:liascript.github.io $ |
+    | $                          $ |
+    '------------------------------'
+    """
+    |> SvgBob.init { fontSize = 14.0
+        , lineWidth = 1.0
+        , textWidth = 8.0
+        , textHeight = 16.0
+        , arcRadius = 4.0
+        , strokeColor = "black"
+        , textColor = "blue"
+        , backgroundColor = "white"
+        , verbatim = '$'
+        , multilineVerbatim = True
+        }
+    |> SvgBob.getSvgWith
+          (\str ->
+              case str |> String.trim |> String.split ":" of
+                "link":url ->
+                  Html.a [ Html.Attributes.href url ] [Html.text "link"]
+                _ ->
+                  Html.text str
+      )
+    [ attribute "vector-effect" "non-scaling-stroke" ]
 ```
 
 ## How to Draw things ...
@@ -242,6 +317,8 @@ these symbols too, or in combination with the upper symbols an shapes.
 
 The following table contains a set of characters, that can be used via copy and
 paste to draw any kind of boxes.
+
+
 
 |        |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |  A  |  B  |  C  |  D  |  E  |  F  |
 | ------ |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|

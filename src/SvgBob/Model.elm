@@ -12,6 +12,8 @@ type alias Settings =
     , strokeColor : String
     , textColor : String
     , backgroundColor : String
+    , verbatim : Char
+    , multilineVerbatim : Bool
     }
 
 

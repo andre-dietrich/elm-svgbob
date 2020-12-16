@@ -57,6 +57,8 @@ default =
     , strokeColor = "black"
     , textColor = "black"
     , backgroundColor = "white"
+    , verbatim = '"'
+    , multilineVerbatim = False
     }
 
 
