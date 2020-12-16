@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Browser
-import Example0 as Example
+import Example1 as Example
 import Html exposing (Html, button, div, pre, text, textarea)
 import Html.Attributes exposing (attribute, class, contenteditable, id, style, value)
 import Html.Events exposing (onInput)
@@ -29,7 +29,8 @@ view model =
         [ Html.textarea [ onInput Input, value model, style "width" "50%" ] []
         , model
             |> SvgBob.init SvgBob.default
-            |> SvgBob.getSvgWith (\s -> Html.p [ Html.Attributes.style "height" "100%", Html.Attributes.style "width" "100%" ] [ Html.text s ])
+            |> SvgBob.getSvg
+                --With (\s -> Html.p [ Html.Attributes.style "height" "100%", Html.Attributes.style "width" "100%" ] [ Html.text s ])
                 [ style "width" "50%"
                 , attribute "vector-effect" "non-scaling-stroke"
                 ]
