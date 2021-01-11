@@ -6,14 +6,15 @@ import Html.Attributes exposing (attribute)
 import String
 import Svg exposing (Svg)
 import Svg.Attributes as Attr
-import SvgBob.Model exposing (Model, Settings)
+import SvgBob.Model exposing (Model, Settings, init)
 import SvgBob.Types
     exposing
         ( Direction(..)
         , Element(..)
         , Point
         , Scan(..)
-        , isVerbatim
+        , Scans
+        , foreignObject
         , mergeVerbatim
         )
 
@@ -538,9 +539,12 @@ arrowMarker c =
         ]
 
 
-getSvg : Maybe (String -> Svg msg) -> List (Svg.Attribute msg) -> Model -> Html msg
-getSvg verbatim attr model =
+getSvg : Settings -> List (Svg.Attribute msg) -> Maybe (String -> Svg msg) -> String -> Html msg
+getSvg settings attributes verbatim code =
     let
+        model =
+            init settings code
+
         gwidth =
             String.fromFloat <| measureX model.columns + 10
 
@@ -550,7 +554,7 @@ getSvg verbatim attr model =
     Svg.svg
         (Attr.viewBox ("0 0 " ++ gwidth ++ " " ++ gheight)
             :: bgColor model.settings.backgroundColor
-            :: attr
+            :: attributes
         )
         (Svg.defs []
             [ arrowMarker model.settings.strokeColor ]
@@ -575,8 +579,8 @@ drawElement withVerbatim dict settings ( ( x, y ), ( char, element ) ) =
         |> draw withVerbatim settings position
 
 
-drawPaths : Maybe (String -> Svg msg) -> Model -> List (Svg msg)
-drawPaths withVerbatim model =
+getScans : Maybe (String -> Svg msg) -> Model -> Scans
+getScans withVerbatim model =
     let
         scanFn =
             scanLine model.settings.verbatim (withVerbatim /= Nothing)
@@ -585,45 +589,48 @@ drawPaths withVerbatim model =
             model.lines
                 |> List.indexedMap scanFn
                 |> List.concat
+    in
+    if model.settings.multilineVerbatim then
+        let
+            ( verbs, scans ) =
+                List.foldl
+                    (\( pos, ( char, scan ) ) ( v, s ) ->
+                        case scan of
+                            Verbatim _ ->
+                                ( ( pos, ( char, scan ) ) :: v, s )
 
-        elements2 =
-            if model.settings.multilineVerbatim then
-                let
-                    ( verbs, scans ) =
-                        List.foldl
-                            (\( pos, ( char, scan ) ) ( v, s ) ->
-                                case scan of
-                                    Verbatim _ ->
-                                        ( ( pos, ( char, scan ) ) :: v, s )
+                            _ ->
+                                ( v, ( pos, ( char, scan ) ) :: s )
+                    )
+                    ( [], [] )
+                    elements
+        in
+        verbs
+            |> List.sortBy (Tuple.first >> Tuple.second)
+            |> merge []
+            |> List.append scans
 
-                                    _ ->
-                                        ( v, ( pos, ( char, scan ) ) :: s )
-                            )
-                            ( [], [] )
-                            elements
-                in
-                verbs
-                    |> List.sortBy (Tuple.first >> Tuple.second)
-                    |> merge []
-                    |> List.append scans
+    else
+        elements
 
-            else
-                elements
+
+drawPaths : Maybe (String -> Svg msg) -> Model -> List (Svg msg)
+drawPaths withVerbatim model =
+    let
+        intermediate =
+            getScans withVerbatim model
 
         dict =
-            Dict.fromList elements2
+            Dict.fromList intermediate
 
         fn =
             drawElement withVerbatim dict model.settings
     in
-    List.map fn elements2
+    List.map fn intermediate
         |> List.concat
 
 
-merge :
-    List ( ( Int, Int ), ( Char, Scan ) )
-    -> List ( ( Int, Int ), ( Char, Scan ) )
-    -> List ( ( Int, Int ), ( Char, Scan ) )
+merge : Scans -> Scans -> Scans
 merge combined verbs =
     case ( List.head verbs, List.tail verbs ) of
         ( Nothing, _ ) ->
@@ -660,7 +667,7 @@ merge combined verbs =
             merge (verb :: combined) (List.reverse newTail)
 
 
-scanLine : Char -> Bool -> Int -> String -> List ( ( Int, Int ), ( Char, Scan ) )
+scanLine : Char -> Bool -> Int -> String -> Scans
 scanLine verbatim withVerbatim y =
     String.trimRight
         >> String.toList

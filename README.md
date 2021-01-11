@@ -26,8 +26,9 @@ view =
     | Hello here and there and everywhere |
     '-------------------------------------'
     """
-    |> SvgBob.init SvgBob.default -- or use your own settings
-    |> SvgBob.getSvg [ attribute "vector-effect" "non-scaling-stroke" ]
+    |> SvgBob.getSvg
+          SvgBob.default -- or use your own settings
+          [ attribute "vector-effect" "non-scaling-stroke" ]
 
 -- you cann pass your own settings
 settings =
@@ -63,16 +64,16 @@ view =
     | "link:liascript.github.io" |
     '----------------------------'
     """
-    |> SvgBob.init SvgBob.default -- or use your own settings
-    |> SvgBob.getSvgWith
+    |> SvgBob.getSvgWith -- or use your own settings
+          SvgBob.default
+          [ attribute "vector-effect" "non-scaling-stroke" ]
           (\str ->
               case String.split ":" str of
                 "link":url ->
-                  Html.a [ Html.Attributes.href url ] [Html.text "link"]
+                   Html.a [ Html.Attributes.href url ] [Html.text "link"]
                 _ ->
-                  Html.text str
+                   Html.text str
       )
-    [ attribute "vector-effect" "non-scaling-stroke" ]
 ```
 
 So you can adjust your internal figures by simply defining enough spaces through
@@ -93,7 +94,8 @@ view =
     | $                          $ |
     '------------------------------'
     """
-    |> SvgBob.init { fontSize = 14.0
+    |> SvgBob.getSvgWith
+        { fontSize = 14.0
         , lineWidth = 1.0
         , textWidth = 8.0
         , textHeight = 16.0
@@ -104,15 +106,14 @@ view =
         , verbatim = '$'
         , multilineVerbatim = True
         }
-    |> SvgBob.getSvgWith
-          (\str ->
+        [ attribute "vector-effect" "non-scaling-stroke" ]
+        (\str ->
               case str |> String.trim |> String.split ":" of
                 "link":url ->
                   Html.a [ Html.Attributes.href url ] [Html.text "link"]
                 _ ->
                   Html.text str
-      )
-    [ attribute "vector-effect" "non-scaling-stroke" ]
+        )
 ```
 
 ## How to Draw things ...
@@ -317,7 +318,6 @@ these symbols too, or in combination with the upper symbols an shapes.
 
 The following table contains a set of characters, that can be used via copy and
 paste to draw any kind of boxes.
-
 
 
 |        |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |  A  |  B  |  C  |  D  |  E  |  F  |

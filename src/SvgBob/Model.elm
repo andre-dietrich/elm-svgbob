@@ -1,7 +1,5 @@
 module SvgBob.Model exposing (Model, Settings, dim, init)
 
-import Svg exposing (Svg)
-
 
 type alias Settings =
     { fontSize : Float

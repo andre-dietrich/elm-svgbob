@@ -28,8 +28,7 @@ view model =
     div [ style "display" "flex" ]
         [ Html.textarea [ onInput Input, value model, style "width" "50%" ] []
         , model
-            |> SvgBob.init SvgBob.default
-            |> SvgBob.getSvg
+            |> SvgBob.getSvg SvgBob.default
                 --With (\s -> Html.p [ Html.Attributes.style "height" "100%", Html.Attributes.style "width" "100%" ] [ Html.text s ])
                 [ style "width" "50%"
                 , attribute "vector-effect" "non-scaling-stroke"

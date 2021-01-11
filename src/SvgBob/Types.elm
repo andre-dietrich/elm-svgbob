@@ -3,6 +3,8 @@ module SvgBob.Types exposing
     , Element(..)
     , Point
     , Scan(..)
+    , Scans
+    , foreignObject
     , isVerbatim
     , mergeVerbatim
     )
@@ -58,6 +60,10 @@ type Scan
     | O Bool
 
 
+type alias Scans =
+    List ( ( Int, Int ), ( Char, Scan ) )
+
+
 isVerbatim : Scan -> Bool
 isVerbatim v =
     case v of
@@ -66,6 +72,16 @@ isVerbatim v =
 
         _ ->
             False
+
+
+foreignObject : Element -> Maybe String
+foreignObject v =
+    case v of
+        ForeignObject str ->
+            Just str
+
+        _ ->
+            Nothing
 
 
 mergeVerbatim : Scan -> Scan -> Scan
