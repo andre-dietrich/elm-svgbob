@@ -1,6 +1,6 @@
 module SvgBob exposing
     ( getSvg, default, getSvgWith, getElements, drawElements
-    , Settings
+    , Settings, Configuration
     )
 
 {-| Convert ASCII to SVG
@@ -11,7 +11,7 @@ It is a fork of Ivan Ceras example that is hosted at:
 
 @docs getSvg, default, getSvgWith, getElements, drawElements
 
-@docs Settings
+@docs Settings, Configuration
 
 -}
 
@@ -73,6 +73,18 @@ default =
     }
 
 
+{-| This record is used to store all relevant data to draw an svg-image multiple
+times, without reparsing it.
+-}
+type alias Configuration a =
+    { svg : List ( Point, Element )
+    , foreign : List ( a, ( Point, ( Int, Int ) ) )
+    , settings : Settings
+    , columns : Int
+    , rows : Int
+    }
+
+
 {-| Get the resulting svg and pass it into a div or whatever
 -}
 getSvg : Settings -> List (Svg.Attribute msg) -> String -> Html msg
@@ -97,16 +109,7 @@ used to store more relevant information.
 Use this function in conjunction with `drawElements`.
 
 -}
-getElements :
-    Settings
-    -> String
-    ->
-        { svg : List ( Point, Element )
-        , foreign : List ( String, ( Point, ( Int, Int ) ) )
-        , settings : Settings
-        , columns : Int
-        , rows : Int
-        }
+getElements : Settings -> String -> Configuration String
 getElements =
     SvgBob.Grid.getElements
 
@@ -114,16 +117,6 @@ getElements =
 {-| Use this to draw the result of the getElements function into an svg container.
 The function that translates foreign objects into Svg elements is mandatory.
 -}
-drawElements :
-    List (Svg.Attribute msg)
-    -> (a -> Svg msg)
-    ->
-        { svg : List ( Point, Element )
-        , foreign : List ( a, ( Point, ( Int, Int ) ) )
-        , settings : Settings
-        , columns : Int
-        , rows : Int
-        }
-    -> Html msg
+drawElements : List (Svg.Attribute msg) -> (a -> Svg msg) -> Configuration a -> Html msg
 drawElements =
     SvgBob.Grid.drawElements
