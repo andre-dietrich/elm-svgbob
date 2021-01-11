@@ -1,5 +1,5 @@
 module SvgBob exposing
-    ( getSvg, default, getSvgWith
+    ( getSvg, default, getSvgWith, getElements, drawElements
     , Settings
     )
 
@@ -9,7 +9,7 @@ It is a fork of Ivan Ceras example that is hosted at:
 
 <https://github.com/ivanceras/elm-examples>
 
-@docs getSvg, default, getSvgWith
+@docs getSvg, default, getSvgWith, getElements, drawElements
 
 @docs Settings
 
@@ -19,7 +19,7 @@ import Html exposing (Html)
 import Svg exposing (Svg)
 import SvgBob.Grid
 import SvgBob.Model
-import SvgBob.Types exposing (Element(..))
+import SvgBob.Types exposing (Element(..), Point)
 
 
 {-| general settings ...
@@ -69,7 +69,7 @@ default =
     , textColor = "black"
     , backgroundColor = "white"
     , verbatim = '"'
-    , multilineVerbatim = False
+    , multilineVerbatim = True
     }
 
 
@@ -85,3 +85,45 @@ getSvg settings attributes =
 getSvgWith : Settings -> List (Svg.Attribute msg) -> (String -> Svg msg) -> String -> Html msg
 getSvgWith settings attributes verbatim =
     SvgBob.Grid.getSvg settings attributes (Just verbatim)
+
+
+{-| Identified elements can be stored for later usage and verbatim code can be
+exposed, so that it can be transformed into any other kind of representation.
+
+The foreign part can be translated into anything, strings are not mandatory.
+This way it can also be used within your model, if those foreign elements are
+used to store more relevant information.
+
+Use this function in conjunction with `drawElements`.
+
+-}
+getElements :
+    Settings
+    -> String
+    ->
+        { svg : List ( Point, Element )
+        , foreign : List ( String, ( Point, ( Int, Int ) ) )
+        , settings : Settings
+        , columns : Int
+        , rows : Int
+        }
+getElements =
+    SvgBob.Grid.getElements
+
+
+{-| Use this to draw the result of the getElements function into an svg container.
+The function that translates foreign objects into Svg elements is mandatory.
+-}
+drawElements :
+    List (Svg.Attribute msg)
+    -> (a -> Svg msg)
+    ->
+        { svg : List ( Point, Element )
+        , foreign : List ( a, ( Point, ( Int, Int ) ) )
+        , settings : Settings
+        , columns : Int
+        , rows : Int
+        }
+    -> Html msg
+drawElements =
+    SvgBob.Grid.drawElements

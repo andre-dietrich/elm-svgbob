@@ -1,4 +1,4 @@
-module SvgBob.Grid exposing (getSvg)
+module SvgBob.Grid exposing (drawElements, getElements, getSvg)
 
 import Dict exposing (Dict)
 import Html exposing (Attribute, Html)
@@ -546,15 +546,9 @@ getSvg settings attributes verbatim code =
     let
         model =
             init settings code
-
-        gwidth =
-            String.fromFloat <| measureX model.columns + 10
-
-        gheight =
-            String.fromFloat <| measureY model.rows + 10
     in
     Svg.svg
-        (Attr.viewBox ("0 0 " ++ gwidth ++ " " ++ gheight)
+        (viewBox model.rows model.columns
             :: bgColor model.settings.backgroundColor
             :: attributes
         )
@@ -562,6 +556,43 @@ getSvg settings attributes verbatim code =
             [ arrowMarker model.settings.strokeColor ]
             :: drawPaths verbatim model
         )
+
+
+drawElements :
+    List (Svg.Attribute msg)
+    -> (a -> Svg msg)
+    ->
+        { svg : List ( Point, Element )
+        , foreign : List ( a, ( Point, ( Int, Int ) ) )
+        , settings : Settings
+        , columns : Int
+        , rows : Int
+        }
+    -> Html msg
+drawElements attributes verbatim config =
+    let
+        fn =
+            draw Nothing config.settings
+    in
+    Svg.svg
+        (viewBox config.rows config.columns
+            :: bgColor config.settings.backgroundColor
+            :: attributes
+        )
+        (Svg.defs []
+            [ arrowMarker config.settings.strokeColor ]
+            :: List.map (\( a, ( point, dim ) ) -> drawCustomObject verbatim config.settings point dim a) config.foreign
+            |> List.append (List.concatMap (\( p, e ) -> fn p e) config.svg)
+        )
+
+
+viewBox rows columns =
+    ("0 0 "
+        ++ (String.fromFloat <| measureX columns + 10)
+        ++ " "
+        ++ (String.fromFloat <| measureY rows + 10)
+    )
+        |> Attr.viewBox
 
 
 bgColor : String -> Svg.Attribute msg
@@ -581,33 +612,56 @@ drawElement withVerbatim dict settings ( ( x, y ), ( char, element ) ) =
         |> draw withVerbatim settings position
 
 
-getElements : Settings -> (String -> Svg msg) -> String -> List ( Point, Element )
-getElements settings verbatim code =
+getElements :
+    Settings
+    -> String
+    ->
+        { rows : Int
+        , columns : Int
+        , settings : Settings
+        , svg : List ( Point, Element )
+        , foreign : List ( String, ( Point, ( Int, Int ) ) )
+        }
+getElements settings code =
     let
+        model =
+            init settings code
+
         intermediate =
-            code
-                |> init settings
-                |> getScans (Just verbatim)
+            getScans True model
 
         dict =
             Dict.fromList intermediate
     in
     intermediate
-        |> List.map
-            (\( ( x, y ), ( char, element ) ) ->
-                ( Point
-                    (measureX x + textWidth / 2)
-                    (measureY y + textHeight / 2)
-                , getElement (getMatrix x y dict) ( char, element )
-                )
+        |> List.foldl
+            (\( ( x, y ), ( char, element ) ) container ->
+                let
+                    point =
+                        Point
+                            (measureX x + textWidth / 2)
+                            (measureY y + textHeight / 2)
+                in
+                case getElement (getMatrix x y dict) ( char, element ) of
+                    ForeignObject str dim ->
+                        { container | foreign = ( str, ( point, dim ) ) :: container.foreign }
+
+                    e ->
+                        { container | svg = ( point, e ) :: container.svg }
             )
+            { rows = model.rows
+            , columns = model.columns
+            , svg = []
+            , foreign = []
+            , settings = settings
+            }
 
 
-getScans : Maybe (String -> Svg msg) -> Model -> Scans
+getScans : Bool -> Model -> Scans
 getScans withVerbatim model =
     let
         scanFn =
-            scanLine model.settings.verbatim (withVerbatim /= Nothing)
+            scanLine model.settings.verbatim withVerbatim
 
         elements =
             model.lines
@@ -639,16 +693,16 @@ getScans withVerbatim model =
 
 
 drawPaths : Maybe (String -> Svg msg) -> Model -> List (Svg msg)
-drawPaths withVerbatim model =
+drawPaths verbatim model =
     let
         intermediate =
-            getScans withVerbatim model
+            getScans (verbatim /= Nothing) model
 
         dict =
             Dict.fromList intermediate
 
         fn =
-            drawElement withVerbatim dict model.settings
+            drawElement verbatim dict model.settings
     in
     List.map fn intermediate
         |> List.concat
@@ -1011,6 +1065,27 @@ drawForeignObject withVerbatim s pos ( rows, columns ) str =
                 , Attr.fill s.textColor
                 ]
                 [ verbatim str ]
+
+
+drawCustomObject : (a -> Svg msg) -> Settings -> Point -> ( Int, Int ) -> a -> Svg msg
+drawCustomObject verbatim s pos ( rows, columns ) obj =
+    let
+        pos2 =
+            move (Ext (North_ 1.1) West) pos
+    in
+    Svg.foreignObject
+        [ Attr.x <| String.fromFloat pos2.x
+        , Attr.y <| String.fromFloat pos2.y
+        , Attr.width <| String.fromFloat (1 + measureX columns)
+        , Attr.height <| String.fromFloat (measureY rows)
+        , Attr.style
+            ("font-size:"
+                ++ String.fromFloat s.fontSize
+                ++ "px;font-family:monospace"
+            )
+        , Attr.fill s.textColor
+        ]
+        [ verbatim obj ]
 
 
 measureX : Int -> Float
