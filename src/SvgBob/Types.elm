@@ -4,7 +4,6 @@ module SvgBob.Types exposing
     , Point
     , Scan(..)
     , Scans
-    , foreignObject
     , isVerbatim
     , mergeVerbatim
     )
@@ -25,7 +24,7 @@ type Element
     | Sequence (List Element)
     | Box
     | Circle Bool
-    | ForeignObject String
+    | ForeignObject String ( Int, Int )
 
 
 type Direction
@@ -72,16 +71,6 @@ isVerbatim v =
 
         _ ->
             False
-
-
-foreignObject : Element -> Maybe String
-foreignObject v =
-    case v of
-        ForeignObject str ->
-            Just str
-
-        _ ->
-            Nothing
 
 
 mergeVerbatim : Scan -> Scan -> Scan

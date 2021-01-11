@@ -14,7 +14,6 @@ import SvgBob.Types
         , Point
         , Scan(..)
         , Scans
-        , foreignObject
         , mergeVerbatim
         )
 
@@ -463,7 +462,10 @@ getElement m ( char, elem ) =
             circle filled char m
 
         Verbatim str ->
-            ForeignObject str
+            str
+                |> String.lines
+                |> SvgBob.Model.dim
+                |> ForeignObject str
 
         _ ->
             Text char
@@ -577,6 +579,28 @@ drawElement withVerbatim dict settings ( ( x, y ), ( char, element ) ) =
     in
     getElement (getMatrix x y dict) ( char, element )
         |> draw withVerbatim settings position
+
+
+getElements : Settings -> (String -> Svg msg) -> String -> List ( Point, Element )
+getElements settings verbatim code =
+    let
+        intermediate =
+            code
+                |> init settings
+                |> getScans (Just verbatim)
+
+        dict =
+            Dict.fromList intermediate
+    in
+    intermediate
+        |> List.map
+            (\( ( x, y ), ( char, element ) ) ->
+                ( Point
+                    (measureX x + textWidth / 2)
+                    (measureY y + textHeight / 2)
+                , getElement (getMatrix x y dict) ( char, element )
+                )
+            )
 
 
 getScans : Maybe (String -> Svg msg) -> Model -> Scans
@@ -828,8 +852,8 @@ draw withVerbatim settings pos element =
                 []
             ]
 
-        ForeignObject str ->
-            [ drawForeignObject withVerbatim settings pos str ]
+        ForeignObject str dim ->
+            [ drawForeignObject withVerbatim settings pos dim str ]
 
         _ ->
             []
@@ -949,8 +973,8 @@ drawText s pos char =
         [ Svg.text (String.fromChar char) ]
 
 
-drawForeignObject : Maybe (String -> Svg msg) -> Settings -> Point -> String -> Svg msg
-drawForeignObject withVerbatim s pos str =
+drawForeignObject : Maybe (String -> Svg msg) -> Settings -> Point -> ( Int, Int ) -> String -> Svg msg
+drawForeignObject withVerbatim s pos ( rows, columns ) str =
     case withVerbatim of
         Nothing ->
             let
@@ -973,11 +997,6 @@ drawForeignObject withVerbatim s pos str =
             let
                 pos2 =
                     move (Ext (North_ 1.1) West) pos
-
-                ( rows, columns ) =
-                    str
-                        |> String.lines
-                        |> SvgBob.Model.dim
             in
             Svg.foreignObject
                 [ Attr.x <| String.fromFloat pos2.x
