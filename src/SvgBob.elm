@@ -9,9 +9,9 @@ It is a fork of Ivan Ceras example that is hosted at:
 
 <https://github.com/ivanceras/elm-examples>
 
-@docs init, getSvg, default, getSvgWith, getElements
+@docs getSvg, default, getSvgWith
 
-@docs Model, Settings
+@docs Settings
 
 -}
 
