@@ -571,8 +571,11 @@ drawElements :
     -> Html msg
 drawElements attributes verbatim config =
     let
-        fn =
+        fnSVG =
             draw Nothing config.settings
+
+        fnCustom =
+            drawCustomObject verbatim config.settings
     in
     Svg.svg
         (viewBox config.rows config.columns
@@ -581,8 +584,8 @@ drawElements attributes verbatim config =
         )
         (Svg.defs []
             [ arrowMarker config.settings.strokeColor ]
-            :: List.map (\( a, ( point, dim ) ) -> drawCustomObject verbatim config.settings point dim a) config.foreign
-            |> List.append (List.concatMap (\( p, e ) -> fn p e) config.svg)
+            :: List.map (\( a, ( point, dim ) ) -> fnCustom point dim a) config.foreign
+            |> List.append (List.concatMap (\( p, e ) -> fnSVG p e) config.svg)
         )
 
 
@@ -1048,23 +1051,7 @@ drawForeignObject withVerbatim s pos ( rows, columns ) str =
                 [ Svg.text str ]
 
         Just verbatim ->
-            let
-                pos2 =
-                    move (Ext (North_ 1.1) West) pos
-            in
-            Svg.foreignObject
-                [ Attr.x <| String.fromFloat pos2.x
-                , Attr.y <| String.fromFloat pos2.y
-                , Attr.width <| String.fromFloat (1 + measureX columns)
-                , Attr.height <| String.fromFloat (measureY rows)
-                , Attr.style
-                    ("font-size:"
-                        ++ String.fromFloat s.fontSize
-                        ++ "px;font-family:monospace"
-                    )
-                , Attr.fill s.textColor
-                ]
-                [ verbatim str ]
+            drawCustomObject verbatim s pos ( rows, columns ) str
 
 
 drawCustomObject : (a -> Svg msg) -> Settings -> Point -> ( Int, Int ) -> a -> Svg msg
@@ -1076,8 +1063,12 @@ drawCustomObject verbatim s pos ( rows, columns ) obj =
     Svg.foreignObject
         [ Attr.x <| String.fromFloat pos2.x
         , Attr.y <| String.fromFloat pos2.y
-        , Attr.width <| String.fromFloat (1 + measureX columns)
-        , Attr.height <| String.fromFloat (measureY rows)
+        , s.widthVerbatim
+            |> Maybe.withDefault (String.fromFloat (1 + measureX columns))
+            |> Attr.width
+        , s.heightVerbatim
+            |> Maybe.withDefault (String.fromFloat (measureY rows))
+            |> Attr.height
         , Attr.style
             ("font-size:"
                 ++ String.fromFloat s.fontSize

@@ -35,7 +35,14 @@ import SvgBob.Types exposing (Element(..), Point)
         , backgroundColor : String
         , verbatim : Char
         , multilineVerbatim : Bool
+        , heightVerbatim : Maybe String
+        , widthVerbatim : Maybe String
         }
+
+The additional `heightVerbatim` and `widthVerbatim` can be used to overwrite the
+calculated dimensions for that specific element. Otherwise the dimensions for
+verbatim elements are calculated on the basis of the position and dimensions
+of the strings within the ASCII-Art image.
 
 -}
 type alias Settings =
@@ -55,6 +62,8 @@ type alias Settings =
         , backgroundColor = "white"
         , verbatim = '"'
         , multilineVerbatim = False
+        , heightVerbatim = Nothing
+        , widthVerbatim = Nothing
         }
 
 -}
@@ -69,7 +78,9 @@ default =
     , textColor = "black"
     , backgroundColor = "white"
     , verbatim = '"'
-    , multilineVerbatim = True
+    , multilineVerbatim = False
+    , heightVerbatim = Nothing
+    , widthVerbatim = Nothing
     }
 
 

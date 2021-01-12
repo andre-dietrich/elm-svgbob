@@ -12,6 +12,8 @@ type alias Settings =
     , backgroundColor : String
     , verbatim : Char
     , multilineVerbatim : Bool
+    , heightVerbatim : Maybe String
+    , widthVerbatim : Maybe String
     }
 
 
