@@ -785,7 +785,14 @@ scanElement verbatim withVerbatim y char scan =
                         , result =
                             case ( withVerbatim, scan.result ) of
                                 ( True, ( pos, ( _, Verbatim str ) ) :: xs ) ->
-                                    ( pos, ( ' ', Verbatim (String.dropRight 1 str) ) ) :: xs
+                                    ( pos
+                                    , ( ' '
+                                      , String.dropRight 1 str
+                                            ++ "  "
+                                            |> Verbatim
+                                      )
+                                    )
+                                        :: xs
 
                                 ( _, result ) ->
                                     result |> List.tail |> Maybe.withDefault []
@@ -799,10 +806,10 @@ scanElement verbatim withVerbatim y char scan =
                                     ( ( scan.x, y ), ( char, AlphaNumeric ) ) :: scan.result
 
                                 ( True, ( pos, ( _, Verbatim str ) ) :: xs ) ->
-                                    ( pos, ( ' ', Verbatim (String.append str (String.fromChar char)) ) ) :: xs
+                                    ( pos, appendToVerbatim str char ) :: xs
 
                                 ( True, _ ) ->
-                                    ( ( scan.x, y ), ( ' ', Verbatim (String.fromChar char) ) ) :: scan.result
+                                    ( ( scan.x, y ), appendToVerbatim "" char ) :: scan.result
                     }
 
         else if scan.verbatimCounter > 0 then
@@ -813,10 +820,10 @@ scanElement verbatim withVerbatim y char scan =
                             ( ( scan.x, y ), ( char, AlphaNumeric ) ) :: scan.result
 
                         ( True, ( pos, ( _, Verbatim str ) ) :: xs ) ->
-                            ( pos, ( ' ', Verbatim (String.append str (String.fromChar char)) ) ) :: xs
+                            ( pos, appendToVerbatim str char ) :: xs
 
                         ( True, _ ) ->
-                            ( ( scan.x, y ), ( ' ', Verbatim (String.fromChar char) ) ) :: scan.result
+                            ( ( scan.x + 1 - scan.verbatimCounter, y ), appendToVerbatim "" char ) :: scan.result
             }
 
         else
@@ -826,6 +833,11 @@ scanElement verbatim withVerbatim y char scan =
 
                 Just elem ->
                     { scan | result = ( ( scan.x, y ), ( char, elem ) ) :: scan.result }
+
+
+appendToVerbatim : String -> Char -> ( Char, Scan )
+appendToVerbatim str =
+    String.fromChar >> String.append str >> Verbatim >> Tuple.pair ' '
 
 
 getScan : Char -> Maybe Scan
