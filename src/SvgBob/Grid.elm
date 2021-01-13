@@ -752,8 +752,10 @@ scanLine : Char -> Bool -> Int -> String -> Scans
 scanLine verbatim withVerbatim y =
     String.trimRight
         >> String.toList
-        >> List.foldl (scanElement verbatim withVerbatim y) ( [], 0, False )
-        >> (\( a, _, _ ) -> a)
+        >> List.foldl
+            (scanElement verbatim withVerbatim y)
+            { result = [], x = 0, verbatimCounter = 0, lastChars = [] }
+        >> .result
 
 
 scanElement :
@@ -761,33 +763,69 @@ scanElement :
     -> Bool
     -> Int
     -> Char
-    -> ( List ( ( Int, Int ), ( Char, Scan ) ), Int, Bool )
-    -> ( List ( ( Int, Int ), ( Char, Scan ) ), Int, Bool )
-scanElement verbatim withVerbatim y char ( rslt, x, isVerbatim ) =
-    if char == verbatim then
-        ( rslt, x + 1, not isVerbatim )
+    -> { result : Scans, x : Int, verbatimCounter : Int, lastChars : List Bool }
+    -> { result : Scans, x : Int, verbatimCounter : Int, lastChars : List Bool }
+scanElement verbatim withVerbatim y char scan =
+    (\s -> { s | x = s.x + 1, lastChars = (char == verbatim) :: s.lastChars }) <|
+        if char == verbatim then
+            -- start verbatim mode
+            case ( scan.verbatimCounter, scan.lastChars ) of
+                ( 0, _ ) ->
+                    { scan | verbatimCounter = 1 }
 
-    else if isVerbatim then
-        ( case ( withVerbatim, rslt ) of
-            ( False, _ ) ->
-                ( ( x, y ), ( char, AlphaNumeric ) ) :: rslt
+                ( 1, False :: _ ) ->
+                    { scan | verbatimCounter = 0 }
 
-            ( True, ( pos, ( _, Verbatim str ) ) :: xs ) ->
-                ( pos, ( ' ', Verbatim (String.append str (String.fromChar char)) ) ) :: xs
+                ( 1, True :: _ ) ->
+                    { scan | verbatimCounter = 2 }
 
-            ( True, _ ) ->
-                ( ( x, y ), ( ' ', Verbatim (String.fromChar char) ) ) :: rslt
-        , x + 1
-        , isVerbatim
-        )
+                ( 2, True :: _ ) ->
+                    { scan
+                        | verbatimCounter = 0
+                        , result =
+                            case ( withVerbatim, scan.result ) of
+                                ( True, ( pos, ( _, Verbatim str ) ) :: xs ) ->
+                                    ( pos, ( ' ', Verbatim (String.dropRight 1 str) ) ) :: xs
 
-    else
-        case getScan char of
-            Nothing ->
-                ( rslt, x + 1, isVerbatim )
+                                ( _, result ) ->
+                                    result |> List.tail |> Maybe.withDefault []
+                    }
 
-            Just elem ->
-                ( ( ( x, y ), ( char, elem ) ) :: rslt, x + 1, isVerbatim )
+                _ ->
+                    { scan
+                        | result =
+                            case ( withVerbatim, scan.result ) of
+                                ( False, _ ) ->
+                                    ( ( scan.x, y ), ( char, AlphaNumeric ) ) :: scan.result
+
+                                ( True, ( pos, ( _, Verbatim str ) ) :: xs ) ->
+                                    ( pos, ( ' ', Verbatim (String.append str (String.fromChar char)) ) ) :: xs
+
+                                ( True, _ ) ->
+                                    ( ( scan.x, y ), ( ' ', Verbatim (String.fromChar char) ) ) :: scan.result
+                    }
+
+        else if scan.verbatimCounter > 0 then
+            { scan
+                | result =
+                    case ( withVerbatim, scan.result ) of
+                        ( False, _ ) ->
+                            ( ( scan.x, y ), ( char, AlphaNumeric ) ) :: scan.result
+
+                        ( True, ( pos, ( _, Verbatim str ) ) :: xs ) ->
+                            ( pos, ( ' ', Verbatim (String.append str (String.fromChar char)) ) ) :: xs
+
+                        ( True, _ ) ->
+                            ( ( scan.x, y ), ( ' ', Verbatim (String.fromChar char) ) ) :: scan.result
+            }
+
+        else
+            case getScan char of
+                Nothing ->
+                    scan
+
+                Just elem ->
+                    { scan | result = ( ( scan.x, y ), ( char, elem ) ) :: scan.result }
 
 
 getScan : Char -> Maybe Scan
