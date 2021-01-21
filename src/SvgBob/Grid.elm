@@ -689,6 +689,8 @@ getScans withVerbatim model =
         verbs
             |> List.sortBy (Tuple.first >> Tuple.second)
             |> merge []
+            -- solves overlay issue ...
+            |> List.reverse
             |> List.append scans
 
     else
