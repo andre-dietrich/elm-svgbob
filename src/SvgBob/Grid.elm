@@ -821,8 +821,12 @@ scanElement verbatim withVerbatim y char scan =
                         ( False, _ ) ->
                             ( ( scan.x, y ), ( char, AlphaNumeric ) ) :: scan.result
 
-                        ( True, ( pos, ( _, Verbatim str ) ) :: xs ) ->
-                            ( pos, appendToVerbatim str char ) :: xs
+                        ( True, ( ( x, _ ), ( _, Verbatim str ) ) :: xs ) ->
+                            if x + String.length str == scan.x then
+                                ( ( x, y ), appendToVerbatim str char ) :: xs
+
+                            else
+                                ( ( scan.x, y ), appendToVerbatim "" char ) :: scan.result
 
                         ( True, _ ) ->
                             ( ( scan.x + 1 - scan.verbatimCounter, y ), appendToVerbatim "" char ) :: scan.result
