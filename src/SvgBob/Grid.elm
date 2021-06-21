@@ -147,7 +147,7 @@ apply_ matrix input output =
                 apply_ matrix fns (then_ :: output)
 
             else
-                apply matrix fns
+                apply_ matrix fns output
 
 
 lowHorizontal : Char -> Matrix -> Element
