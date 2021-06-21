@@ -45,6 +45,9 @@ move dir pt =
         West_ n ->
             { pt | x = pt.x - textWidth / 2 * n }
 
+        Center ->
+            pt
+
         Ext dir1 dir2 ->
             pt
                 |> move dir1
@@ -54,9 +57,6 @@ move dir pt =
             pt
                 |> move (moveExt n dir1)
                 |> move (moveExt n dir2)
-
-        Center ->
-            pt
 
 
 moveExt : Float -> Direction -> Direction
@@ -430,8 +430,19 @@ getElement m ( char, elem ) =
             else
                 Text char
 
-        Arrow dir ->
-            Triangle dir
+        Arrow East ->
+            if Horizontal == m.west || Horizontal == m.east then
+                Triangle East
+
+            else
+                Text char
+
+        Arrow West ->
+            if Horizontal == m.west || Horizontal == m.east then
+                Triangle West
+
+            else
+                Text char
 
         Corner ->
             corner char m
