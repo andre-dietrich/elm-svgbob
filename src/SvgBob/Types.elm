@@ -4,7 +4,6 @@ module SvgBob.Types exposing
     , Point
     , Scan(..)
     , Scans
-    , isVerbatim
     , mergeVerbatim
     )
 
@@ -16,8 +15,7 @@ type alias Point =
 
 
 type Element
-    = Empty
-    | Text Char
+    = Text Char
     | Line Direction Direction
     | Triangle Direction
     | Curve Float Direction Direction
@@ -61,16 +59,6 @@ type Scan
 
 type alias Scans =
     List ( ( Int, Int ), ( Char, Scan ) )
-
-
-isVerbatim : Scan -> Bool
-isVerbatim v =
-    case v of
-        Verbatim _ ->
-            True
-
-        _ ->
-            False
 
 
 mergeVerbatim : Scan -> Scan -> Scan

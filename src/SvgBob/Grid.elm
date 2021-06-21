@@ -605,6 +605,7 @@ drawElements attributes verbatim config =
         )
 
 
+viewBox : Int -> Int -> Attribute msg
 viewBox rows columns =
     ("0 0 "
         ++ (String.fromFloat <| measureX columns + 10)
@@ -983,9 +984,6 @@ draw withVerbatim settings pos element =
 
         ForeignObject str dim ->
             [ drawForeignObject withVerbatim settings pos dim str ]
-
-        _ ->
-            []
 
 
 opposite : Direction -> Direction
