@@ -133,13 +133,18 @@ textHeight =
 
 apply : Matrix -> List ( Matrix -> Bool, Element ) -> List Element
 apply matrix list =
-    case list of
+    apply_ matrix list []
+
+
+apply_ : Matrix -> List ( Matrix -> Bool, Element ) -> List Element -> List Element
+apply_ matrix input output =
+    case input of
         [] ->
-            []
+            List.reverse output
 
         ( if_, then_ ) :: fns ->
             if if_ matrix then
-                then_ :: apply matrix fns
+                apply_ matrix fns (then_ :: output)
 
             else
                 apply matrix fns
