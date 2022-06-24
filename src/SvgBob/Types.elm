@@ -21,6 +21,7 @@ type Element
     | Curve Float Direction Direction
     | Sequence (List Element)
     | Box
+    | BigBox
     | Circle Bool
     | ForeignObject String ( Int, Int )
 

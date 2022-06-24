@@ -216,6 +216,10 @@ intersection char matrix =
     , ( .north_east >> (==) SlantRight, Line Center (Ext North East) )
     , ( .south_west >> (==) SlantRight, Line Center (Ext South West) )
     , ( .south_east >> (==) SlantLeft, Line Center (Ext South East) )
+    , ( .west >> (==) Square, BigBox )
+    , ( .east >> (==) Square, BigBox )
+    , ( .south >> (==) Square, BigBox )
+    , ( .north >> (==) Square, BigBox )
     ]
         |> apply matrix
         |> sequenceWithDefault char
@@ -963,7 +967,10 @@ draw withVerbatim settings pos element =
                 |> List.concat
 
         Box ->
-            [ drawSquare settings pos ]
+            [ drawSquare False settings pos ]
+
+        BigBox ->
+            [ drawSquare True settings pos ]
 
         Circle filled ->
             [ Svg.circle
@@ -1039,15 +1046,23 @@ drawArrow settings pos dir =
         (opposite dir)
 
 
-drawSquare : Settings -> Point -> Svg msg
-drawSquare settings pos =
+drawSquare : Bool -> Settings -> Point -> Svg msg
+drawSquare big settings pos =
+    let
+        ( width, height ) =
+            if big then
+                ( settings.textWidth, settings.textHeight + 1 )
+
+            else
+                ( settings.textWidth, settings.textWidth )
+    in
     Svg.rect
-        [ Attr.x <| String.fromFloat (pos.x - 4)
-        , Attr.y <| String.fromFloat (pos.y - 4)
+        [ Attr.x <| String.fromFloat (pos.x - width / 2)
+        , Attr.y <| String.fromFloat (pos.y - height / 2)
         , Attr.stroke settings.strokeColor
         , Attr.fill settings.strokeColor
-        , Attr.width "8"
-        , Attr.height "8"
+        , Attr.width <| String.fromFloat width
+        , Attr.height <| String.fromFloat height
         ]
         []
 
