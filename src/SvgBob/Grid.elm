@@ -858,6 +858,12 @@ scanElement verbatim withVerbatim y char scan =
                 Nothing ->
                     scan
 
+                Just Emoji ->
+                    { scan
+                        | x = scan.x + 1
+                        , result = ( ( scan.x, y ), ( char, Emoji ) ) :: scan.result
+                    }
+
                 Just elem ->
                     { scan | result = ( ( scan.x, y ), ( char, elem ) ) :: scan.result }
 
@@ -943,7 +949,16 @@ getScan char =
             Just <| O True
 
         _ ->
-            Just AlphaNumeric
+            if isEmoji char then
+                Just Emoji
+
+            else
+                Just AlphaNumeric
+
+
+isEmoji : Char -> Bool
+isEmoji =
+    Char.toCode >> (<) 2048
 
 
 draw : Maybe (String -> Svg msg) -> Settings -> Point -> Element -> List (Svg msg)

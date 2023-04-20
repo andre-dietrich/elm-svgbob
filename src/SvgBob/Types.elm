@@ -45,6 +45,7 @@ type Scan
     | CloseCurve
     | Vertical
     | AlphaNumeric
+    | Emoji
     | Verbatim String
     | Horizontal
     | LowHorizontal
