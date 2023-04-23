@@ -196,7 +196,7 @@ lowHorizontal char matrix =
 sequenceWithDefault : Char -> List Element -> Element
 sequenceWithDefault char list =
     if list == [] then
-        Text char
+        Text (String.fromChar char)
 
     else
         Sequence list
@@ -402,7 +402,7 @@ getElement m ( char, elem ) =
                 Line South (Ext North North)
 
             else
-                Text char
+                Text (String.fromChar char)
 
         Horizontal ->
             horizontal char m
@@ -424,7 +424,7 @@ getElement m ( char, elem ) =
                 Triangle <| Ext North West
 
             else
-                Text char
+                Text (String.fromChar char)
 
         Arrow North ->
             if Vertical == m.south then
@@ -437,21 +437,21 @@ getElement m ( char, elem ) =
                 Triangle <| Ext South East
 
             else
-                Text char
+                Text (String.fromChar char)
 
         Arrow East ->
             if Horizontal == m.west || Horizontal == m.east then
                 Triangle East
 
             else
-                Text char
+                Text (String.fromChar char)
 
         Arrow West ->
             if Horizontal == m.west || Horizontal == m.east then
                 Triangle West
 
             else
-                Text char
+                Text (String.fromChar char)
 
         Corner ->
             corner char m
@@ -476,7 +476,7 @@ getElement m ( char, elem ) =
                         |> Sequence
 
                 _ ->
-                    Text char
+                    Text (String.fromChar char)
 
         O filled ->
             circle filled char m
@@ -487,14 +487,17 @@ getElement m ( char, elem ) =
                 |> SvgBob.Model.dim
                 |> ForeignObject str
 
+        Emoji str ->
+            Text str
+
         _ ->
-            Text char
+            Text (String.fromChar char)
 
 
 circle : Bool -> Char -> Matrix -> Element
 circle filled char m =
     if AlphaNumeric == m.west || AlphaNumeric == m.east then
-        Text char
+        Text (String.fromChar char)
 
     else
         case intersection char m of
@@ -503,7 +506,7 @@ circle filled char m =
                     |> Sequence
 
             _ ->
-                Text char
+                Text (String.fromChar char)
 
 
 vectorEffect : Attribute a
@@ -858,11 +861,38 @@ scanElement verbatim withVerbatim y char scan =
                 Nothing ->
                     scan
 
-                Just Emoji ->
-                    { scan
-                        | x = scan.x + 1
-                        , result = ( ( scan.x, y ), ( char, Emoji ) ) :: scan.result
-                    }
+                Just (Emoji e) ->
+                    case scan.result of
+                        ( pos, ( _, Emoji str ) ) :: xs ->
+                            let
+                                code =
+                                    Char.toCode char
+                            in
+                            if code > 127994 && code < 128000 || code == 8205 then
+                                -- color codes || Zero width joiner
+                                { scan
+                                    | x = scan.x - 1
+                                    , result = ( pos, ( ' ', Emoji (str ++ e) ) ) :: xs
+                                }
+
+                            else if str |> String.endsWith "\u{200D}" then
+                                -- Zero width joiner
+                                { scan
+                                    | x = scan.x - 1
+                                    , result = ( pos, ( ' ', Emoji (str ++ e) ) ) :: xs
+                                }
+
+                            else
+                                { scan
+                                    | x = scan.x + 1
+                                    , result = ( ( scan.x, y ), ( ' ', Emoji e ) ) :: scan.result
+                                }
+
+                        _ ->
+                            { scan
+                                | x = scan.x + 1
+                                , result = ( ( scan.x, y ), ( ' ', Emoji e ) ) :: scan.result
+                            }
 
                 Just elem ->
                     { scan | result = ( ( scan.x, y ), ( char, elem ) ) :: scan.result }
@@ -950,7 +980,10 @@ getScan char =
 
         _ ->
             if isEmoji char then
-                Just Emoji
+                char
+                    |> String.fromChar
+                    |> Emoji
+                    |> Just
 
             else
                 Just AlphaNumeric
@@ -1111,8 +1144,8 @@ drawLine s =
         ]
 
 
-drawText : Settings -> Point -> Char -> Svg msg
-drawText s pos char =
+drawText : Settings -> Point -> String -> Svg msg
+drawText s pos str =
     let
         pos2 =
             move (Ext (South_ 0.5) West) pos
@@ -1127,7 +1160,7 @@ drawText s pos char =
             )
         , Attr.fill s.textColor
         ]
-        [ Svg.text (String.fromChar char) ]
+        [ Svg.text str ]
 
 
 drawForeignObject : Maybe (String -> Svg msg) -> Settings -> Point -> ( Int, Int ) -> String -> Svg msg

@@ -15,7 +15,7 @@ type alias Point =
 
 
 type Element
-    = Text Char
+    = Text String
     | Line Direction Direction
     | Triangle Direction
     | Curve Float Direction Direction
@@ -45,7 +45,7 @@ type Scan
     | CloseCurve
     | Vertical
     | AlphaNumeric
-    | Emoji
+    | Emoji String
     | Verbatim String
     | Horizontal
     | LowHorizontal
