@@ -886,7 +886,7 @@ scanElement verbatim withVerbatim y char scan =
                                 { scan
                                     | x =
                                         scan.x
-                                            + (if code > 12000 then
+                                            + (if code > 10000 then
                                                 1
 
                                                else
@@ -899,7 +899,7 @@ scanElement verbatim withVerbatim y char scan =
                             { scan
                                 | x =
                                     scan.x
-                                        + (if code > 12000 then
+                                        + (if code > 10000 then
                                             1
 
                                            else
