@@ -868,7 +868,7 @@ scanElement verbatim withVerbatim y char scan =
                     in
                     case scan.result of
                         ( pos, ( _, Emoji str ) ) :: xs ->
-                            if code > 127994 && code < 128000 || code == 8205 then
+                            if code > 127994 && code < 128000 || code == 8205 || code == 65039 || code == 65038 then
                                 -- color codes || Zero width joiner
                                 { scan
                                     | x = scan.x - 1
