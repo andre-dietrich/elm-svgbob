@@ -862,12 +862,15 @@ scanElement verbatim withVerbatim y char scan =
                     scan
 
                 Just (Emoji e) ->
+                    let
+                        _ =
+                            Debug.log "XXXXXXXXX" ( char, Char.toCode char )
+
+                        code =
+                            Char.toCode char
+                    in
                     case scan.result of
                         ( pos, ( _, Emoji str ) ) :: xs ->
-                            let
-                                code =
-                                    Char.toCode char
-                            in
                             if code > 127994 && code < 128000 || code == 8205 then
                                 -- color codes || Zero width joiner
                                 { scan
@@ -884,13 +887,27 @@ scanElement verbatim withVerbatim y char scan =
 
                             else
                                 { scan
-                                    | x = scan.x + 1
+                                    | x =
+                                        scan.x
+                                            + (if code > 12000 then
+                                                1
+
+                                               else
+                                                0
+                                              )
                                     , result = ( ( scan.x, y ), ( ' ', Emoji e ) ) :: scan.result
                                 }
 
                         _ ->
                             { scan
-                                | x = scan.x + 1
+                                | x =
+                                    scan.x
+                                        + (if code > 12000 then
+                                            1
+
+                                           else
+                                            0
+                                          )
                                 , result = ( ( scan.x, y ), ( ' ', Emoji e ) ) :: scan.result
                             }
 
@@ -991,7 +1008,7 @@ getScan char =
 
 isEmoji : Char -> Bool
 isEmoji =
-    Char.toCode >> (<) 2048
+    Char.toCode >> (<) 8000
 
 
 draw : Maybe (String -> Svg msg) -> Settings -> Point -> Element -> List (Svg msg)
