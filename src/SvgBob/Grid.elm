@@ -863,9 +863,6 @@ scanElement verbatim withVerbatim y char scan =
 
                 Just (Emoji e) ->
                     let
-                        _ =
-                            Debug.log "XXXXXXXXX" ( char, Char.toCode char )
-
                         code =
                             Char.toCode char
                     in
