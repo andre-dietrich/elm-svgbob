@@ -608,7 +608,7 @@ drawElements attributes verbatim config =
         (Svg.defs []
             [ arrowMarker config.settings.strokeColor ]
             :: List.map (\( a, ( point, dim ) ) -> fnCustom point dim a) config.foreign
-            |> List.append (List.concatMap (\( p, e ) -> fnSVG p e) config.svg)
+            |> List.append (List.concatMap fnSVG config.svg)
         )
 
 
@@ -629,14 +629,13 @@ bgColor bg =
 
 drawElement : Maybe (String -> Svg msg) -> Dict ( Int, Int ) ( Char, Scan ) -> Settings -> ( ( Int, Int ), ( Char, Scan ) ) -> List (Svg msg)
 drawElement withVerbatim dict settings ( ( x, y ), ( char, element ) ) =
-    let
-        position =
-            Point
-                (measureX x + textWidth / 2)
-                (measureY y + textHeight / 2)
-    in
-    getElement (getMatrix x y dict) ( char, element )
-        |> draw withVerbatim settings position
+    draw withVerbatim
+        settings
+        ( Point
+            (measureX x + textWidth / 2)
+            (measureY y + textHeight / 2)
+        , getElement (getMatrix x y dict) ( char, element )
+        )
 
 
 getElements :
@@ -1008,8 +1007,8 @@ isEmoji =
     Char.toCode >> (<) 8000
 
 
-draw : Maybe (String -> Svg msg) -> Settings -> Point -> Element -> List (Svg msg)
-draw withVerbatim settings pos element =
+draw : Maybe (String -> Svg msg) -> Settings -> ( Point, Element ) -> List (Svg msg)
+draw withVerbatim settings ( pos, element ) =
     case element of
         Triangle dir ->
             [ drawArrow settings pos dir ]
@@ -1024,8 +1023,12 @@ draw withVerbatim settings pos element =
             [ drawArc settings faktor (move start pos) stop ]
 
         Sequence elements ->
+            let
+                fn =
+                    Tuple.pair pos >> draw withVerbatim settings
+            in
             elements
-                |> List.map (draw withVerbatim settings pos)
+                |> List.map fn
                 |> List.concat
 
         Box ->
