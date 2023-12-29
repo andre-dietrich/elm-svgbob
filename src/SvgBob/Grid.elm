@@ -607,8 +607,9 @@ drawElements attributes verbatim config =
         )
         (Svg.defs []
             [ arrowMarker config.settings.strokeColor ]
-            :: List.map (\( a, ( point, dim ) ) -> fnCustom point dim a) config.foreign
-            |> List.append (List.concatMap fnSVG config.svg)
+            :: (List.concatMap fnSVG config.svg
+                    |> List.append (List.map (\( a, ( point, dim ) ) -> fnCustom point dim a) config.foreign)
+               )
         )
 
 
