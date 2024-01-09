@@ -875,6 +875,20 @@ scanElement verbatim withVerbatim y char scan =
                                     , result = ( pos, ( ' ', Emoji (str ++ e) ) ) :: xs
                                 }
 
+                            else if code > 127461 && code < 127488 then
+                                -- fix for flags ... still needs to be improved
+                                if Tuple.first pos + 2 >= scan.x && String.length str == 2 then
+                                    { scan
+                                        | x = scan.x - 1
+                                        , result = ( pos, ( ' ', Emoji (str ++ e) ) ) :: xs
+                                    }
+
+                                else
+                                    { scan
+                                        | x = scan.x + 1
+                                        , result = ( ( scan.x, y ), ( ' ', Emoji e ) ) :: scan.result
+                                    }
+
                             else if str |> String.endsWith "\u{200D}" then
                                 -- Zero width joiner
                                 { scan
@@ -909,7 +923,9 @@ scanElement verbatim withVerbatim y char scan =
                             }
 
                 Just elem ->
-                    { scan | result = ( ( scan.x, y ), ( char, elem ) ) :: scan.result }
+                    { scan
+                        | result = ( ( scan.x, y ), ( char, elem ) ) :: scan.result
+                    }
 
 
 appendToVerbatim : String -> Char -> ( Char, Scan )
