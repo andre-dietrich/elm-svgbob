@@ -10,7 +10,7 @@ type alias Settings =
     , strokeColor : String
     , textColor : String
     , backgroundColor : String
-    , verbatim : Char
+    , verbatim : String
     , multilineVerbatim : Bool
     , heightVerbatim : Maybe String
     , widthVerbatim : Maybe String

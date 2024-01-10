@@ -4,6 +4,7 @@ import Dict exposing (Dict)
 import Html exposing (Attribute, Html)
 import Html.Attributes exposing (attribute)
 import String
+import String.Graphemes
 import Svg exposing (Svg)
 import Svg.Attributes as Attr
 import SvgBob.Model exposing (Model, Settings, init)
@@ -108,7 +109,7 @@ type alias Matrix =
     }
 
 
-getMatrix : Int -> Int -> Dict ( Int, Int ) ( Char, Scan ) -> Matrix
+getMatrix : Int -> Int -> Dict ( Int, Int ) ( String, Scan ) -> Matrix
 getMatrix x y dict =
     { north_west = get ( x - 1, y - 1 ) dict
     , north = get ( x, y - 1 ) dict
@@ -150,7 +151,7 @@ apply_ matrix input output =
                 apply_ matrix fns output
 
 
-lowHorizontal : Char -> Matrix -> Element
+lowHorizontal : String -> Matrix -> Element
 lowHorizontal char matrix =
     [ ( .west >> (==) SlantRight
       , Line (Ext South East) (West_ 4)
@@ -193,16 +194,16 @@ lowHorizontal char matrix =
         |> sequenceWithDefault char
 
 
-sequenceWithDefault : Char -> List Element -> Element
+sequenceWithDefault : String -> List Element -> Element
 sequenceWithDefault char list =
     if list == [] then
-        Text (String.fromChar char)
+        Text char
 
     else
         Sequence list
 
 
-intersection : Char -> Matrix -> Element
+intersection : String -> Matrix -> Element
 intersection char matrix =
     [ ( \{ north } -> north == Vertical || north == Intersection || north == Corner
       , Line Center North
@@ -225,7 +226,7 @@ intersection char matrix =
         |> sequenceWithDefault char
 
 
-closeCurve : Char -> Matrix -> Element
+closeCurve : String -> Matrix -> Element
 closeCurve char matrix =
     [ ( \m -> Corner == m.north_west && Corner == m.south_west
       , Curve 4 South (Ext North North)
@@ -238,7 +239,7 @@ closeCurve char matrix =
         |> sequenceWithDefault char
 
 
-openCurve : Char -> Matrix -> Element
+openCurve : String -> Matrix -> Element
 openCurve char matrix =
     [ ( \m -> Corner == m.north_east && Corner == m.south_east
       , Curve 4 North (Ext South South)
@@ -251,7 +252,7 @@ openCurve char matrix =
         |> sequenceWithDefault char
 
 
-corner : Char -> Matrix -> Element
+corner : String -> Matrix -> Element
 corner char matrix =
     [ ( \m -> (Horizontal == m.west) && (Horizontal == m.east)
       , Line West (East_ 2)
@@ -384,7 +385,7 @@ corner char matrix =
         |> sequenceWithDefault char
 
 
-horizontal : Char -> Matrix -> Element
+horizontal : String -> Matrix -> Element
 horizontal char matrix =
     [ ( \m -> AlphaNumeric /= m.west || AlphaNumeric /= m.east
       , Line East (West_ 2)
@@ -394,7 +395,7 @@ horizontal char matrix =
         |> sequenceWithDefault char
 
 
-getElement : Matrix -> ( Char, Scan ) -> Element
+getElement : Matrix -> ( String, Scan ) -> Element
 getElement m ( char, elem ) =
     case elem of
         Vertical ->
@@ -402,7 +403,7 @@ getElement m ( char, elem ) =
                 Line South (Ext North North)
 
             else
-                Text (String.fromChar char)
+                Text char
 
         Horizontal ->
             horizontal char m
@@ -424,7 +425,7 @@ getElement m ( char, elem ) =
                 Triangle <| Ext North West
 
             else
-                Text (String.fromChar char)
+                Text char
 
         Arrow North ->
             if Vertical == m.south then
@@ -437,21 +438,21 @@ getElement m ( char, elem ) =
                 Triangle <| Ext South East
 
             else
-                Text (String.fromChar char)
+                Text char
 
         Arrow East ->
             if Horizontal == m.west || Horizontal == m.east then
                 Triangle East
 
             else
-                Text (String.fromChar char)
+                Text char
 
         Arrow West ->
             if Horizontal == m.west || Horizontal == m.east then
                 Triangle West
 
             else
-                Text (String.fromChar char)
+                Text char
 
         Corner ->
             corner char m
@@ -476,7 +477,7 @@ getElement m ( char, elem ) =
                         |> Sequence
 
                 _ ->
-                    Text (String.fromChar char)
+                    Text char
 
         O filled ->
             circle filled char m
@@ -487,17 +488,17 @@ getElement m ( char, elem ) =
                 |> SvgBob.Model.dim
                 |> ForeignObject str
 
-        Emoji str ->
-            Text str
+        Emoji ->
+            Text char
 
         _ ->
-            Text (String.fromChar char)
+            Text char
 
 
-circle : Bool -> Char -> Matrix -> Element
+circle : Bool -> String -> Matrix -> Element
 circle filled char m =
     if AlphaNumeric == m.west || AlphaNumeric == m.east then
-        Text (String.fromChar char)
+        Text char
 
     else
         case intersection char m of
@@ -506,7 +507,7 @@ circle filled char m =
                     |> Sequence
 
             _ ->
-                Text (String.fromChar char)
+                Text char
 
 
 vectorEffect : Attribute a
@@ -628,7 +629,7 @@ bgColor bg =
     Attr.style ("background-color:" ++ bg ++ ";")
 
 
-drawElement : Maybe (String -> Svg msg) -> Dict ( Int, Int ) ( Char, Scan ) -> Settings -> ( ( Int, Int ), ( Char, Scan ) ) -> List (Svg msg)
+drawElement : Maybe (String -> Svg msg) -> Dict ( Int, Int ) ( String, Scan ) -> Settings -> ( ( Int, Int ), ( String, Scan ) ) -> List (Svg msg)
 drawElement withVerbatim dict settings ( ( x, y ), ( char, element ) ) =
     draw withVerbatim
         settings
@@ -774,10 +775,10 @@ merge combined verbs =
             merge (verb :: combined) (List.reverse newTail)
 
 
-scanLine : Char -> Bool -> Int -> String -> Scans
+scanLine : String -> Bool -> Int -> String -> Scans
 scanLine verbatim withVerbatim y =
     String.trimRight
-        >> String.toList
+        >> String.Graphemes.toList
         >> List.foldl
             (scanElement verbatim withVerbatim y)
             { result = [], x = 0, verbatimCounter = 0, lastChars = [] }
@@ -785,10 +786,10 @@ scanLine verbatim withVerbatim y =
 
 
 scanElement :
-    Char
+    String
     -> Bool
     -> Int
-    -> Char
+    -> String
     -> { result : Scans, x : Int, verbatimCounter : Int, lastChars : List Bool }
     -> { result : Scans, x : Int, verbatimCounter : Int, lastChars : List Bool }
 scanElement verbatim withVerbatim y char scan =
@@ -812,7 +813,7 @@ scanElement verbatim withVerbatim y char scan =
                             case ( withVerbatim, scan.result ) of
                                 ( True, ( pos, ( _, Verbatim str ) ) :: xs ) ->
                                     ( pos
-                                    , ( ' '
+                                    , ( " "
                                       , String.dropRight 1 str
                                             ++ "  "
                                             |> Verbatim
@@ -861,66 +862,11 @@ scanElement verbatim withVerbatim y char scan =
                 Nothing ->
                     scan
 
-                Just (Emoji e) ->
-                    let
-                        code =
-                            Char.toCode char
-                    in
-                    case scan.result of
-                        ( pos, ( _, Emoji str ) ) :: xs ->
-                            if code > 127994 && code < 128000 || code == 8205 || code == 65039 || code == 65038 then
-                                -- color codes || Zero width joiner
-                                { scan
-                                    | x = scan.x - 1
-                                    , result = ( pos, ( ' ', Emoji (str ++ e) ) ) :: xs
-                                }
-
-                            else if code > 127461 && code < 127488 then
-                                -- fix for flags ... still needs to be improved
-                                if Tuple.first pos + 2 >= scan.x && String.length str == 2 then
-                                    { scan
-                                        | x = scan.x - 1
-                                        , result = ( pos, ( ' ', Emoji (str ++ e) ) ) :: xs
-                                    }
-
-                                else
-                                    { scan
-                                        | x = scan.x + 1
-                                        , result = ( ( scan.x, y ), ( ' ', Emoji e ) ) :: scan.result
-                                    }
-
-                            else if str |> String.endsWith "\u{200D}" then
-                                -- Zero width joiner
-                                { scan
-                                    | x = scan.x - 1
-                                    , result = ( pos, ( ' ', Emoji (str ++ e) ) ) :: xs
-                                }
-
-                            else
-                                { scan
-                                    | x =
-                                        scan.x
-                                            + (if code > 10000 then
-                                                1
-
-                                               else
-                                                0
-                                              )
-                                    , result = ( ( scan.x, y ), ( ' ', Emoji e ) ) :: scan.result
-                                }
-
-                        _ ->
-                            { scan
-                                | x =
-                                    scan.x
-                                        + (if code > 10000 then
-                                            1
-
-                                           else
-                                            0
-                                          )
-                                , result = ( ( scan.x, y ), ( ' ', Emoji e ) ) :: scan.result
-                            }
+                Just Emoji ->
+                    { scan
+                        | x = scan.x + 1
+                        , result = ( ( scan.x, y ), ( char, Emoji ) ) :: scan.result
+                    }
 
                 Just elem ->
                     { scan
@@ -928,100 +874,92 @@ scanElement verbatim withVerbatim y char scan =
                     }
 
 
-appendToVerbatim : String -> Char -> ( Char, Scan )
+appendToVerbatim : String -> String -> ( String, Scan )
 appendToVerbatim str =
-    String.fromChar >> String.append str >> Verbatim >> Tuple.pair ' '
+    String.append str >> Verbatim >> Tuple.pair " "
 
 
-getScan : Char -> Maybe Scan
+getScan : String -> Maybe Scan
 getScan char =
     case char of
-        ' ' ->
+        " " ->
             Nothing
 
-        '-' ->
+        "-" ->
             Just Horizontal
 
-        '_' ->
+        "_" ->
             Just LowHorizontal
 
-        '+' ->
+        "+" ->
             Just Intersection
 
-        '.' ->
+        "." ->
             Just Corner
 
-        '\'' ->
+        "'" ->
             Just Corner
 
-        ',' ->
+        "," ->
             Just Corner
 
-        '`' ->
+        "`" ->
             Just Corner
 
-        '´' ->
+        "´" ->
             Just Corner
 
-        '>' ->
+        ">" ->
             Just <| Arrow West
 
-        '<' ->
+        "<" ->
             Just <| Arrow East
 
-        'V' ->
+        "V" ->
             Just <| Arrow South
 
-        'v' ->
+        "v" ->
             Just <| Arrow South
 
-        '^' ->
+        "^" ->
             Just <| Arrow North
 
-        'A' ->
+        "A" ->
             Just <| Arrow North
 
-        '/' ->
+        "/" ->
             Just SlantRight
 
-        '\\' ->
+        "\\" ->
             Just SlantLeft
 
-        '(' ->
+        "(" ->
             Just OpenCurve
 
-        ')' ->
+        ")" ->
             Just CloseCurve
 
-        '|' ->
+        "|" ->
             Just Vertical
 
-        '#' ->
+        "#" ->
             Just Square
 
-        'O' ->
+        "O" ->
             Just <| O False
 
-        'o' ->
+        "o" ->
             Just <| O False
 
-        '*' ->
+        "*" ->
             Just <| O True
 
         _ ->
-            if isEmoji char then
-                char
-                    |> String.fromChar
-                    |> Emoji
-                    |> Just
-
-            else
+            if String.length char == 1 then
                 Just AlphaNumeric
 
-
-isEmoji : Char -> Bool
-isEmoji =
-    Char.toCode >> (<) 8000
+            else
+                Just Emoji
 
 
 draw : Maybe (String -> Svg msg) -> Settings -> ( Point, Element ) -> List (Svg msg)
@@ -1256,7 +1194,7 @@ measureY y =
     toFloat y * textHeight
 
 
-get : ( Int, Int ) -> Dict ( Int, Int ) ( Char, Scan ) -> Scan
+get : ( Int, Int ) -> Dict ( Int, Int ) ( String, Scan ) -> Scan
 get pos dict =
     dict
         |> Dict.get pos

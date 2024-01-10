@@ -45,7 +45,7 @@ type Scan
     | CloseCurve
     | Vertical
     | AlphaNumeric
-    | Emoji String
+    | Emoji
     | Verbatim String
     | Horizontal
     | LowHorizontal
@@ -60,7 +60,7 @@ type Scan
 
 
 type alias Scans =
-    List ( ( Int, Int ), ( Char, Scan ) )
+    List ( ( Int, Int ), ( String, Scan ) )
 
 
 mergeVerbatim : Scan -> Scan -> Scan
