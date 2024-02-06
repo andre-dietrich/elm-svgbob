@@ -489,7 +489,7 @@ getElement m ( char, elem ) =
                 |> ForeignObject str
 
         Emoji ->
-            Text char
+            TextEmoji char
 
         _ ->
             Text char
@@ -970,6 +970,9 @@ draw withVerbatim settings ( pos, element ) =
 
         Text char ->
             [ drawText settings pos char ]
+
+        TextEmoji char ->
+            [ drawText settings (move (East_ 0.25) pos) char ]
 
         Line start stop ->
             [ drawLine settings (move start pos) stop ]

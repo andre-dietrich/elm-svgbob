@@ -16,6 +16,7 @@ type alias Point =
 
 type Element
     = Text String
+    | TextEmoji String
     | Line Direction Direction
     | Triangle Direction
     | Curve Float Direction Direction
