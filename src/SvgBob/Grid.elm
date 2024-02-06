@@ -380,6 +380,18 @@ corner char matrix =
     , ( \m -> SlantRight == m.north_east && SlantLeft == m.north_west
       , Sequence [ Line Center (Ext North East), Line Center (Ext North West) ]
       )
+    , ( \m -> m.west == LowHorizontal && m.east == Horizontal
+      , Line (Ext South West) (Ext North (East_ 2))
+      )
+    , ( \m -> m.west == Horizontal && m.east == LowHorizontal
+      , Line (Ext South East) (Ext North (West_ 2))
+      )
+    , ( \m -> m.west == Horizontal && m.north_east == LowHorizontal
+      , Line West (Ext North (East_ 2))
+      )
+    , ( \m -> m.east == Horizontal && m.north_west == LowHorizontal
+      , Line East (Ext North (West_ 2))
+      )
     ]
         |> apply matrix
         |> sequenceWithDefault char
