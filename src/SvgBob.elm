@@ -85,7 +85,7 @@ default =
 
 
 {-| This record is used to store all relevant data to draw an svg-image multiple
-times, without reparsing it.
+times, without re-parsing it.
 -}
 type alias Configuration a =
     { svg : List ( Point, Element )

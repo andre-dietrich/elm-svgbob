@@ -1,14 +1,15 @@
-module SvgBob.Scanner exposing (..)
+module SvgBob.Scanner exposing (getScans)
 
 import String.Graphemes
-import SvgBob.Types exposing (..)
+import SvgBob.Types exposing (Direction(..), Scan(..), Scans, mergeVerbatim)
 
 
 getScans : { singleLine : Bool, string : String, multiLine : Bool } -> List String -> Scans
 getScans verbatim lines =
     let
         scanFn =
-            scanLine verbatim.string verbatim.singleLine
+            scanLine verbatim.string
+                verbatim.singleLine
 
         elements =
             lines

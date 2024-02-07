@@ -48,19 +48,30 @@ move dir pt =
             pt
 
         Ext dir1 dir2 ->
-            pt
-                |> move dir1
-                |> move dir2
+            let
+                next =
+                    pt
+                        |> move dir1
+                        |> move dir2
+            in
+            next
 
         Ext_ n dir1 dir2 ->
-            pt
-                |> move (moveExt n dir1)
-                |> move (moveExt n dir2)
+            let
+                next =
+                    pt
+                        |> move (moveExt n dir1)
+                        |> move (moveExt n dir2)
+            in
+            next
 
 
 moveExt : Float -> Direction -> Direction
 moveExt n dir =
     case dir of
+        Center ->
+            Center
+
         South ->
             South_ n
 
@@ -86,13 +97,18 @@ moveExt n dir =
             West_ (n * m)
 
         Ext dir1 dir2 ->
-            Ext (moveExt n dir1) (moveExt n dir2)
+            let
+                next =
+                    Ext (moveExt n dir1) (moveExt n dir2)
+            in
+            next
 
         Ext_ m dir1 dir2 ->
-            Ext (moveExt (n * m) dir1) (moveExt (n * m) dir2)
-
-        Center ->
-            Center
+            let
+                next =
+                    Ext (moveExt (n * m) dir1) (moveExt (n * m) dir2)
+            in
+            next
 
 
 type alias Matrix =
@@ -717,8 +733,7 @@ drawPaths verbatim model =
         fn =
             drawElement verbatim dict model.settings
     in
-    List.map fn intermediate
-        |> List.concat
+    List.concatMap fn intermediate
 
 
 draw : Maybe (String -> Svg msg) -> Settings -> ( Point, Element ) -> List (Svg msg)
@@ -744,9 +759,7 @@ draw withVerbatim settings ( pos, element ) =
                 fn =
                     Tuple.pair pos >> draw withVerbatim settings
             in
-            elements
-                |> List.map fn
-                |> List.concat
+            List.concatMap fn elements
 
         Box ->
             [ drawSquare False settings pos ]
@@ -778,6 +791,9 @@ draw withVerbatim settings ( pos, element ) =
 opposite : Direction -> Direction
 opposite dir =
     case dir of
+        Center ->
+            Center
+
         East ->
             West
 
@@ -803,13 +819,18 @@ opposite dir =
             North_ n
 
         Ext dir1 dir2 ->
-            Ext (opposite dir1) (opposite dir2)
+            let
+                oppositeDir =
+                    Ext (opposite dir1) (opposite dir2)
+            in
+            oppositeDir
 
         Ext_ n dir1 dir2 ->
-            Ext_ n (opposite dir1) (opposite dir2)
-
-        _ ->
-            dir
+            let
+                oppositeDir =
+                    Ext_ n (opposite dir1) (opposite dir2)
+            in
+            oppositeDir
 
 
 drawArrow : Settings -> Point -> Direction -> Svg msg
