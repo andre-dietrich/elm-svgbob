@@ -683,10 +683,7 @@ getElements settings code =
 
         intermediate =
             getScans
-                { singleLine = True
-                , multiLine = model.settings.multilineVerbatim
-                , string = model.settings.verbatim
-                }
+                model.settings.verbatim
                 model.lines
 
         dict =
@@ -719,11 +716,19 @@ getElements settings code =
 drawPaths : Maybe (String -> Svg msg) -> Model -> List (Svg msg)
 drawPaths verbatim model =
     let
+        settings =
+            model.settings.verbatim
+
         intermediate =
             getScans
-                { singleLine = verbatim /= Nothing
-                , multiLine = model.settings.multilineVerbatim
-                , string = model.settings.verbatim
+                { settings
+                    | string =
+                        case verbatim of
+                            Nothing ->
+                                ""
+
+                            Just _ ->
+                                settings.string
                 }
                 model.lines
 
@@ -951,10 +956,10 @@ drawCustomObject verbatim s pos ( rows, columns ) obj =
     Svg.foreignObject
         [ Attr.x <| String.fromFloat pos2.x
         , Attr.y <| String.fromFloat pos2.y
-        , s.widthVerbatim
+        , s.verbatim.width
             |> Maybe.withDefault (String.fromFloat (1 + measureX columns))
             |> Attr.width
-        , s.heightVerbatim
+        , s.verbatim.height
             |> Maybe.withDefault (String.fromFloat (measureY rows))
             |> Attr.height
         , Attr.style

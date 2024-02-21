@@ -77,10 +77,12 @@ default =
     , strokeColor = "black"
     , textColor = "black"
     , backgroundColor = "white"
-    , verbatim = "\""
-    , multilineVerbatim = False
-    , heightVerbatim = Nothing
-    , widthVerbatim = Nothing
+    , verbatim =
+        { string = "\""
+        , multiline = False
+        , height = Nothing
+        , width = Nothing
+        }
     }
 
 

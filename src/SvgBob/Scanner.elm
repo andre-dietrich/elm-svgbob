@@ -4,19 +4,27 @@ import String.Graphemes
 import SvgBob.Types exposing (Direction(..), Scan(..), Scans, mergeVerbatim)
 
 
-getScans : { singleLine : Bool, string : String, multiLine : Bool } -> List String -> Scans
+getScans :
+    { string : String
+    , multiline : Bool
+    , height : Maybe String
+    , width : Maybe String
+    }
+    -> List String
+    -> Scans
 getScans verbatim lines =
     let
         scanFn =
-            scanLine verbatim.string
-                verbatim.singleLine
+            scanLine
+                verbatim.string
+                (verbatim.string /= "")
 
         elements =
             lines
                 |> List.indexedMap scanFn
                 |> List.concat
     in
-    if verbatim.multiLine then
+    if verbatim.multiline then
         let
             ( verbs, scans ) =
                 List.foldl
