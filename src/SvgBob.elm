@@ -74,9 +74,11 @@ default =
     , textWidth = 8.0
     , textHeight = 16.0
     , arcRadius = 4.0
-    , strokeColor = "black"
-    , textColor = "black"
-    , backgroundColor = "white"
+    , color =
+        { stroke = "black"
+        , text = "black"
+        , background = "white"
+        }
     , verbatim =
         { string = "\""
         , multiline = False

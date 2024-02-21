@@ -565,7 +565,7 @@ drawArc s factor pos dir =
           ]
             |> String.join " "
             |> Attr.d
-        , Attr.stroke s.strokeColor
+        , Attr.stroke s.color.stroke
         , Attr.strokeWidth <| String.fromFloat s.lineWidth
         , Attr.fill "transparent"
         , vectorEffect
@@ -599,11 +599,11 @@ getSvg settings attributes verbatim code =
     in
     Svg.svg
         (viewBox model.rows model.columns
-            :: bgColor model.settings.backgroundColor
+            :: bgColor model.settings.color.background
             :: attributes
         )
         (Svg.defs []
-            [ arrowMarker model.settings.strokeColor ]
+            [ arrowMarker model.settings.color.stroke ]
             :: drawPaths verbatim model
         )
 
@@ -629,11 +629,11 @@ drawElements attributes verbatim config =
     in
     Svg.svg
         (viewBox config.rows config.columns
-            :: bgColor config.settings.backgroundColor
+            :: bgColor config.settings.color.background
             :: attributes
         )
         (Svg.defs []
-            [ arrowMarker config.settings.strokeColor ]
+            [ arrowMarker config.settings.color.stroke ]
             :: (List.concatMap fnSVG config.svg
                     |> List.append (List.map (\( a, ( point, dim ) ) -> fnCustom point dim a) config.foreign)
                )
@@ -779,11 +779,11 @@ draw withVerbatim settings ( pos, element ) =
                 , Attr.r <| String.fromFloat settings.arcRadius
                 , Attr.fill <|
                     if filled then
-                        settings.strokeColor
+                        settings.color.stroke
 
                     else
-                        settings.backgroundColor
-                , Attr.stroke settings.strokeColor
+                        settings.color.background
+                , Attr.stroke settings.color.stroke
                 , Attr.strokeWidth <| String.fromFloat settings.lineWidth
                 ]
                 []
@@ -843,7 +843,7 @@ drawArrow settings pos dir =
     toLine
         [ Attr.style
             ("stroke: "
-                ++ settings.strokeColor
+                ++ settings.color.stroke
                 ++ ";stroke-width:"
                 ++ String.fromFloat settings.lineWidth
             )
@@ -867,8 +867,8 @@ drawSquare big settings pos =
     Svg.rect
         [ Attr.x <| String.fromFloat (pos.x - width / 2)
         , Attr.y <| String.fromFloat (pos.y - height / 2)
-        , Attr.stroke settings.strokeColor
-        , Attr.fill settings.strokeColor
+        , Attr.stroke settings.color.stroke
+        , Attr.fill settings.color.stroke
         , Attr.width <| String.fromFloat width
         , Attr.height <| String.fromFloat height
         ]
@@ -896,7 +896,7 @@ toLine misc pos dir =
 drawLine : Settings -> Point -> Direction -> Svg msg
 drawLine s =
     toLine
-        [ Attr.stroke s.strokeColor
+        [ Attr.stroke s.color.stroke
         , Attr.strokeWidth <| String.fromFloat s.lineWidth
         , Attr.strokeLinecap "round"
         , Attr.strokeLinejoin "mitter"
@@ -918,7 +918,7 @@ drawText s pos str =
                 ++ String.fromFloat s.fontSize
                 ++ "px;font-family:monospace;"
             )
-        , Attr.fill s.textColor
+        , Attr.fill s.color.text
         ]
         [ Svg.text str ]
 
@@ -939,7 +939,7 @@ drawForeignObject withVerbatim s pos ( rows, columns ) str =
                         ++ String.fromFloat s.fontSize
                         ++ "px;font-family:monospace"
                     )
-                , Attr.fill s.textColor
+                , Attr.fill s.color.text
                 ]
                 [ Svg.text str ]
 
@@ -967,7 +967,7 @@ drawCustomObject verbatim s pos ( rows, columns ) obj =
                 ++ String.fromFloat s.fontSize
                 ++ "px;font-family:monospace"
             )
-        , Attr.fill s.textColor
+        , Attr.fill s.color.text
         ]
         [ verbatim obj ]
 

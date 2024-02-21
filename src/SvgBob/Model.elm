@@ -7,9 +7,11 @@ type alias Settings =
     , textWidth : Float
     , textHeight : Float
     , arcRadius : Float
-    , strokeColor : String
-    , textColor : String
-    , backgroundColor : String
+    , color :
+        { stroke : String
+        , text : String
+        , background : String
+        }
     , verbatim :
         { string : String
         , multiline : Bool
