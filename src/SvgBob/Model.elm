@@ -1,4 +1,9 @@
-module SvgBob.Model exposing (Model, Settings, dim, init)
+module SvgBob.Model exposing
+    ( Model
+    , Settings
+    , dim
+    , init
+    )
 
 
 type alias Settings =
@@ -7,17 +12,20 @@ type alias Settings =
     , textWidth : Float
     , textHeight : Float
     , arcRadius : Float
-    , color :
-        { stroke : String
-        , text : String
-        , background : String
-        }
+    , color : Color
     , verbatim :
         { string : String
         , multiline : Bool
         , height : Maybe String
         , width : Maybe String
         }
+    }
+
+
+type alias Color =
+    { stroke : String
+    , text : String
+    , background : String
     }
 
 

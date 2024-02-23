@@ -1,4 +1,8 @@
-module SvgBob.Grid exposing (drawElements, getElements, getSvg)
+module SvgBob.Grid exposing
+    ( drawElements
+    , getElements
+    , getSvg
+    )
 
 import Dict exposing (Dict)
 import Html exposing (Attribute, Html)
@@ -6,7 +10,12 @@ import Html.Attributes exposing (attribute)
 import String
 import Svg exposing (Svg)
 import Svg.Attributes as Attr
-import SvgBob.Model exposing (Model, Settings, init)
+import SvgBob.Model
+    exposing
+        ( Model
+        , Settings
+        , init
+        )
 import SvgBob.Scanner exposing (getScans)
 import SvgBob.Types
     exposing
@@ -565,8 +574,6 @@ drawArc s factor pos dir =
           ]
             |> String.join " "
             |> Attr.d
-        , Attr.stroke s.color.stroke
-        , Attr.strokeWidth <| String.fromFloat s.lineWidth
         , Attr.fill "transparent"
         , vectorEffect
         ]
@@ -574,7 +581,7 @@ drawArc s factor pos dir =
 
 
 arrowMarker : String -> Svg msg
-arrowMarker c =
+arrowMarker color =
     Svg.marker
         [ Attr.id "triangle"
         , Attr.viewBox "0 0 14 14"
@@ -584,27 +591,63 @@ arrowMarker c =
         , Attr.markerWidth "10"
         , Attr.markerHeight "10"
         , Attr.orient "auto"
-        , Attr.stroke c
-        , Attr.fill c
+        , Attr.stroke color
+        , Attr.fill color
         ]
         [ Svg.path [ Attr.d "M 0 0 L 10 5 L 0 10 z", vectorEffect ] []
         ]
 
 
-getSvg : Settings -> List (Svg.Attribute msg) -> Maybe (String -> Svg msg) -> String -> Html msg
+getSvg :
+    Settings
+    -> List (Svg.Attribute msg)
+    -> Maybe (String -> Svg msg)
+    -> String
+    -> Html msg
 getSvg settings attributes verbatim code =
     let
         model =
             init settings code
     in
+    model
+        |> drawPaths verbatim
+        |> drawSvg attributes model
+
+
+drawSvg :
+    List (Svg.Attribute msg)
+    ->
+        { model
+            | settings : Settings
+            , columns : Int
+            , rows : Int
+        }
+    -> List (Svg msg)
+    -> Html msg
+drawSvg attributes model body =
+    let
+        color =
+            model.settings.color
+    in
     Svg.svg
         (viewBox model.rows model.columns
-            :: bgColor model.settings.color.background
+            :: bgColor color.background color.stroke
+            :: Attr.stroke color.stroke
+            :: Attr.fill color.stroke
+            :: Attr.color color.background
             :: attributes
         )
-        (Svg.defs []
-            [ arrowMarker model.settings.color.stroke ]
-            :: drawPaths verbatim model
+        (Svg.style
+            []
+            [ Svg.text <|
+                "text { fill: "
+                    ++ color.text
+                    ++ "; font-size:"
+                    ++ String.fromFloat model.settings.fontSize
+                    ++ "px; font-family: monospace; stroke-width: 0px;}"
+            ]
+            :: Svg.defs [] [ arrowMarker color.stroke ]
+            :: body
         )
 
 
@@ -627,17 +670,9 @@ drawElements attributes verbatim config =
         fnCustom =
             drawCustomObject verbatim config.settings
     in
-    Svg.svg
-        (viewBox config.rows config.columns
-            :: bgColor config.settings.color.background
-            :: attributes
-        )
-        (Svg.defs []
-            [ arrowMarker config.settings.color.stroke ]
-            :: (List.concatMap fnSVG config.svg
-                    |> List.append (List.map (\( a, ( point, dim ) ) -> fnCustom point dim a) config.foreign)
-               )
-        )
+    List.concatMap fnSVG config.svg
+        |> List.append (List.map (\( a, ( point, dim ) ) -> fnCustom point dim a) config.foreign)
+        |> drawSvg attributes config
 
 
 viewBox : Int -> Int -> Attribute msg
@@ -650,9 +685,9 @@ viewBox rows columns =
         |> Attr.viewBox
 
 
-bgColor : String -> Svg.Attribute msg
-bgColor bg =
-    Attr.style ("background-color:" ++ bg ++ ";")
+bgColor : String -> String -> Svg.Attribute msg
+bgColor background fill =
+    Attr.style ("background-color:" ++ background ++ "; fill:" ++ fill ++ ";")
 
 
 drawElement : Maybe (String -> Svg msg) -> Dict ( Int, Int ) ( String, Scan ) -> Settings -> ( ( Int, Int ), ( String, Scan ) ) -> List (Svg msg)
@@ -745,16 +780,16 @@ draw : Maybe (String -> Svg msg) -> Settings -> ( Point, Element ) -> List (Svg 
 draw withVerbatim settings ( pos, element ) =
     case element of
         Triangle dir ->
-            [ drawArrow settings pos dir ]
+            [ drawArrow pos dir ]
 
         Text char ->
-            [ drawText settings pos char ]
+            [ drawText pos char ]
 
         TextEmoji char ->
-            [ drawText settings (move (East_ 0.25) pos) char ]
+            [ drawText (move (East_ 0.25) pos) char ]
 
         Line start stop ->
-            [ drawLine settings (move start pos) stop ]
+            [ drawLine (move start pos) stop ]
 
         Curve factor start stop ->
             [ drawArc settings factor (move start pos) stop ]
@@ -777,14 +812,13 @@ draw withVerbatim settings ( pos, element ) =
                 [ Attr.cx <| String.fromFloat pos.x
                 , Attr.cy <| String.fromFloat pos.y
                 , Attr.r <| String.fromFloat settings.arcRadius
+                , Attr.strokeWidth <| String.fromFloat settings.lineWidth
                 , Attr.fill <|
                     if filled then
-                        settings.color.stroke
+                        "inherit"
 
                     else
-                        settings.color.background
-                , Attr.stroke settings.color.stroke
-                , Attr.strokeWidth <| String.fromFloat settings.lineWidth
+                        "currentColor"
                 ]
                 []
             ]
@@ -838,16 +872,10 @@ opposite dir =
             oppositeDir
 
 
-drawArrow : Settings -> Point -> Direction -> Svg msg
-drawArrow settings pos dir =
+drawArrow : Point -> Direction -> Svg msg
+drawArrow pos dir =
     toLine
-        [ Attr.style
-            ("stroke: "
-                ++ settings.color.stroke
-                ++ ";stroke-width:"
-                ++ String.fromFloat settings.lineWidth
-            )
-        , Attr.markerEnd "url(#triangle)"
+        [ Attr.markerEnd "url(#triangle)"
         , vectorEffect
         ]
         (move dir pos)
@@ -867,8 +895,6 @@ drawSquare big settings pos =
     Svg.rect
         [ Attr.x <| String.fromFloat (pos.x - width / 2)
         , Attr.y <| String.fromFloat (pos.y - height / 2)
-        , Attr.stroke settings.color.stroke
-        , Attr.fill settings.color.stroke
         , Attr.width <| String.fromFloat width
         , Attr.height <| String.fromFloat height
         ]
@@ -893,19 +919,17 @@ toLine misc pos dir =
         []
 
 
-drawLine : Settings -> Point -> Direction -> Svg msg
-drawLine s =
+drawLine : Point -> Direction -> Svg msg
+drawLine =
     toLine
-        [ Attr.stroke s.color.stroke
-        , Attr.strokeWidth <| String.fromFloat s.lineWidth
-        , Attr.strokeLinecap "round"
+        [ Attr.strokeLinecap "round"
         , Attr.strokeLinejoin "mitter"
         , vectorEffect
         ]
 
 
-drawText : Settings -> Point -> String -> Svg msg
-drawText s pos str =
+drawText : Point -> String -> Svg msg
+drawText pos str =
     let
         pos2 =
             move (Ext (South_ 0.5) West) pos
@@ -913,12 +937,6 @@ drawText s pos str =
     Svg.node "text"
         [ Attr.x <| String.fromFloat pos2.x
         , Attr.y <| String.fromFloat pos2.y
-        , Attr.style
-            ("font-size:"
-                ++ String.fromFloat s.fontSize
-                ++ "px;font-family:monospace;"
-            )
-        , Attr.fill s.color.text
         ]
         [ Svg.text str ]
 
@@ -934,12 +952,6 @@ drawForeignObject withVerbatim s pos ( rows, columns ) str =
             Svg.node "text"
                 [ Attr.x <| String.fromFloat pos2.x
                 , Attr.y <| String.fromFloat pos2.y
-                , Attr.style
-                    ("font-size:"
-                        ++ String.fromFloat s.fontSize
-                        ++ "px;font-family:monospace"
-                    )
-                , Attr.fill s.color.text
                 ]
                 [ Svg.text str ]
 
@@ -962,12 +974,6 @@ drawCustomObject verbatim s pos ( rows, columns ) obj =
         , s.verbatim.height
             |> Maybe.withDefault (String.fromFloat (measureY rows))
             |> Attr.height
-        , Attr.style
-            ("font-size:"
-                ++ String.fromFloat s.fontSize
-                ++ "px;font-family:monospace"
-            )
-        , Attr.fill s.color.text
         ]
         [ verbatim obj ]
 

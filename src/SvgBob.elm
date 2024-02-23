@@ -57,13 +57,17 @@ type alias Settings =
         , textWidth = 8.0
         , textHeight = 16.0
         , arcRadius = 4.0
-        , strokeColor = "black"
-        , textColor = "black"
-        , backgroundColor = "white"
-        , verbatim = '"'
-        , multilineVerbatim = False
-        , heightVerbatim = Nothing
-        , widthVerbatim = Nothing
+        , color =
+            { stroke = "red"
+            , text = "green"
+            , background = "blue"
+            }
+        , verbatim =
+            { string = "\""
+            , multiline = False
+            , height = Nothing
+            , width = Nothing
+            }
         }
 
 -}
@@ -75,7 +79,7 @@ default =
     , textHeight = 16.0
     , arcRadius = 4.0
     , color =
-        { stroke = "black"
+        { stroke = "#222"
         , text = "black"
         , background = "white"
         }
