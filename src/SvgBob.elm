@@ -1,5 +1,5 @@
 module SvgBob exposing
-    ( getSvg, default, getSvgWith, getElements, drawElements
+    ( getSvg, defaultOptions, getSvgWith, getElements, drawElements
     , Settings, Configuration
     , setColors, setColorsIn
     )
@@ -10,7 +10,7 @@ It is a fork of Ivan Ceras example that is hosted at:
 
 <https://github.com/ivanceras/elm-examples>
 
-@docs getSvg, default, getSvgWith, getElements, drawElements
+@docs getSvg, defaultOptions, getSvgWith, getElements, drawElements
 
 @docs Settings, Configuration
 
@@ -33,16 +33,20 @@ import SvgBob.Types exposing (Element(..), Point)
         , textWidth : Float
         , textHeight : Float
         , arcRadius : Float
-        , strokeColor : String
-        , textColor : String
-        , backgroundColor : String
-        , verbatim : Char
-        , multilineVerbatim : Bool
-        , heightVerbatim : Maybe String
-        , widthVerbatim : Maybe String
+        , color :
+            { stroke : String
+            , text : String
+            , background : String
+            }
+        , verbatim :
+            { string : String
+            , multiline : Bool
+            , height : Maybe String
+            , width : Maybe String
+            }
         }
 
-The additional `heightVerbatim` and `widthVerbatim` can be used to overwrite the
+The additional `verbatim.height` and `verbatim.width` can be used to overwrite the
 calculated dimensions for that specific element. Otherwise the dimensions for
 verbatim elements are calculated on the basis of the position and dimensions
 of the strings within the ASCII-Art image.
@@ -54,16 +58,16 @@ type alias Settings =
 
 {-| Default parameters to work with ...
 
-    default =
+    defaultOptions =
         { fontSize = 14.0
         , lineWidth = 1.0
         , textWidth = 8.0
         , textHeight = 16.0
         , arcRadius = 4.0
         , color =
-            { stroke = "red"
-            , text = "green"
-            , background = "blue"
+            { stroke = "#222"
+            , text = "black"
+            , background = "white"
             }
         , verbatim =
             { string = "\""
@@ -74,8 +78,8 @@ type alias Settings =
         }
 
 -}
-default : Settings
-default =
+defaultOptions : Settings
+defaultOptions =
     { fontSize = 14.0
     , lineWidth = 1.0
     , textWidth = 8.0
@@ -109,16 +113,16 @@ type alias Configuration a =
 
 {-| Get the resulting svg and pass it into a div or whatever
 -}
-getSvg : Settings -> List (Svg.Attribute msg) -> String -> Html msg
-getSvg settings attributes =
-    SvgBob.Grid.getSvg settings attributes Nothing
+getSvg : List (Svg.Attribute msg) -> String -> Settings -> Html msg
+getSvg =
+    SvgBob.Grid.getSvg Nothing
 
 
 {-| Get the resulting svg and pass it into a div or parse it further or do whatever ...
 -}
-getSvgWith : Settings -> List (Svg.Attribute msg) -> (String -> Svg msg) -> String -> Html msg
-getSvgWith settings attributes verbatim =
-    SvgBob.Grid.getSvg settings attributes (Just verbatim)
+getSvgWith : (String -> Svg msg) -> List (Svg.Attribute msg) -> String -> Settings -> Html msg
+getSvgWith =
+    Just >> SvgBob.Grid.getSvg
 
 
 {-| Identified elements can be stored for later usage and verbatim code can be
@@ -144,11 +148,25 @@ drawElements =
     SvgBob.Grid.drawElements
 
 
+{-| Helper for changing the color settings.
+
+    settings
+    |> setColors { stroke = "red", text = "green", background = "blue" }
+    |> getSvg [] ...
+
+-}
 setColors : Colors -> Settings -> Settings
 setColors color settings =
     { settings | color = color }
 
 
+{-| Helper for changing the color configuration.
+
+    config
+    |> setColorsIn { stroke = "red", text = "green", background = "blue" }
+    |> drawElements [] ...
+
+-}
 setColorsIn : Colors -> Configuration a -> Configuration a
 setColorsIn color config =
     { config | settings = setColors color config.settings }

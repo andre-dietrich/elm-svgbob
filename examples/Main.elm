@@ -26,12 +26,14 @@ view : Model -> Html Msg
 view model =
     div [ style "display" "flex" ]
         [ textarea [ onInput Input, value model, style "width" "50%" ] []
-        , model
-            |> SvgBob.getSvg SvgBob.default
-                --With (\s -> Html.p [ Html.Attributes.style "height" "100%", Html.Attributes.style "width" "100%" ] [ Html.text s ])
+        , SvgBob.defaultOptions
+            |> SvgBob.getSvg
                 [ style "width" "50%"
                 , attribute "vector-effect" "non-scaling-stroke"
                 ]
+                model
+
+        --With (\s -> Html.p [ Html.Attributes.style "height" "100%", Html.Attributes.style "width" "100%" ] [ Html.text s ])
         ]
 
 

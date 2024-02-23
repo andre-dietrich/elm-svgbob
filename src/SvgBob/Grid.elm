@@ -599,12 +599,12 @@ arrowMarker color =
 
 
 getSvg :
-    Settings
+    Maybe (String -> Svg msg)
     -> List (Svg.Attribute msg)
-    -> Maybe (String -> Svg msg)
     -> String
+    -> Settings
     -> Html msg
-getSvg settings attributes verbatim code =
+getSvg verbatim attributes code settings =
     let
         model =
             init settings code
