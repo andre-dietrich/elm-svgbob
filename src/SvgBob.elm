@@ -1,6 +1,7 @@
 module SvgBob exposing
     ( getSvg, default, getSvgWith, getElements, drawElements
     , Settings, Configuration
+    , setColors, setColorsIn
     )
 
 {-| Convert ASCII to SVG
@@ -13,12 +14,14 @@ It is a fork of Ivan Ceras example that is hosted at:
 
 @docs Settings, Configuration
 
+@docs setColors, setColorsIn
+
 -}
 
 import Html exposing (Html)
 import Svg exposing (Svg)
 import SvgBob.Grid
-import SvgBob.Model
+import SvgBob.Model exposing (Colors)
 import SvgBob.Types exposing (Element(..), Point)
 
 
@@ -139,3 +142,13 @@ The function that translates foreign objects into Svg elements is mandatory.
 drawElements : List (Svg.Attribute msg) -> (a -> Svg msg) -> Configuration a -> Html msg
 drawElements =
     SvgBob.Grid.drawElements
+
+
+setColors : Colors -> Settings -> Settings
+setColors color settings =
+    { settings | color = color }
+
+
+setColorsIn : Colors -> Configuration a -> Configuration a
+setColorsIn color config =
+    { config | settings = setColors color config.settings }
