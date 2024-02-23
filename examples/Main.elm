@@ -2,16 +2,15 @@ module Main exposing (..)
 
 import Browser
 import Example1 as Example
-import Html exposing (Html, button, div, pre, text, textarea)
-import Html.Attributes exposing (attribute, class, contenteditable, id, style, value)
+import Html exposing (Html, div, textarea)
+import Html.Attributes exposing (attribute, style, value)
 import Html.Events exposing (onInput)
-import Json.Decode exposing (string)
 import SvgBob
 
 
 
 {--code which detects lines and connections
-also algorithmn to connect these lines
+also algorithm to connect these lines
 --}
 
 
@@ -26,7 +25,7 @@ type Msg
 view : Model -> Html Msg
 view model =
     div [ style "display" "flex" ]
-        [ Html.textarea [ onInput Input, value model, style "width" "50%" ] []
+        [ textarea [ onInput Input, value model, style "width" "50%" ] []
         , model
             |> SvgBob.getSvg SvgBob.default
                 --With (\s -> Html.p [ Html.Attributes.style "height" "100%", Html.Attributes.style "width" "100%" ] [ Html.text s ])
@@ -37,7 +36,7 @@ view model =
 
 
 update : Msg -> Model -> Model
-update msg model =
+update msg _ =
     case msg of
         Input asciiText ->
             asciiText
