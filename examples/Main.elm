@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Browser
-import Example1 as Example
+import Example0 as Example
 import Html exposing (Html, div, textarea)
 import Html.Attributes exposing (attribute, style, value)
 import Html.Events exposing (onInput)
