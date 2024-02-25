@@ -634,7 +634,6 @@ drawSvg attributes model body =
             :: bgColor color.background color.stroke
             :: Attr.stroke color.stroke
             :: Attr.fill color.stroke
-            :: Attr.color color.background
             :: attributes
         )
         (Svg.style
@@ -644,7 +643,11 @@ drawSvg attributes model body =
                     ++ color.text
                     ++ "; font-size:"
                     ++ String.fromFloat model.settings.fontSize
-                    ++ "px; font-family: monospace; stroke-width: 0px;}"
+                    ++ "px; font-family: monospace; stroke-width: 0px; }"
+            , Svg.text <|
+                "circle { color: "
+                    ++ color.background
+                    ++ "; }"
             ]
             :: Svg.defs [] [ arrowMarker color.stroke ]
             :: body
