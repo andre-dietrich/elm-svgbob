@@ -225,11 +225,42 @@ getScan char =
             Just <| O True
 
         _ ->
-            if String.length char == 1 then
+            if String.length char == 1 && not (isEmoji char) then
                 Just AlphaNumeric
 
             else
                 Just Emoji
+
+
+isEmoji : String -> Bool
+isEmoji char =
+    char
+        |> String.uncons
+        |> Maybe.map (Tuple.first >> Char.toCode)
+        |> Maybe.withDefault 0
+        |> isWideCharacter
+
+
+{-| Function to check if a character is a wide character (takes more space)
+-}
+isWideCharacter : Int -> Bool
+isWideCharacter codePoint =
+    if codePoint < 0x2000 then
+        False
+
+    else if codePoint <= 0x0001FAFF then
+        (codePoint <= 0x206F)
+            || (0x2300 <= codePoint && codePoint <= 0x23FF)
+            || (0x25A0 <= codePoint && codePoint <= 0x25FF)
+            || (0x2600 <= codePoint && codePoint <= 0x27BF)
+            || (0x2900 <= codePoint && codePoint <= 0x297F)
+            || (0x2B50 <= codePoint && codePoint <= 0x2B55)
+            || (0x3000 <= codePoint && codePoint <= 0x303F)
+            || (0xFF00 <= codePoint && codePoint <= 0xFFEF)
+            || (0x0001F000 <= codePoint)
+
+    else
+        False
 
 
 appendToVerbatim : String -> String -> ( String, Scan )
