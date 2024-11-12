@@ -134,14 +134,18 @@ type alias Matrix =
 
 getMatrix : Int -> Int -> Dict ( Int, Int ) ( String, Scan ) -> Matrix
 getMatrix x y dict =
-    { north_west = get ( x - 1, y - 1 ) dict
-    , north = get ( x, y - 1 ) dict
-    , north_east = get ( x + 1, y - 1 ) dict
-    , west = get ( x - 1, y ) dict
-    , east = get ( x + 1, y ) dict
-    , south_west = get ( x - 1, y + 1 ) dict
-    , south = get ( x, y + 1 ) dict
-    , south_east = get ( x + 1, y + 1 ) dict
+    let
+        getNeighbor pos =
+            get pos dict
+    in
+    { north_west = getNeighbor ( x - 1, y - 1 )
+    , north = getNeighbor ( x, y - 1 )
+    , north_east = getNeighbor ( x + 1, y - 1 )
+    , west = getNeighbor ( x - 1, y )
+    , east = getNeighbor ( x + 1, y )
+    , south_west = getNeighbor ( x - 1, y + 1 )
+    , south = getNeighbor ( x, y + 1 )
+    , south_east = getNeighbor ( x + 1, y + 1 )
     }
 
 
@@ -157,21 +161,15 @@ textHeight =
 
 apply : Matrix -> List ( Matrix -> Bool, Element ) -> List Element
 apply matrix list =
-    apply_ matrix list []
+    list
+        |> List.filterMap
+            (\( if_, then_ ) ->
+                if if_ matrix then
+                    Just then_
 
-
-apply_ : Matrix -> List ( Matrix -> Bool, Element ) -> List Element -> List Element
-apply_ matrix input output =
-    case input of
-        [] ->
-            List.reverse output
-
-        ( if_, then_ ) :: fns ->
-            if if_ matrix then
-                apply_ matrix fns (then_ :: output)
-
-            else
-                apply_ matrix fns output
+                else
+                    Nothing
+            )
 
 
 lowHorizontal : String -> Matrix -> Element
@@ -219,11 +217,12 @@ lowHorizontal char matrix =
 
 sequenceWithDefault : String -> List Element -> Element
 sequenceWithDefault char list =
-    if list == [] then
-        Text char
+    case list of
+        [] ->
+            Text char
 
-    else
-        Sequence list
+        _ ->
+            Sequence list
 
 
 intersection : String -> Matrix -> Element
@@ -727,28 +726,28 @@ getElements settings code =
         dict =
             Dict.fromList intermediate
     in
-    intermediate
-        |> List.foldl
-            (\( ( x, y ), ( char, element ) ) container ->
-                let
-                    point =
-                        Point
-                            (measureX x + textWidth / 2)
-                            (measureY y + textHeight / 2)
-                in
-                case getElement (getMatrix x y dict) ( char, element ) of
-                    ForeignObject str dim ->
-                        { container | foreign = ( str, ( point, dim ) ) :: container.foreign }
+    List.foldl
+        (\( ( x, y ), ( char, element ) ) container ->
+            let
+                point =
+                    Point
+                        (measureX x + textWidth / 2)
+                        (measureY y + textHeight / 2)
+            in
+            case getElement (getMatrix x y dict) ( char, element ) of
+                ForeignObject str dim ->
+                    { container | foreign = ( str, ( point, dim ) ) :: container.foreign }
 
-                    e ->
-                        { container | svg = ( point, e ) :: container.svg }
-            )
-            { rows = model.rows
-            , columns = model.columns
-            , svg = []
-            , foreign = []
-            , settings = settings
-            }
+                e ->
+                    { container | svg = ( point, e ) :: container.svg }
+        )
+        { rows = model.rows
+        , columns = model.columns
+        , svg = []
+        , foreign = []
+        , settings = settings
+        }
+        intermediate
 
 
 drawPaths : Maybe (String -> Svg msg) -> Model -> List (Svg msg)
