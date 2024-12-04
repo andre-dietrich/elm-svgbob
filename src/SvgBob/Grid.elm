@@ -475,14 +475,14 @@ getElement m ( char, elem ) =
                 Text char
 
         Arrow East ->
-            if Horizontal == m.west || Horizontal == m.east then
+            if Horizontal == m.west || Horizontal == m.east || Corner == m.west || Corner == m.east then
                 Triangle East
 
             else
                 Text char
 
         Arrow West ->
-            if Horizontal == m.west || Horizontal == m.east then
+            if Horizontal == m.west || Horizontal == m.east || Corner == m.west || Corner == m.east then
                 Triangle West
 
             else

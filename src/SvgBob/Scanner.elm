@@ -2,7 +2,13 @@ module SvgBob.Scanner exposing (getScans)
 
 import Dict exposing (Dict)
 import String.Graphemes
-import SvgBob.Types exposing (Direction(..), Scan(..), Scans, mergeVerbatim)
+import SvgBob.Types
+    exposing
+        ( Direction(..)
+        , Scan(..)
+        , Scans
+        , mergeVerbatim
+        )
 
 
 getScans :
