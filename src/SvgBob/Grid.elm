@@ -250,7 +250,7 @@ intersection char matrix =
 
 closeCurve : String -> Matrix -> Element
 closeCurve char matrix =
-    [ ( \m -> Corner == m.north_west && Corner == m.south_west
+    [ ( \m -> Corner == m.north_west || Corner == m.south_west
       , Curve 4 South (Ext North North)
       )
     , ( \m -> SlantLeft == m.north_west && SlantRight == m.south_west
@@ -263,7 +263,7 @@ closeCurve char matrix =
 
 openCurve : String -> Matrix -> Element
 openCurve char matrix =
-    [ ( \m -> Corner == m.north_east && Corner == m.south_east
+    [ ( \m -> Corner == m.north_east || Corner == m.south_east
       , Curve 4 North (Ext South South)
       )
     , ( \m -> SlantRight == m.north_east && SlantLeft == m.south_east
