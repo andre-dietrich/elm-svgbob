@@ -227,10 +227,10 @@ sequenceWithDefault char list =
 
 intersection : String -> Matrix -> Element
 intersection char matrix =
-    [ ( \{ north } -> north == Vertical || north == Intersection || north == Corner
+    [ ( \{ north } -> north == Vertical || north == Intersection || north == Corner South
       , Line Center North
       )
-    , ( \m -> m.south == Vertical || m.south == Intersection || m.south == Corner
+    , ( \m -> m.south == Vertical || m.south == Intersection || m.south == Corner North
       , Line Center South
       )
     , ( .east >> (==) Horizontal, Line Center East )
@@ -250,7 +250,7 @@ intersection char matrix =
 
 closeCurve : String -> Matrix -> Element
 closeCurve char matrix =
-    [ ( \m -> Corner == m.north_west || Corner == m.south_west
+    [ ( \m -> Corner South == m.north_west || Corner North == m.south_west
       , Curve 4 South (Ext North North)
       )
     , ( \m -> SlantLeft == m.north_west && SlantRight == m.south_west
@@ -263,7 +263,7 @@ closeCurve char matrix =
 
 openCurve : String -> Matrix -> Element
 openCurve char matrix =
-    [ ( \m -> Corner == m.north_east || Corner == m.south_east
+    [ ( \m -> Corner South == m.north_east || Corner North == m.south_east
       , Curve 4 North (Ext South South)
       )
     , ( \m -> SlantRight == m.north_east && SlantLeft == m.south_east
@@ -282,7 +282,7 @@ corner char matrix =
     , ( \m -> (Vertical == m.north) && (Vertical == m.south)
       , Line North (South_ 2)
       )
-    , ( \m -> Corner == m.north_east && Corner == m.south_west
+    , ( \m -> Corner South == m.north_east && Corner North == m.south_west
       , Line Center (Ext North (East_ 2))
       )
     , ( \m -> (SlantRight == m.north_east) && (SlantRight == m.south_west)
@@ -291,43 +291,43 @@ corner char matrix =
     , ( \m -> (SlantLeft == m.north_west) && (SlantLeft == m.south_east)
       , Line (Ext North West) (Ext_ 2 South East)
       )
-    , ( \m -> (Vertical == m.north || Corner == m.north || Intersection == m.north) && (Horizontal == m.west)
+    , ( \m -> (Vertical == m.north || Corner South == m.north || Intersection == m.north) && (Horizontal == m.west)
       , Sequence
             [ Curve 1 West (Ext (North_ 0.5) East)
             , Line North (South_ 0.5)
             ]
       )
-    , ( \m -> (Vertical == m.north || Corner == m.north || Intersection == m.north) && (Horizontal == m.east)
+    , ( \m -> (Vertical == m.north || Corner South == m.north || Intersection == m.north) && (Horizontal == m.east)
       , Sequence
             [ Curve 1 (North_ 0.5) (Ext (South_ 0.5) East)
             , Line North (South_ 0.5)
             ]
       )
-    , ( \m -> (Vertical == m.south || Corner == m.south || Intersection == m.south) && (Horizontal == m.west)
+    , ( \m -> (Vertical == m.south || Corner North == m.south || Intersection == m.south) && (Horizontal == m.west)
       , Sequence
             [ Curve 1 (South_ 0.5) (Ext (North_ 0.5) West)
             , Line South (North_ 0.5)
             ]
       )
-    , ( \m -> (Vertical == m.north || Corner == m.north || Intersection == m.north) && (LowHorizontal == m.west)
+    , ( \m -> (Vertical == m.north || Corner South == m.north || Intersection == m.north) && (LowHorizontal == m.west)
       , Sequence
             [ Curve 1 (Ext South West) (Ext (North_ 0.5) East)
             , Line North (South_ 1.5)
             ]
       )
-    , ( \m -> (Vertical == m.south || Corner == m.south || Intersection == m.south) && (LowHorizontal == m.west)
+    , ( \m -> (Vertical == m.south || Corner North == m.south || Intersection == m.south) && (LowHorizontal == m.west)
       , Curve 1 (South_ 1.5) (Ext (North_ 0.5) West)
       )
-    , ( \m -> (Vertical == m.south || Corner == m.south || Intersection == m.south) && (LowHorizontal == m.east)
+    , ( \m -> (Vertical == m.south || Corner North == m.south || Intersection == m.south) && (LowHorizontal == m.east)
       , Curve 1 (Ext South East) (Ext (South_ 0.5) West)
       )
-    , ( \m -> (Vertical == m.north || Corner == m.north || Intersection == m.north) && (LowHorizontal == m.east)
+    , ( \m -> (Vertical == m.north || Corner South == m.north || Intersection == m.north) && (LowHorizontal == m.east)
       , Sequence
             [ Curve 1 (South_ 0.5) (Ext (South_ 0.5) East)
             , Line North (South_ 1.5)
             ]
       )
-    , ( \m -> (Vertical == m.south || Corner == m.south || Intersection == m.south) && (Horizontal == m.east)
+    , ( \m -> (Vertical == m.south || Corner North == m.south || Intersection == m.south) && (Horizontal == m.east)
       , Sequence
             [ Curve 1 East (Ext (South_ 0.5) West)
             , Line South (North_ 0.5)
@@ -475,20 +475,29 @@ getElement m ( char, elem ) =
                 Text char
 
         Arrow East ->
-            if Horizontal == m.west || Horizontal == m.east || Corner == m.west || Corner == m.east then
+            if
+                List.member m.west [ Horizontal, Corner South, Corner North ]
+                    || List.member m.east [ Horizontal, Corner South, Corner North ]
+            then
                 Triangle East
 
             else
                 Text char
 
         Arrow West ->
-            if Horizontal == m.west || Horizontal == m.east || Corner == m.west || Corner == m.east then
+            if
+                List.member m.west [ Horizontal, Corner South, Corner North ]
+                    || List.member m.east [ Horizontal, Corner South, Corner North ]
+            then
                 Triangle West
 
             else
                 Text char
 
-        Corner ->
+        Corner North ->
+            corner char m
+
+        Corner South ->
             corner char m
 
         SlantRight ->

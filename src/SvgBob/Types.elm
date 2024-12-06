@@ -51,7 +51,7 @@ type Scan
     | Horizontal
     | LowHorizontal
     | Intersection
-    | Corner
+    | Corner Direction
     | Arrow Direction
     | SlantRight
     | SlantLeft
