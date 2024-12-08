@@ -274,16 +274,13 @@ openCurve char matrix =
         |> sequenceWithDefault char
 
 
-corner : String -> Matrix -> Element
-corner char matrix =
+corner : Direction -> String -> Matrix -> Element
+corner dir char matrix =
     [ ( \m -> (Horizontal == m.west) && (Horizontal == m.east)
       , Line West (East_ 2)
       )
     , ( \m -> (Vertical == m.north) && (Vertical == m.south)
       , Line North (South_ 2)
-      )
-    , ( \m -> Corner South == m.north_east && Corner North == m.south_west
-      , Line Center (Ext North (East_ 2))
       )
     , ( \m -> (SlantRight == m.north_east) && (SlantRight == m.south_west)
       , Line (Ext North East) (Ext_ 2 South West)
@@ -414,6 +411,46 @@ corner char matrix =
     , ( \m -> m.east == Horizontal && m.north_west == LowHorizontal
       , Line East (Ext North (West_ 2))
       )
+
+    -- corner combinations
+    , ( \m -> dir == North && m.west == Corner North
+      , Line (Ext (North_ 0.5) West) East
+      )
+    , ( \m -> dir == North && m.east == Corner North
+      , Line (Ext (North_ 0.5) East) West
+      )
+    , ( \m -> dir == South && m.west == Corner South
+      , Line (Ext (South_ 0.5) West) East
+      )
+    , ( \m -> dir == South && m.east == Corner South
+      , Line (Ext (South_ 0.5) East) West
+      )
+
+    -----
+    , ( \m -> dir == South && m.east == Corner North
+      , Line (South_ 0.5) (Ext (North_ 0.5) East)
+      )
+    , ( \m -> dir == South && m.south_east == Corner North
+      , Line (South_ 0.5) (Ext (South_ 0.5) East)
+      )
+    , ( \m -> dir == South && m.west == Corner North
+      , Line (South_ 0.5) (Ext (North_ 0.5) West)
+      )
+    , ( \m -> dir == South && m.south_west == Corner North
+      , Line (South_ 0.5) (Ext (South_ 0.5) West)
+      )
+    , ( \m -> dir == North && m.east == Corner South
+      , Line (North_ 0.5) (Ext (South_ 0.5) East)
+      )
+    , ( \m -> dir == North && m.north_east == Corner South
+      , Line (North_ 0.5) (Ext (North_ 0.5) East)
+      )
+    , ( \m -> dir == North && m.west == Corner South
+      , Line (North_ 0.5) (Ext (South_ 0.5) West)
+      )
+    , ( \m -> dir == North && m.north_west == Corner South
+      , Line (North_ 0.5) (Ext (North_ 0.5) West)
+      )
     ]
         |> apply matrix
         |> sequenceWithDefault char
@@ -494,11 +531,8 @@ getElement m ( char, elem ) =
             else
                 Text char
 
-        Corner North ->
-            corner char m
-
-        Corner South ->
-            corner char m
+        Corner dir ->
+            corner dir char m
 
         SlantRight ->
             Line (Ext North East) (Ext_ 2 South West)
