@@ -9,6 +9,7 @@ import SvgBob.Types
         , Scans
         , mergeVerbatim
         )
+import WChar
 
 
 getScans :
@@ -187,50 +188,40 @@ characterScans =
 
 getScan : String -> Maybe Scan
 getScan char =
-    if char == " " then
-        Nothing
+    case char of
+        " " ->
+            Nothing
 
-    else
-        Dict.get char characterScans
-            |> Maybe.withDefault
-                (if String.length char == 1 && not (isEmoji char) then
-                    AlphaNumeric
+        _ ->
+            Dict.get char characterScans
+                |> Maybe.withDefault
+                    (if String.length char == 1 && not (isEmoji char) then
+                        AlphaNumeric
 
-                 else
-                    Emoji
-                )
-            |> Just
+                     else
+                        Emoji
+                    )
+                |> Just
 
 
 isEmoji : String -> Bool
 isEmoji char =
     char
         |> String.uncons
-        |> Maybe.map (Tuple.first >> Char.toCode)
-        |> Maybe.withDefault 0
-        |> isWideCharacter
+        |> Maybe.map (Tuple.first >> isWideCharacter)
+        |> Maybe.withDefault False
 
 
 {-| Function to check if a character is a wide character (takes more space)
 -}
-isWideCharacter : Int -> Bool
-isWideCharacter codePoint =
-    if codePoint < 0x2000 then
-        False
+isWideCharacter : Char -> Bool
+isWideCharacter char =
+    case WChar.width char of
+        WChar.Wide ->
+            True
 
-    else if codePoint <= 0x0001FAFF then
-        (codePoint <= 0x206F)
-            || (0x2300 <= codePoint && codePoint <= 0x23FF)
-            || (0x25A0 <= codePoint && codePoint <= 0x25FF)
-            || (0x2600 <= codePoint && codePoint <= 0x27BF)
-            || (0x2900 <= codePoint && codePoint <= 0x297F)
-            || (0x2B50 <= codePoint && codePoint <= 0x2B55)
-            || (0x3000 <= codePoint && codePoint <= 0x303F)
-            || (0xFF00 <= codePoint && codePoint <= 0xFFEF)
-            || (0x0001F000 <= codePoint)
-
-    else
-        False
+        _ ->
+            False
 
 
 appendToVerbatim : String -> String -> ( String, Scan )
