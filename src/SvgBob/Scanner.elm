@@ -157,51 +157,87 @@ scanElement verbatim withVerbatim y char scan =
                     }
 
 
-characterScans : Dict String Scan
-characterScans =
-    Dict.fromList
-        [ ( "-", Horizontal )
-        , ( "_", LowHorizontal )
-        , ( "+", Intersection )
-        , ( ".", Corner South )
-        , ( "'", Corner North )
-        , ( ",", Corner South )
-        , ( "`", Corner North )
-        , ( "´", Corner North )
-        , ( ">", Arrow West )
-        , ( "<", Arrow East )
-        , ( "V", Arrow South )
-        , ( "v", Arrow South )
-        , ( "^", Arrow North )
-        , ( "A", Arrow North )
-        , ( "/", SlantRight )
-        , ( "\\", SlantLeft )
-        , ( "(", OpenCurve )
-        , ( ")", CloseCurve )
-        , ( "|", Vertical )
-        , ( "#", Square )
-        , ( "O", O False )
-        , ( "o", O False )
-        , ( "*", O True )
-        ]
-
-
 getScan : String -> Maybe Scan
 getScan char =
     case char of
         " " ->
             Nothing
 
-        _ ->
-            Dict.get char characterScans
-                |> Maybe.withDefault
-                    (if String.length char == 1 && not (isEmoji char) then
-                        AlphaNumeric
+        "-" ->
+            Just Horizontal
 
-                     else
-                        Emoji
-                    )
-                |> Just
+        "_" ->
+            Just LowHorizontal
+
+        "+" ->
+            Just Intersection
+
+        "." ->
+            Just (Corner South)
+
+        "'" ->
+            Just (Corner North)
+
+        "," ->
+            Just (Corner South)
+
+        "`" ->
+            Just (Corner North)
+
+        "´" ->
+            Just (Corner North)
+
+        ">" ->
+            Just <| Arrow West
+
+        "<" ->
+            Just <| Arrow East
+
+        "V" ->
+            Just <| Arrow South
+
+        "v" ->
+            Just <| Arrow South
+
+        "^" ->
+            Just <| Arrow North
+
+        "A" ->
+            Just <| Arrow North
+
+        "/" ->
+            Just SlantRight
+
+        "\\" ->
+            Just SlantLeft
+
+        "(" ->
+            Just OpenCurve
+
+        ")" ->
+            Just CloseCurve
+
+        "|" ->
+            Just Vertical
+
+        "#" ->
+            Just Square
+
+        "O" ->
+            Just <| O False
+
+        "o" ->
+            Just <| O False
+
+        "*" ->
+            Just <| O True
+
+        _ ->
+            if String.length char == 1 && not (isEmoji char) then
+                Just AlphaNumeric
+
+            else
+                Just Emoji
 
 
 isEmoji : String -> Bool
