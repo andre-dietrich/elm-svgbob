@@ -6,6 +6,9 @@ module SvgBob.Model exposing
     , init
     )
 
+import String.Graphemes
+import WChar exposing (stringWidth)
+
 
 type alias Settings =
     { fontSize : Float
@@ -38,11 +41,24 @@ type alias Model =
     }
 
 
+realLength : String -> Int
+realLength str =
+    str
+        |> String.Graphemes.toList
+        |> List.map
+            (String.toList
+                >> List.head
+                >> Maybe.map (String.fromChar >> stringWidth >> Maybe.withDefault 0)
+                >> Maybe.withDefault 0
+            )
+        |> List.sum
+
+
 dim : List String -> ( Int, Int )
 dim lines =
     ( List.length lines
     , lines
-        |> List.map String.length
+        |> List.map realLength
         |> List.maximum
         |> Maybe.withDefault 0
     )
