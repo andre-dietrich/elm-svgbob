@@ -625,24 +625,6 @@ drawArc s factor pos dir =
         []
 
 
-arrowMarker : String -> Svg msg
-arrowMarker color =
-    Svg.marker
-        [ Attr.id "triangle"
-        , Attr.viewBox "0 0 14 14"
-        , Attr.refX "10"
-        , Attr.refY "5"
-        , Attr.markerUnits "strokeWidth"
-        , Attr.markerWidth "10"
-        , Attr.markerHeight "10"
-        , Attr.orient "auto"
-        , Attr.stroke color
-        , Attr.fill color
-        ]
-        [ Svg.path [ Attr.d "M 0 0 L 10 5 L 0 10 z", vectorEffect ] []
-        ]
-
-
 getSvg :
     Maybe (String -> Svg msg)
     -> List (Svg.Attribute msg)
@@ -694,7 +676,6 @@ drawSvg attributes model body =
                     ++ color.background
                     ++ "; }"
             ]
-            :: Svg.defs [] [ arrowMarker color.stroke ]
             :: body
         )
 
@@ -930,14 +911,55 @@ opposite dir =
             oppositeDir
 
 
+dirToAngle : Direction -> Float
+dirToAngle dir =
+    -- Slant lines move (textWidth/2, textHeight/2) = (4, 8), so the true
+    -- diagonal angle is atan2(8, 4) = atan(2) ≈ 63.43°, not 45°.
+    case dir of
+        East ->
+            0
+
+        South ->
+            90
+
+        West ->
+            180
+
+        North ->
+            -90
+
+        Ext North East ->
+            -63.43
+
+        Ext South East ->
+            63.43
+
+        Ext South West ->
+            116.57
+
+        Ext North West ->
+            -116.57
+
+        _ ->
+            0
+
+
 drawArrow : Point -> Direction -> Svg msg
 drawArrow pos dir =
-    toLine
-        [ Attr.markerEnd "url(#triangle)"
+    Svg.polygon
+        [ Attr.points "0,0 -8,-4 -8,4"
+        , Attr.transform
+            ("translate("
+                ++ String.fromFloat pos.x
+                ++ ","
+                ++ String.fromFloat pos.y
+                ++ ") rotate("
+                ++ String.fromFloat (dirToAngle (opposite dir))
+                ++ ")"
+            )
         , vectorEffect
         ]
-        (move dir pos)
-        (opposite dir)
+        []
 
 
 drawSquare : Bool -> Settings -> Point -> Svg msg
