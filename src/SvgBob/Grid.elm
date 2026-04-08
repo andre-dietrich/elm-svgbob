@@ -183,9 +183,6 @@ lowHorizontal char matrix =
     , ( .east >> (==) SlantLeft
       , Line (Ext South West) (East_ 4)
       )
-    , ( .east >> (==) SlantLeft
-      , Line (Ext South West) (East_ 4)
-      )
     , ( .east >> (==) Vertical
       , Line (Ext South West) (East_ 3)
       )
