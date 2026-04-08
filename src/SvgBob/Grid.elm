@@ -968,7 +968,7 @@ drawLine : Point -> Direction -> Svg msg
 drawLine =
     toLine
         [ Attr.strokeLinecap "round"
-        , Attr.strokeLinejoin "mitter"
+        , Attr.strokeLinejoin "miter"
         , vectorEffect
         ]
 
