@@ -627,7 +627,7 @@ arrowMarker color =
     Svg.marker
         [ Attr.id "triangle"
         , Attr.viewBox "0 0 14 14"
-        , Attr.refX "0"
+        , Attr.refX "10"
         , Attr.refY "5"
         , Attr.markerUnits "strokeWidth"
         , Attr.markerWidth "10"
