@@ -1,6 +1,5 @@
 module SvgBob.Scanner exposing (getScans)
 
-import Dict exposing (Dict)
 import String.Graphemes
 import SvgBob.Types
     exposing
@@ -267,36 +266,34 @@ appendToVerbatim str =
 
 merge : Scans -> Scans -> Scans
 merge combined verbs =
-    case ( List.head verbs, List.tail verbs ) of
-        ( Nothing, _ ) ->
+    case verbs of
+        [] ->
             combined
 
-        ( _, Nothing ) ->
-            combined
+        [ single ] ->
+            single :: combined
 
-        ( Just head, Just tail ) ->
+        head :: tail ->
             let
                 ( _, verb, newTail ) =
-                    tail
-                        |> List.foldl
-                            (\( ( x, y ) as pos, ( c, s ) as scan ) ( currentY, ( ( v_x, v_y ), ( _, v_s ) ) as v, rest ) ->
-                                if x == v_x && currentY + 1 == y then
-                                    ( currentY + 1
-                                    , ( ( v_x, v_y ), ( c, mergeVerbatim v_s s ) )
-                                    , rest
-                                    )
+                    List.foldl
+                        (\( ( x, y ) as pos, ( c, s ) as scan ) ( currentY, ( ( v_x, _ ), ( _, v_s ) ) as v, rest ) ->
+                            if x == v_x && currentY + 1 == y then
+                                ( currentY + 1
+                                , ( ( v_x, y ), ( c, mergeVerbatim v_s s ) )
+                                , rest
+                                )
 
-                                else
-                                    ( currentY
-                                    , v
-                                    , ( pos, scan ) :: rest
-                                    )
-                            )
-                            ( head
-                                |> Tuple.first
-                                |> Tuple.second
-                            , head
-                            , []
-                            )
+                            else
+                                ( currentY
+                                , v
+                                , ( pos, scan ) :: rest
+                                )
+                        )
+                        ( head |> Tuple.first |> Tuple.second
+                        , head
+                        , []
+                        )
+                        tail
             in
             merge (verb :: combined) (List.reverse newTail)

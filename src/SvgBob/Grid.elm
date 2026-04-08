@@ -132,20 +132,20 @@ type alias Matrix =
     }
 
 
-getMatrix : Int -> Int -> Dict ( Int, Int ) ( String, Scan ) -> Matrix
-getMatrix x y dict =
+getMatrix : Int -> Int -> Int -> Dict Int ( String, Scan ) -> Matrix
+getMatrix stride x y dict =
     let
-        getNeighbor pos =
-            get pos dict
+        getNeighbor nx ny =
+            get stride nx ny dict
     in
-    { north_west = getNeighbor ( x - 1, y - 1 )
-    , north = getNeighbor ( x, y - 1 )
-    , north_east = getNeighbor ( x + 1, y - 1 )
-    , west = getNeighbor ( x - 1, y )
-    , east = getNeighbor ( x + 1, y )
-    , south_west = getNeighbor ( x - 1, y + 1 )
-    , south = getNeighbor ( x, y + 1 )
-    , south_east = getNeighbor ( x + 1, y + 1 )
+    { north_west = getNeighbor (x - 1) (y - 1)
+    , north = getNeighbor x (y - 1)
+    , north_east = getNeighbor (x + 1) (y - 1)
+    , west = getNeighbor (x - 1) y
+    , east = getNeighbor (x + 1) y
+    , south_west = getNeighbor (x - 1) (y + 1)
+    , south = getNeighbor x (y + 1)
+    , south_east = getNeighbor (x + 1) (y + 1)
     }
 
 
@@ -738,14 +738,14 @@ bgColor background fill =
     Attr.style ("background-color:" ++ background ++ "; fill:" ++ fill ++ ";")
 
 
-drawElement : Maybe (String -> Svg msg) -> Dict ( Int, Int ) ( String, Scan ) -> Settings -> ( ( Int, Int ), ( String, Scan ) ) -> List (Svg msg)
-drawElement withVerbatim dict settings ( ( x, y ), ( char, element ) ) =
+drawElement : Maybe (String -> Svg msg) -> Int -> Dict Int ( String, Scan ) -> Settings -> ( ( Int, Int ), ( String, Scan ) ) -> List (Svg msg)
+drawElement withVerbatim stride dict settings ( ( x, y ), ( char, element ) ) =
     draw withVerbatim
         settings
         ( Point
             (measureX x + textWidth / 2)
             (measureY y + textHeight / 2)
-        , getElement (getMatrix x y dict) ( char, element )
+        , getElement (getMatrix stride x y dict) ( char, element )
         )
 
 
@@ -769,8 +769,13 @@ getElements settings code =
                 model.settings.verbatim
                 model.lines
 
+        stride =
+            model.columns + 2
+
         dict =
-            Dict.fromList intermediate
+            intermediate
+                |> List.map (\( ( x, y ), v ) -> ( y * stride + x, v ))
+                |> Dict.fromList
     in
     List.foldl
         (\( ( x, y ), ( char, element ) ) container ->
@@ -780,7 +785,7 @@ getElements settings code =
                         (measureX x + textWidth / 2)
                         (measureY y + textHeight / 2)
             in
-            case getElement (getMatrix x y dict) ( char, element ) of
+            case getElement (getMatrix stride x y dict) ( char, element ) of
                 ForeignObject str dim ->
                     { container | foreign = ( str, ( point, dim ) ) :: container.foreign }
 
@@ -815,11 +820,16 @@ drawPaths verbatim model =
                 }
                 model.lines
 
+        stride =
+            model.columns + 2
+
         dict =
-            Dict.fromList intermediate
+            intermediate
+                |> List.map (\( ( x, y ), v ) -> ( y * stride + x, v ))
+                |> Dict.fromList
 
         fn =
-            drawElement verbatim dict model.settings
+            drawElement verbatim stride dict model.settings
     in
     List.concatMap fn intermediate
 
@@ -1036,9 +1046,9 @@ measureY y =
     toFloat y * textHeight
 
 
-get : ( Int, Int ) -> Dict ( Int, Int ) ( String, Scan ) -> Scan
-get pos dict =
+get : Int -> Int -> Int -> Dict Int ( String, Scan ) -> Scan
+get stride x y dict =
     dict
-        |> Dict.get pos
+        |> Dict.get (y * stride + x)
         |> Maybe.map Tuple.second
         |> Maybe.withDefault None
