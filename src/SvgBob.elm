@@ -81,7 +81,7 @@ type alias Settings =
 defaultOptions : Settings
 defaultOptions =
     { fontSize = 14.0
-    , lineWidth = 1.0
+    , lineWidth = 1.5
     , textWidth = 8.0
     , textHeight = 16.0
     , arcRadius = 4.0

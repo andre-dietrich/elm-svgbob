@@ -660,6 +660,7 @@ drawSvg attributes model body =
         (viewBox model.rows model.columns
             :: bgColor color.background color.stroke
             :: Attr.stroke color.stroke
+            :: Attr.strokeWidth (String.fromFloat model.settings.lineWidth)
             :: Attr.fill color.stroke
             :: attributes
         )
