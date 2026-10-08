@@ -268,10 +268,44 @@ suite =
                         |> List.drop 1
                         |> List.head
                         |> Expect.equal (Just (Sequence [ Sequence [ Curve 1 (North_ 0.5) (Ext (South_ 0.5) East), Line North (South_ 0.5) ] ]))
+            , test "vertical line reaches a horizontal neighbour" <|
+                \_ -> Expect.equal [ Sequence [ Line South (Ext North North), Line Center East ] ] (List.take 1 (elements "|-"))
+            , test "arrow heads only on the line side, `<5k>` is a label" <|
+                \_ -> Expect.equal [ Text "<", Text ">" ] (List.filter (\e -> e == Text "<" || e == Text ">") (elements "-<5k>-"))
+            , test "double arrow head inside a line" <|
+                \_ -> Expect.equal [ Triangle West, Triangle West ] (List.filter ((==) (Triangle West)) (elements "->>-"))
+            , test "a row of arrow characters is text" <|
+                \_ -> Expect.equal [ Text "<", Text "<", Text "<" ] (elements "<<<")
+            , test "slash inside a word is text" <|
+                \_ -> Expect.equal (Just (Text "/")) (List.head (List.drop 1 (elements "1/8")))
+            , test "resistor cap `.+.` connects the plus to both corners" <|
+                \_ -> Expect.equal (Just (Sequence [ Line Center East, Line Center West ])) (List.head (List.drop 1 (elements ".+.\n| |")))
+            , test "side vertex of a hexagon" <|
+                \_ ->
+                    elements " /\n.\n \\"
+                        |> List.drop 1
+                        |> List.head
+                        |> Expect.equal (Just (Sequence [ Sequence [ Line Center (Ext North East), Line Center (Ext South East) ] ]))
+            , test "step of a round shape continues into the slant" <|
+                \_ ->
+                    elements " ,'\n/"
+                        |> List.head
+                        |> Expect.equal (Just (Sequence [ Line (South_ 0.5) (Ext (North_ 0.5) East), Line (South_ 0.5) (Ext (South_ 0.5) West) ]))
+            , test "corner that only ends a horizontal line" <|
+                \_ -> Expect.equal (Just (Sequence [ Line West East ])) (List.head (List.drop 1 (elements "-'")))
+            , test "corner with a vertical leg ignores a diagonal low line" <|
+                \_ ->
+                    elements "_\n .-\n |"
+                        |> List.drop 1
+                        |> List.head
+                        |> Expect.equal (Just (Sequence [ Sequence [ Curve 1 East (Ext (South_ 0.5) West), Line South (North_ 0.5) ] ]))
             , describe "nothing is drawn twice"
                 ([ "-.\n  )"
                  , ".---.  .--->\n|   |  |\n'-+-'  '--( )\n  |  /  \\\n  v\n"
                  , "  ,-.   _\n (   ) | |\n  `-'  |_|\n +--#--+\n o  *  O"
+                 , "\\|/\n.\n/|\\"
+                 , "   ___\n ,'   `.\n/       \\\n\\       /\n `.___,'"
+                 , "  ____\n /    \\\n. text .\n \\____/"
                  ]
                     |> List.map
                         (\str ->

@@ -213,6 +213,14 @@ intersection char matrix =
       )
     , ( .east >> (==) Horizontal, Line Center East )
     , ( .west >> (==) Horizontal, Line Center West )
+
+    -- resistor caps `.+.` and `'+'`: the corner beside continues vertically
+    , ( \m -> (Corner South == m.east && Vertical == m.south_east) || (Corner North == m.east && Vertical == m.north_east)
+      , Line Center East
+      )
+    , ( \m -> (Corner South == m.west && Vertical == m.south_west) || (Corner North == m.west && Vertical == m.north_west)
+      , Line Center West
+      )
     , ( .north_west >> (==) SlantLeft, Line Center (Ext North West) )
     , ( .north_east >> (==) SlantRight, Line Center (Ext North East) )
     , ( .south_west >> (==) SlantRight, Line Center (Ext South West) )
@@ -266,6 +274,13 @@ fromSouth m =
     Vertical == m.south || Corner North == m.south || Intersection == m.south
 
 
+{-| a horizontal line ends at this corner, `+` included for resistors like `.+.`
+-}
+horizontalEnd : Scan -> Bool
+horizontalEnd scan =
+    Horizontal == scan || Intersection == scan
+
+
 corner : Direction -> String -> Matrix -> Element
 corner dir char matrix =
     [ ( \m -> (Horizontal == m.west) && (Horizontal == m.east)
@@ -280,19 +295,19 @@ corner dir char matrix =
     , ( \m -> (SlantLeft == m.north_west) && (SlantLeft == m.south_east)
       , Line (Ext North West) (Ext_ 2 South East)
       )
-    , ( \m -> fromNorth m && (Horizontal == m.west)
+    , ( \m -> fromNorth m && horizontalEnd m.west
       , Sequence
             [ Curve 1 West (Ext (North_ 0.5) East)
             , Line North (South_ 0.5)
             ]
       )
-    , ( \m -> fromNorth m && (Horizontal == m.east)
+    , ( \m -> fromNorth m && horizontalEnd m.east
       , Sequence
             [ Curve 1 (North_ 0.5) (Ext (South_ 0.5) East)
             , Line North (South_ 0.5)
             ]
       )
-    , ( \m -> fromSouth m && (Horizontal == m.west)
+    , ( \m -> fromSouth m && horizontalEnd m.west
       , Sequence
             [ Curve 1 (South_ 0.5) (Ext (North_ 0.5) West)
             , Line South (North_ 0.5)
@@ -316,7 +331,7 @@ corner dir char matrix =
             , Line North (South_ 1.5)
             ]
       )
-    , ( \m -> fromSouth m && (Horizontal == m.east)
+    , ( \m -> fromSouth m && horizontalEnd m.east
       , Sequence
             [ Curve 1 East (Ext (South_ 0.5) West)
             , Line South (North_ 0.5)
@@ -394,16 +409,24 @@ corner dir char matrix =
     , ( \m -> SlantRight == m.north_east && SlantLeft == m.north_west
       , Sequence [ Line Center (Ext North East), Line Center (Ext North West) ]
       )
+
+    -- side vertices of a hexagon `>` and `<`, in a star the straight slants above already pass
+    , ( \m -> SlantLeft == m.north_west && SlantRight == m.south_west && SlantRight /= m.north_east && SlantLeft /= m.south_east
+      , Sequence [ Line Center (Ext North West), Line Center (Ext South West) ]
+      )
+    , ( \m -> SlantRight == m.north_east && SlantLeft == m.south_east && SlantRight /= m.south_west && SlantLeft /= m.north_west
+      , Sequence [ Line Center (Ext North East), Line Center (Ext South East) ]
+      )
     , ( \m -> m.west == LowHorizontal && m.east == Horizontal
       , Line (Ext South West) (Ext North (East_ 2))
       )
     , ( \m -> m.west == Horizontal && m.east == LowHorizontal
       , Line (Ext South East) (Ext North (West_ 2))
       )
-    , ( \m -> m.west == Horizontal && m.north_east == LowHorizontal
+    , ( \m -> m.west == Horizontal && m.north_east == LowHorizontal && not (fromNorth m || fromSouth m)
       , Line West (Ext North (East_ 2))
       )
-    , ( \m -> m.east == Horizontal && m.north_west == LowHorizontal
+    , ( \m -> m.east == Horizontal && m.north_west == LowHorizontal && not (fromNorth m || fromSouth m)
       , Line East (Ext North (West_ 2))
       )
 
@@ -446,8 +469,33 @@ corner dir char matrix =
     , ( \m -> dir == North && m.north_west == Corner South
       , Line (North_ 0.5) (Ext (North_ 0.5) West)
       )
+
+    -- a step `,'` or `` `. `` continues into a slant or a low line, as in round shapes
+    , ( \m -> dir == South && m.east == Corner North && (SlantRight == m.south_west || LowHorizontal == m.west)
+      , Line (South_ 0.5) (Ext (South_ 0.5) West)
+      )
+    , ( \m -> dir == South && m.west == Corner North && (SlantLeft == m.south_east || LowHorizontal == m.east)
+      , Line (South_ 0.5) (Ext (South_ 0.5) East)
+      )
+    , ( \m -> dir == North && m.west == Corner South && (SlantRight == m.north_east || LowHorizontal == m.north_east)
+      , Line (North_ 0.5) (Ext (North_ 0.5) East)
+      )
+    , ( \m -> dir == North && m.east == Corner South && (SlantLeft == m.north_west || LowHorizontal == m.north_west)
+      , Line (North_ 0.5) (Ext (North_ 0.5) West)
+      )
     ]
         |> apply matrix
+        |> (\list ->
+                if List.isEmpty list then
+                    -- only a horizontal line ends here, as in `'----'`
+                    apply matrix
+                        [ ( .west >> (==) Horizontal, Line West East )
+                        , ( .east >> (==) Horizontal, Line East West )
+                        ]
+
+                else
+                    list
+           )
         |> sequenceWithDefault char
 
 
@@ -466,7 +514,13 @@ getElement m ( char, elem ) =
     case elem of
         Vertical ->
             if AlphaNumeric /= m.west || AlphaNumeric /= m.east then
-                Line South (Ext North North)
+                -- `-` stops at its cell border, so reach out to it from the center
+                case apply m [ ( .west >> (==) Horizontal, Line Center West ), ( .east >> (==) Horizontal, Line Center East ) ] of
+                    [] ->
+                        Line South (Ext North North)
+
+                    stubs ->
+                        Sequence (Line South (Ext North North) :: stubs)
 
             else
                 Text char
@@ -507,10 +561,19 @@ getElement m ( char, elem ) =
                 Text char
 
         Arrow dir ->
-            -- East or West
+            -- East or West: `>` needs its line on the west, `<` on the east, so `<5k>` stays text
+            let
+                ( lineSide, otherSide ) =
+                    if dir == West then
+                        ( m.west, m.east )
+
+                    else
+                        ( m.east, m.west )
+            in
             if
-                List.member m.west [ Horizontal, Corner South, Corner North ]
-                    || List.member m.east [ Horizontal, Corner South, Corner North ]
+                List.member lineSide [ Horizontal, Corner South, Corner North ]
+                    -- second head of `->>-`, but not text like `<<<<`
+                    || (lineSide == Arrow dir && otherSide == Horizontal)
             then
                 Triangle dir
 
@@ -521,10 +584,19 @@ getElement m ( char, elem ) =
             corner dir char m
 
         SlantRight ->
-            Line (Ext North East) (Ext_ 2 South West)
+            if AlphaNumeric == m.west && AlphaNumeric == m.east then
+                -- part of a word like `1/8`; ponytail: o, v, V, A scan as shapes, so `w/o` stays a line
+                Text char
+
+            else
+                Line (Ext North East) (Ext_ 2 South West)
 
         SlantLeft ->
-            Line (Ext South East) (Ext_ 2 North West)
+            if AlphaNumeric == m.west && AlphaNumeric == m.east then
+                Text char
+
+            else
+                Line (Ext South East) (Ext_ 2 North West)
 
         OpenCurve ->
             openCurve char m
