@@ -1,19 +1,16 @@
 module SvgBob.Grid exposing
     ( drawElements
     , getElements
-    , getSvg
     )
 
 import Dict exposing (Dict)
 import Html exposing (Attribute, Html)
-import Html.Attributes exposing (attribute)
 import String
 import Svg exposing (Svg)
 import Svg.Attributes as Attr
 import SvgBob.Model
     exposing
-        ( Model
-        , Settings
+        ( Settings
         , init
         )
 import SvgBob.Scanner exposing (getScans)
@@ -57,22 +54,14 @@ move dir pt =
             pt
 
         Ext dir1 dir2 ->
-            let
-                next =
-                    pt
-                        |> move dir1
-                        |> move dir2
-            in
-            next
+            pt
+                |> move dir1
+                |> move dir2
 
         Ext_ n dir1 dir2 ->
-            let
-                next =
-                    pt
-                        |> move (moveExt n dir1)
-                        |> move (moveExt n dir2)
-            in
-            next
+            pt
+                |> move (moveExt n dir1)
+                |> move (moveExt n dir2)
 
 
 moveExt : Float -> Direction -> Direction
@@ -106,18 +95,10 @@ moveExt n dir =
             West_ (n * m)
 
         Ext dir1 dir2 ->
-            let
-                next =
-                    Ext (moveExt n dir1) (moveExt n dir2)
-            in
-            next
+            Ext (moveExt n dir1) (moveExt n dir2)
 
         Ext_ m dir1 dir2 ->
-            let
-                next =
-                    Ext (moveExt (n * m) dir1) (moveExt (n * m) dir2)
-            in
-            next
+            Ext (moveExt (n * m) dir1) (moveExt (n * m) dir2)
 
 
 type alias Matrix =
@@ -271,6 +252,20 @@ openCurve char matrix =
         |> sequenceWithDefault char
 
 
+{-| a vertical line ends at this corner from the north
+-}
+fromNorth : Matrix -> Bool
+fromNorth m =
+    Vertical == m.north || Corner South == m.north || Intersection == m.north
+
+
+{-| a vertical line ends at this corner from the south
+-}
+fromSouth : Matrix -> Bool
+fromSouth m =
+    Vertical == m.south || Corner North == m.south || Intersection == m.south
+
+
 corner : Direction -> String -> Matrix -> Element
 corner dir char matrix =
     [ ( \m -> (Horizontal == m.west) && (Horizontal == m.east)
@@ -285,43 +280,43 @@ corner dir char matrix =
     , ( \m -> (SlantLeft == m.north_west) && (SlantLeft == m.south_east)
       , Line (Ext North West) (Ext_ 2 South East)
       )
-    , ( \m -> (Vertical == m.north || Corner South == m.north || Intersection == m.north) && (Horizontal == m.west)
+    , ( \m -> fromNorth m && (Horizontal == m.west)
       , Sequence
             [ Curve 1 West (Ext (North_ 0.5) East)
             , Line North (South_ 0.5)
             ]
       )
-    , ( \m -> (Vertical == m.north || Corner South == m.north || Intersection == m.north) && (Horizontal == m.east)
+    , ( \m -> fromNorth m && (Horizontal == m.east)
       , Sequence
             [ Curve 1 (North_ 0.5) (Ext (South_ 0.5) East)
             , Line North (South_ 0.5)
             ]
       )
-    , ( \m -> (Vertical == m.south || Corner North == m.south || Intersection == m.south) && (Horizontal == m.west)
+    , ( \m -> fromSouth m && (Horizontal == m.west)
       , Sequence
             [ Curve 1 (South_ 0.5) (Ext (North_ 0.5) West)
             , Line South (North_ 0.5)
             ]
       )
-    , ( \m -> (Vertical == m.north || Corner South == m.north || Intersection == m.north) && (LowHorizontal == m.west)
+    , ( \m -> fromNorth m && (LowHorizontal == m.west)
       , Sequence
             [ Curve 1 (Ext South West) (Ext (North_ 0.5) East)
             , Line North (South_ 1.5)
             ]
       )
-    , ( \m -> (Vertical == m.south || Corner North == m.south || Intersection == m.south) && (LowHorizontal == m.west)
+    , ( \m -> fromSouth m && (LowHorizontal == m.west)
       , Curve 1 (South_ 1.5) (Ext (North_ 0.5) West)
       )
-    , ( \m -> (Vertical == m.south || Corner North == m.south || Intersection == m.south) && (LowHorizontal == m.east)
+    , ( \m -> fromSouth m && (LowHorizontal == m.east)
       , Curve 1 (Ext South East) (Ext (South_ 0.5) West)
       )
-    , ( \m -> (Vertical == m.north || Corner South == m.north || Intersection == m.north) && (LowHorizontal == m.east)
+    , ( \m -> fromNorth m && (LowHorizontal == m.east)
       , Sequence
             [ Curve 1 (South_ 0.5) (Ext (South_ 0.5) East)
             , Line North (South_ 1.5)
             ]
       )
-    , ( \m -> (Vertical == m.south || Corner North == m.south || Intersection == m.south) && (Horizontal == m.east)
+    , ( \m -> fromSouth m && (Horizontal == m.east)
       , Sequence
             [ Curve 1 East (Ext (South_ 0.5) West)
             , Line South (North_ 0.5)
@@ -377,9 +372,6 @@ corner dir char matrix =
       )
     , ( \m -> (LowHorizontal == m.west) && (SlantLeft == m.north_west)
       , Curve 4 (Ext South West) (North_ 2)
-      )
-    , ( \m -> (Horizontal == m.west) && (CloseCurve == m.south_east)
-      , Curve 4 (Ext South (East_ 2)) (Ext North (West_ 3))
       )
     , ( \m -> OpenCurve == m.south_west
       , Curve 4 East (Ext South (West_ 3))
@@ -514,22 +506,13 @@ getElement m ( char, elem ) =
             else
                 Text char
 
-        Arrow East ->
+        Arrow dir ->
+            -- East or West
             if
                 List.member m.west [ Horizontal, Corner South, Corner North ]
                     || List.member m.east [ Horizontal, Corner South, Corner North ]
             then
-                Triangle East
-
-            else
-                Text char
-
-        Arrow West ->
-            if
-                List.member m.west [ Horizontal, Corner South, Corner North ]
-                    || List.member m.east [ Horizontal, Corner South, Corner North ]
-            then
-                Triangle West
+                Triangle dir
 
             else
                 Text char
@@ -564,7 +547,7 @@ getElement m ( char, elem ) =
 
         Verbatim str ->
             str
-                |> String.lines
+                |> SvgBob.Model.toLines
                 |> SvgBob.Model.dim
                 |> ForeignObject str
 
@@ -588,11 +571,6 @@ circle filled char m =
 
             _ ->
                 Text char
-
-
-vectorEffect : Attribute a
-vectorEffect =
-    attribute "vector-effect" "none"
 
 
 drawArc : Settings -> Float -> Point -> Direction -> Svg msg
@@ -620,25 +598,8 @@ drawArc s factor pos dir =
             |> String.join " "
             |> Attr.d
         , Attr.fill "transparent"
-        , vectorEffect
         ]
         []
-
-
-getSvg :
-    Maybe (String -> Svg msg)
-    -> List (Svg.Attribute msg)
-    -> String
-    -> Settings
-    -> Html msg
-getSvg verbatim attributes code settings =
-    let
-        model =
-            init settings code
-    in
-    model
-        |> drawPaths verbatim
-        |> drawSvg attributes model
 
 
 drawSvg :
@@ -664,21 +625,7 @@ drawSvg attributes model body =
             :: Attr.fill color.stroke
             :: attributes
         )
-        (Svg.style
-            []
-            [ Svg.text <|
-                "text { fill: "
-                    ++ color.text
-                    ++ "; font-size:"
-                    ++ String.fromFloat model.settings.fontSize
-                    ++ "px; font-family: monospace; stroke-width: 0px; }"
-            , Svg.text <|
-                "circle { color: "
-                    ++ color.background
-                    ++ "; }"
-            ]
-            :: body
-        )
+        body
 
 
 drawElements :
@@ -695,7 +642,7 @@ drawElements :
 drawElements attributes verbatim config =
     let
         fnSVG =
-            draw Nothing config.settings
+            draw config.settings
 
         fnCustom =
             drawCustomObject verbatim config.settings
@@ -718,17 +665,6 @@ viewBox rows columns =
 bgColor : String -> String -> Svg.Attribute msg
 bgColor background fill =
     Attr.style ("background-color:" ++ background ++ "; fill:" ++ fill ++ ";")
-
-
-drawElement : Maybe (String -> Svg msg) -> Int -> Dict Int ( String, Scan ) -> Settings -> ( ( Int, Int ), ( String, Scan ) ) -> List (Svg msg)
-drawElement withVerbatim stride dict settings ( ( x, y ), ( char, element ) ) =
-    draw withVerbatim
-        settings
-        ( Point
-            (measureX x + textWidth / 2)
-            (measureY y + textHeight / 2)
-        , getElement (getMatrix stride x y dict) ( char, element )
-        )
 
 
 getElements :
@@ -783,50 +719,17 @@ getElements settings code =
         intermediate
 
 
-drawPaths : Maybe (String -> Svg msg) -> Model -> List (Svg msg)
-drawPaths verbatim model =
-    let
-        settings =
-            model.settings.verbatim
-
-        intermediate =
-            getScans
-                { settings
-                    | string =
-                        case verbatim of
-                            Nothing ->
-                                ""
-
-                            Just _ ->
-                                settings.string
-                }
-                model.lines
-
-        stride =
-            model.columns + 2
-
-        dict =
-            intermediate
-                |> List.map (\( ( x, y ), v ) -> ( y * stride + x, v ))
-                |> Dict.fromList
-
-        fn =
-            drawElement verbatim stride dict model.settings
-    in
-    List.concatMap fn intermediate
-
-
-draw : Maybe (String -> Svg msg) -> Settings -> ( Point, Element ) -> List (Svg msg)
-draw withVerbatim settings ( pos, element ) =
+draw : Settings -> ( Point, Element ) -> List (Svg msg)
+draw settings ( pos, element ) =
     case element of
         Triangle dir ->
             [ drawArrow pos dir ]
 
         Text char ->
-            [ drawText pos char ]
+            [ drawText settings pos char ]
 
         TextEmoji char ->
-            [ drawText (move (East_ 0.25) pos) char ]
+            [ drawText settings (move (East_ 0.25) pos) char ]
 
         Line start stop ->
             [ drawLine (move start pos) stop ]
@@ -837,79 +740,34 @@ draw withVerbatim settings ( pos, element ) =
         Sequence elements ->
             let
                 fn =
-                    Tuple.pair pos >> draw withVerbatim settings
+                    Tuple.pair pos >> draw settings
             in
             List.concatMap fn elements
 
         Box ->
-            [ drawSquare False settings pos ]
+            [ drawSquare False pos ]
 
         BigBox ->
-            [ drawSquare True settings pos ]
+            [ drawSquare True pos ]
 
         Circle filled ->
             [ Svg.circle
                 [ Attr.cx <| String.fromFloat pos.x
                 , Attr.cy <| String.fromFloat pos.y
                 , Attr.r <| String.fromFloat settings.arcRadius
-                , Attr.strokeWidth <| String.fromFloat settings.lineWidth
                 , Attr.fill <|
                     if filled then
                         "inherit"
 
                     else
-                        "currentColor"
+                        settings.color.background
                 ]
                 []
             ]
 
-        ForeignObject str dim ->
-            [ drawForeignObject withVerbatim settings pos dim str ]
-
-
-opposite : Direction -> Direction
-opposite dir =
-    case dir of
-        Center ->
-            Center
-
-        East ->
-            West
-
-        East_ n ->
-            West_ n
-
-        West ->
-            East
-
-        West_ n ->
-            East_ n
-
-        North ->
-            South
-
-        North_ n ->
-            South_ n
-
-        South ->
-            North
-
-        South_ n ->
-            North_ n
-
-        Ext dir1 dir2 ->
-            let
-                oppositeDir =
-                    Ext (opposite dir1) (opposite dir2)
-            in
-            oppositeDir
-
-        Ext_ n dir1 dir2 ->
-            let
-                oppositeDir =
-                    Ext_ n (opposite dir1) (opposite dir2)
-            in
-            oppositeDir
+        ForeignObject _ _ ->
+            -- getElements moves these into the foreign list
+            []
 
 
 dirToAngle : Direction -> Float
@@ -948,30 +806,29 @@ dirToAngle dir =
 drawArrow : Point -> Direction -> Svg msg
 drawArrow pos dir =
     Svg.polygon
-        [ Attr.points "0,0 -8,-4 -8,4"
+        [ Attr.points "0,0 8,-4 8,4"
         , Attr.transform
             ("translate("
                 ++ String.fromFloat pos.x
                 ++ ","
                 ++ String.fromFloat pos.y
                 ++ ") rotate("
-                ++ String.fromFloat (dirToAngle (opposite dir))
+                ++ String.fromFloat (dirToAngle dir)
                 ++ ")"
             )
-        , vectorEffect
         ]
         []
 
 
-drawSquare : Bool -> Settings -> Point -> Svg msg
-drawSquare big settings pos =
+drawSquare : Bool -> Point -> Svg msg
+drawSquare big pos =
     let
         ( width, height ) =
             if big then
-                ( settings.textWidth, settings.textHeight + 1 )
+                ( textWidth, textHeight + 1 )
 
             else
-                ( settings.textWidth, settings.textWidth )
+                ( textWidth, textWidth )
     in
     Svg.rect
         [ Attr.x <| String.fromFloat (pos.x - width / 2)
@@ -1005,12 +862,13 @@ drawLine =
     toLine
         [ Attr.strokeLinecap "round"
         , Attr.strokeLinejoin "miter"
-        , vectorEffect
         ]
 
 
-drawText : Point -> String -> Svg msg
-drawText pos str =
+{-| Text styling is set per element, a <style> inside the svg would apply to the whole page.
+-}
+drawText : Settings -> Point -> String -> Svg msg
+drawText settings pos str =
     let
         pos2 =
             move (Ext (South_ 0.5) West) pos
@@ -1018,26 +876,12 @@ drawText pos str =
     Svg.node "text"
         [ Attr.x <| String.fromFloat pos2.x
         , Attr.y <| String.fromFloat pos2.y
+        , Attr.fill settings.color.text
+        , Attr.stroke "none"
+        , Attr.fontSize <| String.fromFloat settings.fontSize
+        , Attr.fontFamily "monospace"
         ]
         [ Svg.text str ]
-
-
-drawForeignObject : Maybe (String -> Svg msg) -> Settings -> Point -> ( Int, Int ) -> String -> Svg msg
-drawForeignObject withVerbatim s pos ( rows, columns ) str =
-    case withVerbatim of
-        Nothing ->
-            let
-                pos2 =
-                    move (Ext (South_ 0.5) West) pos
-            in
-            Svg.node "text"
-                [ Attr.x <| String.fromFloat pos2.x
-                , Attr.y <| String.fromFloat pos2.y
-                ]
-                [ Svg.text str ]
-
-        Just verbatim ->
-            drawCustomObject verbatim s pos ( rows, columns ) str
 
 
 drawCustomObject : (a -> Svg msg) -> Settings -> Point -> ( Int, Int ) -> a -> Svg msg

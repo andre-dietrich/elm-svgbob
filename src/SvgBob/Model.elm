@@ -4,10 +4,11 @@ module SvgBob.Model exposing
     , Settings
     , dim
     , init
+    , toLines
     )
 
 import String.Graphemes
-import WChar exposing (stringWidth)
+import WChar exposing (graphemeWidth)
 
 
 type alias Settings =
@@ -36,29 +37,23 @@ type alias Colors =
 type alias Model =
     { rows : Int
     , columns : Int
-    , lines : List String
+    , lines : List (List String)
     , settings : Settings
     }
 
 
-realLength : String -> Int
-realLength str =
-    str
-        |> String.Graphemes.toList
-        |> List.map
-            (String.toList
-                >> List.head
-                >> Maybe.map (String.fromChar >> stringWidth >> Maybe.withDefault 0)
-                >> Maybe.withDefault 0
-            )
-        |> List.sum
+{-| Lines split into grapheme clusters, so they are only parsed once.
+-}
+toLines : String -> List (List String)
+toLines =
+    String.lines >> List.map String.Graphemes.toList
 
 
-dim : List String -> ( Int, Int )
+dim : List (List String) -> ( Int, Int )
 dim lines =
     ( List.length lines
     , lines
-        |> List.map realLength
+        |> List.map (List.map graphemeWidth >> List.sum)
         |> List.maximum
         |> Maybe.withDefault 0
     )
@@ -68,7 +63,7 @@ init : Settings -> String -> Model
 init settings str =
     let
         lines =
-            String.lines str
+            toLines str
 
         ( rows, columns ) =
             dim lines

@@ -1,6 +1,5 @@
 module SvgBob.Scanner exposing (getScans)
 
-import String.Graphemes
 import SvgBob.Types
     exposing
         ( Direction(..)
@@ -17,18 +16,13 @@ getScans :
     , height : Maybe String
     , width : Maybe String
     }
-    -> List String
+    -> List (List String)
     -> Scans
 getScans verbatim lines =
     let
-        scanFn =
-            scanLine
-                verbatim.string
-                (verbatim.string /= "")
-
         elements =
             lines
-                |> List.indexedMap scanFn
+                |> List.indexedMap (scanLine verbatim.string)
                 |> List.concat
     in
     if verbatim.multiline then
@@ -57,103 +51,81 @@ getScans verbatim lines =
         elements
 
 
-scanLine : String -> Bool -> Int -> String -> Scans
-scanLine verbatim withVerbatim y =
-    String.trimRight
-        >> String.Graphemes.toList
+type alias State =
+    { result : Scans
+    , x : Int
+    , verbatimCounter : Int
+    , lastWasVerbatim : Bool
+
+    -- the last cell was appended to the verbatim run at the head of result
+    , inRun : Bool
+    }
+
+
+scanLine : String -> Int -> List String -> Scans
+scanLine verbatim y =
+    trimRight
         >> List.foldl
-            (scanElement verbatim withVerbatim y)
-            { result = [], x = 0, verbatimCounter = 0, lastChars = [] }
+            (scanElement verbatim y)
+            { result = [], x = 0, verbatimCounter = 0, lastWasVerbatim = False, inRun = False }
         >> .result
 
 
-scanElement :
-    String
-    -> Bool
-    -> Int
-    -> String
-    -> { result : Scans, x : Int, verbatimCounter : Int, lastChars : List Bool }
-    -> { result : Scans, x : Int, verbatimCounter : Int, lastChars : List Bool }
-scanElement verbatim withVerbatim y char scan =
-    (\s -> { s | x = s.x + 1, lastChars = (char == verbatim) :: s.lastChars }) <|
+trimRight : List String -> List String
+trimRight =
+    List.foldr
+        (\char rest ->
+            if List.isEmpty rest && String.trim char == "" then
+                []
+
+            else
+                char :: rest
+        )
+        []
+
+
+scanElement : String -> Int -> String -> State -> State
+scanElement verbatim y char scan =
+    (\s -> { s | x = s.x + WChar.graphemeWidth char, lastWasVerbatim = char == verbatim }) <|
         if char == verbatim then
             -- start verbatim mode
-            case ( scan.verbatimCounter, scan.lastChars ) of
+            case ( scan.verbatimCounter, scan.lastWasVerbatim ) of
                 ( 0, _ ) ->
                     { scan | verbatimCounter = 1 }
 
-                ( 1, False :: _ ) ->
-                    { scan | verbatimCounter = 0 }
+                ( 1, False ) ->
+                    { scan | verbatimCounter = 0, inRun = False }
 
-                ( 1, True :: _ ) ->
+                ( 1, True ) ->
                     { scan | verbatimCounter = 2 }
 
-                ( 2, True :: _ ) ->
+                ( 2, True ) ->
                     { scan
                         | verbatimCounter = 0
+                        , inRun = False
                         , result =
-                            case ( withVerbatim, scan.result ) of
+                            case ( scan.inRun, scan.result ) of
                                 ( True, ( pos, ( _, Verbatim str ) ) :: xs ) ->
-                                    ( pos
-                                    , ( " "
-                                      , String.dropRight 1 str
-                                            ++ "  "
-                                            |> Verbatim
-                                      )
-                                    )
-                                        :: xs
+                                    -- drop the first closing quote, that was appended as text
+                                    ( pos, ( " ", Verbatim (String.dropRight 1 str ++ "  ") ) ) :: xs
 
-                                ( _, result ) ->
-                                    result |> List.tail |> Maybe.withDefault []
+                                _ ->
+                                    scan.result
                     }
 
                 _ ->
-                    { scan
-                        | result =
-                            case ( withVerbatim, scan.result ) of
-                                ( False, _ ) ->
-                                    ( ( scan.x, y ), ( char, AlphaNumeric ) ) :: scan.result
-
-                                ( True, ( pos, ( _, Verbatim str ) ) :: xs ) ->
-                                    ( pos, appendToVerbatim str char ) :: xs
-
-                                ( True, _ ) ->
-                                    ( ( scan.x, y ), appendToVerbatim "" char ) :: scan.result
-                    }
+                    { scan | result = appendToVerbatim y char scan, inRun = True }
 
         else if scan.verbatimCounter > 0 then
-            { scan
-                | result =
-                    case ( withVerbatim, scan.result ) of
-                        ( False, _ ) ->
-                            ( ( scan.x, y ), ( char, AlphaNumeric ) ) :: scan.result
-
-                        ( True, ( ( x, _ ), ( _, Verbatim str ) ) :: xs ) ->
-                            if x + String.length str == scan.x then
-                                ( ( x, y ), appendToVerbatim str char ) :: xs
-
-                            else
-                                ( ( scan.x, y ), appendToVerbatim "" char ) :: scan.result
-
-                        ( True, _ ) ->
-                            ( ( scan.x + 1 - scan.verbatimCounter, y ), appendToVerbatim "" char ) :: scan.result
-            }
+            { scan | result = appendToVerbatim y char scan, inRun = True }
 
         else
             case getScan char of
                 Nothing ->
                     scan
 
-                Just Emoji ->
-                    { scan
-                        | x = scan.x + 1
-                        , result = ( ( scan.x, y ), ( char, Emoji ) ) :: scan.result
-                    }
-
                 Just elem ->
-                    { scan
-                        | result = ( ( scan.x, y ), ( char, elem ) ) :: scan.result
-                    }
+                    { scan | result = ( ( scan.x, y ), ( char, elem ) ) :: scan.result }
 
 
 getScan : String -> Maybe Scan
@@ -232,36 +204,21 @@ getScan char =
             Just <| O True
 
         _ ->
-            if String.length char == 1 && not (isEmoji char) then
-                Just AlphaNumeric
-
-            else
+            if WChar.graphemeWidth char == 2 then
                 Just Emoji
 
-
-isEmoji : String -> Bool
-isEmoji char =
-    char
-        |> String.uncons
-        |> Maybe.map (Tuple.first >> isWideCharacter)
-        |> Maybe.withDefault False
+            else
+                Just AlphaNumeric
 
 
-{-| Function to check if a character is a wide character (takes more space)
--}
-isWideCharacter : Char -> Bool
-isWideCharacter char =
-    case WChar.width char of
-        WChar.Wide ->
-            True
+appendToVerbatim : Int -> String -> State -> Scans
+appendToVerbatim y char scan =
+    case ( scan.inRun, scan.result ) of
+        ( True, ( pos, ( _, Verbatim str ) ) :: xs ) ->
+            ( pos, ( " ", Verbatim (str ++ char) ) ) :: xs
 
         _ ->
-            False
-
-
-appendToVerbatim : String -> String -> ( String, Scan )
-appendToVerbatim str =
-    String.append str >> Verbatim >> Tuple.pair " "
+            ( ( scan.x + 1 - scan.verbatimCounter, y ), ( " ", Verbatim char ) ) :: scan.result
 
 
 merge : Scans -> Scans -> Scans

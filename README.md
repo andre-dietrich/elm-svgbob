@@ -10,11 +10,14 @@ Try out the demo at: https://andre-dietrich.github.io/elm-svgbob/
 And see the implementation at [`examples/Main.elm`](examples/Main.elm).
 
 ```elm
+import Html exposing (Html)
 import SvgBob
+
 
 view : Html msg
 view =
-    """
+    SvgBob.getSvg []
+        """
     +------+   +-----+   +-----+   +-----+
     |      |   |     |   |     |   |     |
     | Foo  +-->| Bar +---+ Baz |<--+ Moo |
@@ -26,24 +29,33 @@ view =
     | Hello here and there and everywhere |
     '-------------------------------------'
     """
-    |> SvgBob.getSvg
-          SvgBob.default -- or use your own settings
-          [ attribute "vector-effect" "non-scaling-stroke" ]
+        SvgBob.defaultOptions -- or use your own settings
 
--- you cann pass your own settings
+
+-- you can pass your own settings
+settings : SvgBob.Settings
 settings =
     { fontSize = 14.0
-    , lineWidth = 1.0
-    , textWidth = 8.0
-    , textHeight = 16.0
+    , lineWidth = 1.5
+    , textWidth = 8.0 -- currently ignored, the grid is always 8 × 16
+    , textHeight = 16.0 -- currently ignored
     , arcRadius = 4.0
-    , strokeColor = "black"  -- color for lines and arrows and stuff
-    , textColor = "black"    -- basic text-color for all symbols that are not strokes
-    , backgroundColor = "white" -- backgroundColor
-    , verbatim = '"'         -- you can define your own char, everything within will be identified as AlphaNumeric or Verbatim
-    , multilineVerbatim = False -- set this to True, if you want to combine multiple verbatims
+    , color =
+        { stroke = "#222" -- color for lines and arrows and stuff
+        , text = "black" -- text-color for all symbols that are not strokes
+        , background = "white"
+        }
+    , verbatim =
+        { string = "\"" -- everything within is passed to your function (see getSvgWith)
+        , multiline = False -- set this to True, if you want to combine multiple verbatims
+        , height = Nothing -- overwrite the computed height of verbatim elements
+        , width = Nothing -- overwrite the computed width of verbatim elements
+        }
     }
 ```
+
+If you draw the same image many times, parse it once with `SvgBob.getElements`
+and draw the result with `SvgBob.drawElements`.
 
 ## Extended settings
 
@@ -55,65 +67,69 @@ of your required spaces, etc. Unfortunately I did not find a way so far to draw
 the foreignObject above all other content, also `z-index` does not work for svg.
 
 ```elm
+import Html exposing (Html)
+import Html.Attributes
 import SvgBob
+
 
 view : Html msg
 view =
-    """
+    SvgBob.getSvgWith
+        (\str ->
+            case String.split ":" str of
+                "link" :: url ->
+                    Html.a [ Html.Attributes.href (String.join ":" url) ] [ Html.text "link" ]
+
+                _ ->
+                    Html.text str
+        )
+        []
+        """
     .----------------------------.
     | "link:liascript.github.io" |
     '----------------------------'
     """
-    |> SvgBob.getSvgWith -- or use your own settings
-          SvgBob.default
-          [ attribute "vector-effect" "non-scaling-stroke" ]
-          (\str ->
-              case String.split ":" str of
-                "link":url ->
-                   Html.a [ Html.Attributes.href url ] [Html.text "link"]
-                _ ->
-                   Html.text str
-      )
+        SvgBob.defaultOptions
 ```
 
 So you can adjust your internal figures by simply defining enough spaces through
-multilineVerbatim ... centering and everything else has to be defined by your
+multiline verbatims ... centering and everything else has to be defined by your
 function. But, at least it gives you some more control over your image and let
 you define your own "extensions" ...
 
 ```elm
+import Html exposing (Html)
+import Html.Attributes
 import SvgBob
+
 
 view : Html msg
 view =
+    let
+        settings =
+            SvgBob.defaultOptions
+    in
+    SvgBob.getSvgWith
+        (\str ->
+            case str |> String.trim |> String.split ":" of
+                "link" :: url ->
+                    Html.a [ Html.Attributes.href (String.join ":" url) ] [ Html.text "link" ]
 
-    """
+                _ ->
+                    Html.text str
+        )
+        []
+        """
     .------------------------------.
     | $                          $ |
     | $ link:liascript.github.io $ |
     | $                          $ |
     '------------------------------'
     """
-    |> SvgBob.getSvgWith
-        { fontSize = 14.0
-        , lineWidth = 1.0
-        , textWidth = 8.0
-        , textHeight = 16.0
-        , arcRadius = 4.0
-        , strokeColor = "black"
-        , textColor = "blue"
-        , backgroundColor = "white"
-        , verbatim = '$'
-        , multilineVerbatim = True
+        { settings
+            | color = { stroke = "black", text = "blue", background = "white" }
+            , verbatim = { string = "$", multiline = True, height = Nothing, width = Nothing }
         }
-        [ attribute "vector-effect" "non-scaling-stroke" ]
-        (\str ->
-              case str |> String.trim |> String.split ":" of
-                "link":url ->
-                  Html.a [ Html.Attributes.href url ] [Html.text "link"]
-                _ ->
-                  Html.text str
-        )
 ```
 
 ## How to Draw things ...

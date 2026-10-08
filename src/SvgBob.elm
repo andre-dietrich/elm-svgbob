@@ -46,6 +46,8 @@ import SvgBob.Types exposing (Element(..), Point)
             }
         }
 
+`textWidth` and `textHeight` are currently ignored, the grid is always 8 × 16.
+
 The additional `verbatim.height` and `verbatim.width` can be used to overwrite the
 calculated dimensions for that specific element. Otherwise the dimensions for
 verbatim elements are calculated on the basis of the position and dimensions
@@ -60,7 +62,7 @@ type alias Settings =
 
     defaultOptions =
         { fontSize = 14.0
-        , lineWidth = 1.0
+        , lineWidth = 1.5
         , textWidth = 8.0
         , textHeight = 16.0
         , arcRadius = 4.0
@@ -114,15 +116,20 @@ type alias Configuration a =
 {-| Get the resulting svg and pass it into a div or whatever
 -}
 getSvg : List (Svg.Attribute msg) -> String -> Settings -> Html msg
-getSvg =
-    SvgBob.Grid.getSvg Nothing
+getSvg attributes code settings =
+    let
+        verbatim =
+            settings.verbatim
+    in
+    getSvgWith Svg.text attributes code { settings | verbatim = { verbatim | string = "" } }
 
 
 {-| Get the resulting svg and pass it into a div or parse it further or do whatever ...
 -}
 getSvgWith : (String -> Svg msg) -> List (Svg.Attribute msg) -> String -> Settings -> Html msg
-getSvgWith =
-    Just >> SvgBob.Grid.getSvg
+getSvgWith verbatim attributes code settings =
+    getElements settings code
+        |> drawElements attributes verbatim
 
 
 {-| Identified elements can be stored for later usage and verbatim code can be
