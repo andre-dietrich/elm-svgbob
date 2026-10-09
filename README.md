@@ -145,8 +145,14 @@ boxes. Supported characters for
 * borders:
 
   * straight: `-`, `_`, `|`
+  * dashed: `~` (horizontal), `:`, `!` (vertical)
+  * double: `=`
   * rounded: `(`, `)`
   * diagonal: `\`, `/`
+
+  Dashed and double lines are only drawn if they continue another line in the
+  same direction and do not touch any text, so `Note:`, `a == b` or `~ ~ ~`
+  remain text.
 
 * corners:
 
@@ -178,6 +184,12 @@ boxes. Supported characters for
 ```
 
 ![different box shapes](https://raw.githubusercontent.com/andre-dietrich/elm-svgbob/master/img/box.svg)
+
+```
+ .~~~~~~~~~~~~.          +==========+          +~~~~~~~~~~~+
+ ! optional   !  ~~~~~~> |  stored  |=========>: cached    :
+ '~~~~~~~~~~~~'          +==========+          +~~~~~~~~~~~+
+```
 
 ### Arrows & Connectors
 
