@@ -137,6 +137,18 @@ getScan char =
         "-" ->
             Just Horizontal
 
+        "~" ->
+            Just Horizontal
+
+        "=" ->
+            Just Horizontal
+
+        ":" ->
+            Just Vertical
+
+        "!" ->
+            Just Vertical
+
         "_" ->
             Just LowHorizontal
 

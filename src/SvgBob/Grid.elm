@@ -630,6 +630,72 @@ getElement m ( char, elem ) =
             Text char
 
 
+{-| `~ : ! =` are lines only when their run ends at another line and touches no text, so `Note:`, `a == b` or `~ ~ ~` stay text.
+-}
+lineOrText : (Int -> Int -> ( String, Scan )) -> Int -> Int -> ( String, Scan ) -> ( String, Scan )
+lineOrText at x y ( char, scan ) =
+    let
+        -- a vertical run needs a vertical continuation, so `:` inside `( : )` between `.-.` and `'-'` stays text
+        isLine : ( String, Scan ) -> Bool
+        isLine ( _, s ) =
+            List.member s
+                (if scan == Vertical then
+                    [ Vertical, Intersection, Corner North, Corner South, Arrow North, Arrow South ]
+
+                 else
+                    [ Horizontal, Intersection, Corner North, Corner South, Arrow East, Arrow West ]
+                )
+
+        isText : Int -> Bool
+        isText nx =
+            Tuple.second (at nx y) == AlphaNumeric
+
+        -- the first cell after the run of `char` in direction (dx, dy)
+        endOfRun : Int -> Int -> Int -> Int -> ( String, Scan )
+        endOfRun dx dy nx ny =
+            if Tuple.first (at nx ny) == char then
+                endOfRun dx dy (nx + dx) (ny + dy)
+
+            else
+                at nx ny
+
+        connected : Bool
+        connected =
+            if scan == Vertical then
+                isLine (endOfRun 0 -1 x (y - 1)) || isLine (endOfRun 0 1 x (y + 1))
+
+            else
+                isLine (endOfRun -1 0 (x - 1) y) || isLine (endOfRun 1 0 (x + 1) y)
+    in
+    if not (List.member char [ "~", ":", "!", "=" ]) || (connected && not (isText (x - 1)) && not (isText (x + 1))) then
+        ( char, scan )
+
+    else
+        ( char, AlphaNumeric )
+
+
+{-| `~ : !` draw their lines dashed, `=` doubles them.
+-}
+restyle : String -> Element -> Element
+restyle char element =
+    case element of
+        Sequence list ->
+            Sequence (List.map (restyle char) list)
+
+        Line start stop ->
+            if char == "=" then
+                Sequence [ Line (Ext start (North_ 0.25)) stop, Line (Ext start (South_ 0.25)) stop ]
+
+            else if List.member char [ "~", ":", "!" ] then
+                DashedLine start stop
+
+            else
+                element
+
+        _ ->
+            element
+
+
 circle : Bool -> String -> Matrix -> Element
 circle filled char m =
     if AlphaNumeric == m.west || AlphaNumeric == m.east then
@@ -762,10 +828,20 @@ getElements settings code =
         stride =
             model.columns + 2
 
+        toDict : List ( ( Int, Int ), ( String, Scan ) ) -> Dict Int ( String, Scan )
+        toDict =
+            List.map (\( ( x, y ), v ) -> ( y * stride + x, v )) >> Dict.fromList
+
+        raw : Dict Int ( String, Scan )
+        raw =
+            toDict intermediate
+
+        resolved : List ( ( Int, Int ), ( String, Scan ) )
+        resolved =
+            List.map (\( ( x, y ), v ) -> ( ( x, y ), lineOrText (\nx ny -> Dict.get (ny * stride + nx) raw |> Maybe.withDefault ( "", None )) x y v )) intermediate
+
         dict =
-            intermediate
-                |> List.map (\( ( x, y ), v ) -> ( y * stride + x, v ))
-                |> Dict.fromList
+            toDict resolved
     in
     List.foldl
         (\( ( x, y ), ( char, element ) ) container ->
@@ -775,7 +851,7 @@ getElements settings code =
                         (measureX x + textWidth / 2)
                         (measureY y + textHeight / 2)
             in
-            case getElement (getMatrix stride x y dict) ( char, element ) of
+            case getElement (getMatrix stride x y dict) ( char, element ) |> restyle char of
                 ForeignObject str dim ->
                     { container | foreign = ( str, ( point, dim ) ) :: container.foreign }
 
@@ -788,7 +864,7 @@ getElements settings code =
         , foreign = []
         , settings = settings
         }
-        intermediate
+        resolved
 
 
 draw : Settings -> ( Point, Element ) -> List (Svg msg)
@@ -805,6 +881,10 @@ draw settings ( pos, element ) =
 
         Line start stop ->
             [ drawLine (move start pos) stop ]
+
+        DashedLine start stop ->
+            -- butt caps and a period of 8 keep the dashes evenly spaced across cells
+            [ toLine [ Attr.strokeDasharray "4 4" ] (move start pos) stop ]
 
         Curve factor start stop ->
             [ drawArc settings factor (move start pos) stop ]

@@ -234,6 +234,11 @@ suite =
                     render { settings | textWidth = 12, textHeight = 20 } "+#"
                         |> Query.find [ tag "rect" ]
                         |> Query.has [ attribute (Attr.width "8"), attribute (Attr.height "17") ]
+            , test "dashed lines get a dash pattern" <|
+                \_ ->
+                    render SvgBob.defaultOptions "+~~+"
+                        |> Query.findAll [ attribute (Attr.strokeDasharray "4 4") ]
+                        |> Query.count (Expect.equal 2)
             , describe "arrow heads point along the line"
                 ([ ( "-->", "translate(20,8) rotate(180)" )
                  , ( "<--", "translate(4,8) rotate(0)" )
@@ -299,6 +304,26 @@ suite =
                         |> List.drop 1
                         |> List.head
                         |> Expect.equal (Just (Sequence [ Sequence [ Curve 1 East (Ext (South_ 0.5) West), Line South (North_ 0.5) ] ]))
+            , test "tilde continues a line dashed" <|
+                \_ -> Expect.equal (Just (Sequence [ DashedLine East (West_ 2) ])) (List.head (List.drop 1 (elements "+~~+")))
+            , test "colon and bang continue a vertical line dashed" <|
+                \_ -> Expect.equal [ DashedLine South (Ext North North), DashedLine South (Ext North North) ] (List.take 2 (List.drop 1 (elements "+\n:\n!\n+")))
+            , test "equal sign is a double line" <|
+                \_ ->
+                    Expect.equal (Just (Sequence [ Sequence [ Line (Ext East (North_ 0.25)) (West_ 2), Line (Ext East (South_ 0.25)) (West_ 2) ] ]))
+                        (List.head (List.drop 1 (elements "+==+")))
+            , describe "`~ : ! =` in text stay text"
+                ([ "Note: |", "a = b", "~5 min", "Hi!\n|", "a == b", "~ ~ ~", "~~~~", " .-.\n( : )\n `-'" ]
+                    |> List.map
+                        (\str ->
+                            test str <|
+                                \_ ->
+                                    elements str
+                                        |> List.filter (\e -> List.member e (List.map Text [ ":", "=", "~", "!" ]))
+                                        |> List.length
+                                        |> Expect.equal (String.length (String.filter (\c -> List.member c [ ':', '=', '~', '!' ]) str))
+                        )
+                )
             , describe "nothing is drawn twice"
                 ([ "-.\n  )"
                  , ".---.  .--->\n|   |  |\n'-+-'  '--( )\n  |  /  \\\n  v\n"

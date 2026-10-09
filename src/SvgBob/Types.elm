@@ -18,6 +18,7 @@ type Element
     = Text String
     | TextEmoji String
     | Line Direction Direction
+    | DashedLine Direction Direction
     | Triangle Direction
     | Curve Float Direction Direction
     | Sequence (List Element)
