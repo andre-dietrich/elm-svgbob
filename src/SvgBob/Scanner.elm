@@ -246,10 +246,11 @@ merge combined verbs =
             let
                 ( _, verb, newTail ) =
                     List.foldl
-                        (\( ( x, y ) as pos, ( c, s ) as scan ) ( currentY, ( ( v_x, _ ), ( _, v_s ) ) as v, rest ) ->
+                        (\( ( x, y ) as pos, ( c, s ) as scan ) ( currentY, ( ( v_x, v_y ), ( _, v_s ) ) as v, rest ) ->
                             if x == v_x && currentY + 1 == y then
+                                -- the block keeps the position of its first row
                                 ( currentY + 1
-                                , ( ( v_x, y ), ( c, mergeVerbatim v_s s ) )
+                                , ( ( v_x, v_y ), ( c, mergeVerbatim v_s s ) )
                                 , rest
                                 )
 

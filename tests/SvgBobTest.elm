@@ -182,6 +182,24 @@ suite =
                 \_ ->
                     verbatims "-- \"ab"
                         |> Expect.equal [ ( 4, "ab" ) ]
+            , test "a multiline verbatim block starts at its first row" <|
+                \_ ->
+                    let
+                        verbatim =
+                            SvgBob.defaultOptions.verbatim
+                    in
+                    SvgBob.Model.toLines "+-----+\n|\"ab\" |\n|\"cd\" |\n|\"ef\" |\n+-----+"
+                        |> SvgBob.Scanner.getScans { verbatim | multiline = True }
+                        |> List.filterMap
+                            (\( pos, ( _, scan ) ) ->
+                                case scan of
+                                    Verbatim str ->
+                                        Just ( pos, str )
+
+                                    _ ->
+                                        Nothing
+                            )
+                        |> Expect.equal [ ( ( 2, 1 ), "ab\ncd\nef" ) ]
             ]
         , describe "rendering"
             [ test "no global <style> that leaks into the page" <|
